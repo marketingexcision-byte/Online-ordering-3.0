@@ -98,12 +98,10 @@
 
 {%- comment -%} Excision: MTO when product has tag 'custom length' {%- endcomment -%}
 {%- assign is_mto = false -%}
-{%- for t in item.product.tags -%}
-  {%- if t | downcase == 'custom length' -%}
-    {%- assign is_mto = true -%}
-    {%- break -%}
-  {%- endif -%}
-{%- endfor -%}
+{%- assign _tags = item.product.tags | join: '||' | downcase | split: '||' -%}
+{%- if _tags contains 'custom length' -%}
+  {%- assign is_mto = true -%}
+{%- endif -%}
 
 
 {%- assign ex_stock_status = '' -%}
