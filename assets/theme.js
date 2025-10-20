@@ -1837,44 +1837,63 @@ $( document ).ready(function() {
   }
 });
 
-$(document).ready(function () {
-  // Apply TomSelect on all Code Variants dropdowns
-   new TomSelect("label[for=Code] + select",{
-       create: true,
-       sortField: {
-          field: "text",
-          direction: "asc"
-       }
-   });
-});
-
-$(document).ready(function () {
-  // Select all dropdowns and apply Select2
-  $('select').select2({
-    placeholder: "Select an option", // Optional placeholder
-    minimumResultsForSearch: Infinity, // Hide the search bar for short dropdowns
-    allowClear: true, // Adds a clear button for single selects
+document.addEventListener('DOMContentLoaded', function () {
+  if (typeof TomSelect !== 'function') {
+    return;
+  }
+  var codeSelects = document.querySelectorAll('label[for=Code] + select');
+  if (!codeSelects.length) {
+    return;
+  }
+  codeSelects.forEach(function (selectNode) {
+    if (selectNode.tomselect) {
+      return;
+    }
+    new TomSelect(selectNode, {
+      create: true,
+      sortField: {
+        field: 'text',
+        direction: 'asc'
+      }
+    });
   });
 });
 
-$(document).ready(function () {
-  // Function to apply Select2
-  function applySelect2() {
-    $('select:not(.select2-hidden-accessible)').select2({
-      placeholder: "Select an option",
-      minimumResultsForSearch: Infinity,
-    });
+document.addEventListener('DOMContentLoaded', function () {
+  if (!window.jQuery || !jQuery.fn || !jQuery.fn.select2) {
+    return;
   }
 
-  // Initial application of Select2
+  var selectOptions = {
+    placeholder: 'Select an option',
+    minimumResultsForSearch: Infinity,
+    allowClear: true
+  };
+
+  var applySelect2 = function (root) {
+    var $context = root ? jQuery(root) : jQuery(document.body);
+    $context
+      .find('select')
+      .not('.select2-hidden-accessible')
+      .each(function () {
+        jQuery(this).select2(selectOptions);
+      });
+  };
+
   applySelect2();
 
-  // Monitor the DOM for dynamically added dropdowns
-  const observer = new MutationObserver(function (mutations) {
+  var observer = new MutationObserver(function (mutations) {
     mutations.forEach(function (mutation) {
-      if (mutation.addedNodes.length) {
-        applySelect2();
-      }
+      mutation.addedNodes.forEach(function (node) {
+        if (!(node instanceof Element)) {
+          return;
+        }
+        if (node.matches && node.matches('select') && !jQuery(node).hasClass('select2-hidden-accessible')) {
+          jQuery(node).select2(selectOptions);
+          return;
+        }
+        applySelect2(node);
+      });
     });
   });
 
