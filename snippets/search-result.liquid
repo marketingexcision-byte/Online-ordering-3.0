@@ -41,7 +41,11 @@ Assumes this file is rendered inside: {% for item in search.results %} ... {% en
 <div class="grid-item search-result {{ grid_item_width }}{% if sold_out %} sold-out{% endif %}{% if on_sale %} on-sale{% endif %}">
   <a href="{{ item.url | within: current_collection }}" class="product-grid-item">
 
-    {% if item.object_type == 'product' %}
+    
+
+    <div class="AirReviews-Widget AirReviews-Widget--Stars" data-review-avg="{{ product.metafields.air_reviews_product.review_avg }}" data-review-count="{{ product.metafields.air_reviews_product.review_count }}"></div>
+
+{% if item.object_type == 'product' %}
       <div class="product-grid-image">
         <div class="product-grid-image--centered">
           {% if sold_out %}
