@@ -135,7 +135,7 @@
       {{ 'account.css' | asset_url | stylesheet_tag }}
       <script src="{{ 'account.js' | asset_url }}" defer></script>
     {%- endif -%}
-    <script src="{{ 'jquery-2.2.3.min.js' | asset_url }}" defer></script>
+    <script src="{{ 'jquery-2.2.3.min.js' | asset_url }}"></script>
     <script src="{{ 'select2.min.js' | asset_url }}" defer></script>
     <script src="{{ 'lazysizes.min.js' | asset_url }}" async="async"></script>
     <script src="{{ 'vendor.js' | asset_url }}" defer></script>
@@ -562,81 +562,88 @@
 
 
 <script>
-  const loadedEl = document.querySelector('.loader-loaded');
-  const unloadedEl = document.querySelector('.loader-unloaded');
-  const preloader = document.getElementById('preloader');
-
-  let progress = 0;
-  let animationFrame;
-  if (!preloader) {
-    return;
-  }
-
-  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  if (reduceMotion) {
-    updateBar(100);
-    preloader.style.opacity = '0';
-    preloader.style.display = 'none';
-  }
-
-  function updateBar(value) {
-    const clamped = Math.min(value, 100);
-    loadedEl.style.width = `${clamped}%`;
-    unloadedEl.style.width = `${100 - clamped}%`;
-  }
-
-  function animateProgress() {
-    if (progress < 90) {
-      progress += Math.random() * 1.5; // simulate progressive load
-      updateBar(progress);
-      animationFrame = requestAnimationFrame(animateProgress);
+  (function () {
+    const preloader = document.getElementById('preloader');
+    if (!preloader) {
+      return;
     }
-  }
 
-  // Start simulating progress
-  if (!reduceMotion) {
-    requestAnimationFrame(animateProgress);
-  }
+    const loadedEl = preloader.querySelector('.loader-loaded');
+    const unloadedEl = preloader.querySelector('.loader-unloaded');
 
-  // Use PerformanceObserver to detect First Contentful Paint
-  const po = new PerformanceObserver((entryList, observer) => {
-    for (const entry of entryList.getEntries()) {
-      if (entry.name === 'first-contentful-paint') {
-        // Finish progress bar
-        cancelAnimationFrame(animationFrame);
+    if (!loadedEl || !unloadedEl) {
+      return;
+    }
+
+    let progress = 0;
+    let animationFrame;
+
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (reduceMotion) {
+      updateBar(100);
+      preloader.style.opacity = '0';
+      preloader.style.display = 'none';
+    }
+
+    function updateBar(value) {
+      const clamped = Math.min(value, 100);
+      loadedEl.style.width = `${clamped}%`;
+      unloadedEl.style.width = `${100 - clamped}%`;
+    }
+
+    function animateProgress() {
+      if (progress < 90) {
+        progress += Math.random() * 1.5; // simulate progressive load
+        updateBar(progress);
+        animationFrame = requestAnimationFrame(animateProgress);
+      }
+    }
+
+    // Start simulating progress
+    if (!reduceMotion) {
+      requestAnimationFrame(animateProgress);
+    }
+
+    // Use PerformanceObserver to detect First Contentful Paint
+    const po = new PerformanceObserver((entryList, observer) => {
+      for (const entry of entryList.getEntries()) {
+        if (entry.name === 'first-contentful-paint') {
+          // Finish progress bar
+          cancelAnimationFrame(animationFrame);
+          updateBar(100);
+          const finish = () => {
+            preloader.style.opacity = '0';
+            setTimeout(() => (preloader.style.display = 'none'), 300);
+          };
+          if (reduceMotion) {
+            finish();
+          } else {
+            setTimeout(finish, 200);
+          }
+          observer.disconnect();
+        }
+      }
+    });
+
+    try {
+      po.observe({ type: 'paint', buffered: true });
+    } catch (e) {
+      // Fallback if unsupported
+      window.addEventListener('DOMContentLoaded', () => {
         updateBar(100);
         const finish = () => {
           preloader.style.opacity = '0';
-          setTimeout(() => preloader.style.display = 'none', 300);
+          setTimeout(() => (preloader.style.display = 'none'), 300);
         };
         if (reduceMotion) {
           finish();
         } else {
           setTimeout(finish, 200);
         }
-        observer.disconnect();
-      }
+      });
     }
-  });
-
-  try {
-    po.observe({ type: 'paint', buffered: true });
-  } catch (e) {
-    // Fallback if unsupported
-    window.addEventListener('DOMContentLoaded', () => {
-      updateBar(100);
-      const finish = () => {
-        preloader.style.opacity = '0';
-        setTimeout(() => preloader.style.display = 'none', 300);
-      };
-      if (reduceMotion) {
-        finish();
-      } else {
-        setTimeout(finish, 200);
-      }
-    });
-  }
+  })();
 </script>
 
 <!-- HubSpot Embed Code -->
