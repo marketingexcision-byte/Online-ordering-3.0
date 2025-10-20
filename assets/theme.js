@@ -1993,3 +1993,43 @@ $(document).ready(function () {
       alert('Sorry, something went wrong. Please try again.');
     }
   });
+// Accessibility and SEO hygiene enhancements added by automation
+document.addEventListener('DOMContentLoaded', function () {
+  var canonicalLinks = document.querySelectorAll('link[rel="canonical"], link[rel="icon"], link[rel="shortcut icon"]');
+  canonicalLinks.forEach(function (link) {
+    if (link.hasAttribute('async')) {
+      link.removeAttribute('async');
+    }
+    if (link.hasAttribute('defer')) {
+      link.removeAttribute('defer');
+    }
+  });
+
+  var metaDescription = document.querySelector('meta[name="description"]');
+  if (metaDescription) {
+    var currentContent = metaDescription.getAttribute('content');
+    var needsFallback = !currentContent || currentContent.trim().length === 0;
+    if (needsFallback) {
+      var fallback = '';
+      var ogDescription = document.querySelector('meta[property="og:description"]');
+      if (ogDescription && ogDescription.getAttribute('content')) {
+        fallback = ogDescription.getAttribute('content').trim();
+      }
+      if (!fallback) {
+        var twitterDescription = document.querySelector('meta[name="twitter:description"]');
+        if (twitterDescription && twitterDescription.getAttribute('content')) {
+          fallback = twitterDescription.getAttribute('content').trim();
+        }
+      }
+      if (!fallback) {
+        var firstParagraph = document.querySelector('main p');
+        if (firstParagraph) {
+          fallback = firstParagraph.textContent.replace(/\s+/g, ' ').trim().slice(0, 155);
+        }
+      }
+      if (fallback) {
+        metaDescription.setAttribute('content', fallback);
+      }
+    }
+  }
+});
