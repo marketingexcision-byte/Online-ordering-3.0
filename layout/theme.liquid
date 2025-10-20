@@ -587,74 +587,60 @@
       unloadedEl.style.width = `${100 - clamped}%`;
     }
 
-    function hidePreloader(instant) {
-      preloader.style.opacity = '0';
-      const delay = instant ? 0 : 300;
-      setTimeout(() => {
-        preloader.style.display = 'none';
-      }, delay);
-    }
-
-    function finishLoading(instant) {
-      if (completed) {
-        return;
-      }
-      completed = true;
-      if (animationFrame) {
-        cancelAnimationFrame(animationFrame);
-      }
-      updateBar(100);
-      if (instant) {
-        hidePreloader(true);
-      } else {
-        setTimeout(() => hidePreloader(false), 200);
-      }
-    }
-
     function animateProgress() {
-      if (completed) {
-        return;
-      }
       if (progress < 90) {
         progress += Math.random() * 1.5; // simulate progressive load
         updateBar(progress);
+        animationFrame = requestAnimationFrame(animateProgress);
       }
-      animationFrame = requestAnimationFrame(animateProgress);
     }
 
     if (reduceMotion) {
-      finishLoading(true);
-      return;
-    }
-
-    animationFrame = requestAnimationFrame(animateProgress);
-
-    function fallbackComplete() {
-      finishLoading(false);
-    }
-
-    if (document.readyState === 'complete') {
-      fallbackComplete();
+      updateBar(100);
+      preloader.style.opacity = '0';
+      preloader.style.display = 'none';
     } else {
-      window.addEventListener('load', fallbackComplete, { once: true });
+      // Start simulating progress
+      requestAnimationFrame(animateProgress);
     }
 
-    if (typeof window.PerformanceObserver === 'function') {
-      try {
-        const observer = new PerformanceObserver((entryList, observerInstance) => {
-          for (const entry of entryList.getEntries()) {
-            if (entry.name === 'first-contentful-paint') {
-              finishLoading(false);
-              observerInstance.disconnect();
-              return;
-            }
+    // Use PerformanceObserver to detect First Contentful Paint
+    const po = new PerformanceObserver((entryList, observer) => {
+      for (const entry of entryList.getEntries()) {
+        if (entry.name === 'first-contentful-paint') {
+          // Finish progress bar
+          cancelAnimationFrame(animationFrame);
+          updateBar(100);
+          const finish = () => {
+            preloader.style.opacity = '0';
+            setTimeout(() => (preloader.style.display = 'none'), 300);
+          };
+          if (reduceMotion) {
+            finish();
+          } else {
+            setTimeout(finish, 200);
           }
-        });
-        observer.observe({ type: 'paint', buffered: true });
-      } catch (error) {
-        // PerformanceObserver exists but paint entries are unsupported
-        fallbackComplete();
+          observer.disconnect();
+        }
       }
+    });
+
+    try {
+      po.observe({ type: 'paint', buffered: true });
+    } catch (e) {
+      // Fallback if unsupported
+      window.addEventListener('DOMContentLoaded', () => {
+        updateBar(100);
+        const finish = () => {
+          preloader.style.opacity = '0';
+          setTimeout(() => (preloader.style.display = 'none'), 300);
+        };
+        if (reduceMotion) {
+          finish();
+        } else {
+          setTimeout(finish, 200);
+        }
+      });
     }
   })();
 </script>
