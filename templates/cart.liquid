@@ -378,13 +378,13 @@
 
         <!-- RIGHT: SUMMARY -->
         <aside class="cart-right">
+{%- if pc_by != blank or pc_for != blank or pc_note != blank or pc_id != blank -%}
           <div class="cart-summary">
 {%- comment -%} === PreCart meta panel (server-rendered, native look) === {%- endcomment -%}
 {%- assign pc_id  = cart.attributes._precart_id | strip -%}
 {%- assign pc_by  = cart.attributes._precart_created_by | strip -%}
 {%- assign pc_for = cart.attributes._precart_created_for | strip -%}
 {%- assign pc_note = cart.attributes._precart_note | strip -%}
-{%- if pc_by != blank or pc_for != blank or pc_note != blank or pc_id != blank -%}
   <div class="precart-panel">
     <div class="precart-title">
     PreCart{%- if pc_id != blank -%} <span class="precart-number">#{{ pc_id }}</span></div>{%- endif -%}
@@ -401,10 +401,11 @@
       </div>
     </div>
   </div>
-{%- endif -%}
 {%- comment -%} === /PreCart meta panel === {%- endcomment -%}
 
           </div>
+{%- endif -%}
+
           <div class="cart-summary">
             {%- comment -%} Collect applied codes (cart-level + line-level). Heuristic: one-word titles = manual codes. {%- endcomment -%}
             {%- assign _codes = '' -%}
