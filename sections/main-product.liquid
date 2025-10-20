@@ -3228,35 +3228,395 @@ document.addEventListener('DOMContentLoaded', function () {
 }
 {% endschema %}
 
-<script type="application/ld+json">
+{% liquid
+  assign brand_name = product.vendor | default: shop.name
+  assign secondary_title = product.metafields.custom.title.value | default: product.metafields.custom.title
+  assign description_text = product.description | strip_html | strip
+  assign product_url = shop.secure_url | append: product.url
+  assign lead_time_min = product.metafields.custom.lead_time_min_days | default: product.metafields.custom.lead_time_days | default: lead_days
+  assign lead_time_max = product.metafields.custom.lead_time_max_days | default: lead_time_min
+  assign handling_time_days = product.metafields.custom.handling_time_days | default: blank
+  assign shipping_cost_value = product.metafields.custom.shipping_cost.value | default: product.metafields.custom.shipping_cost | default: shop.metafields.custom.default_shipping_cost
+  assign shipping_cost_sanitised = shipping_cost_value | replace: '$', '' | replace: 'AUD', '' | replace: 'aud', '' | strip
+  assign shipping_cost_digits = '0,1,2,3,4,5,6,7,8,9' | split: ','
+  assign shipping_cost_has_digits = false
+  for digit in shipping_cost_digits
+    if shipping_cost_sanitised contains digit
+      assign shipping_cost_has_digits = true
+    endif
+  endfor
+  assign shipping_cost_number = shipping_cost_sanitised | replace: ',', '.' | plus: 0
+  assign shipping_details_available = false
+  if shipping_cost_has_digits and shipping_cost_sanitised != ''
+    assign shipping_details_available = true
+  endif
+  if handling_time_days != blank
+    assign shipping_details_available = true
+  endif
+  if lead_time_min != blank
+    assign shipping_details_available = true
+  endif
+  assign return_policy_flag = product.metafields.custom.product_returns
+  assign return_window_days = product.metafields.custom.return_window_days | default: shop.metafields.custom.default_return_window
+  assign warranty_text = product.metafields.custom.product_warranty | strip
+  assign schema_properties = product.metafields.custom.schema
+  assign review_provider = shop.metafields.ecomposer.app_review.value
+  assign store_country = shop.address.country_code | default: shop.address.country
+  assign price_expiry = 'today' | date: '%s' | plus: 31536000 | date: '%Y-%m-%d'
+%}
+
+{% capture images_json %}
+[
+{% if product.images.size > 0 %}
+  {% for image in product.images %}
+    {{ image | img_url: 'master' | prepend: 'https:' | json }}{% unless forloop.last %},{% endunless %}
+  {% endfor %}
+{% elsif product.featured_image %}
+  {{ product.featured_image | img_url: 'master' | prepend: 'https:' | json }}
+{% endif %}
+]
+{% endcapture %}
+{% assign images_json = images_json | strip_newlines %}
+
+{% assign shipping_details_json = '' %}
+{% if shipping_details_available %}
+  {% capture shipping_details_json %}
   {
-    "@context": "http://schema.org/",
-    "@type": "Product",
-    "name": "{{ product.title }}",
-    "image": "{{ product.featured_image.src | img_url: 'master' }}",
-    "description": "{{ product.description | strip_html | escape }}",
-    "brand": {
-      "@type": "Brand",
-      "name": "Excision"
-    },
+    "@type": "OfferShippingDetails"
+    {% if shipping_cost_has_digits and shipping_cost_sanitised != '' %}
+      ,"shippingRate": {
+        "@type": "MonetaryAmount",
+        "value": {{ shipping_cost_number | json }},
+        "currency": {{ shop.currency | json }}
+      }
+    {% endif %}
+    ,"shippingDestination": {
+      "@type": "DefinedRegion",
+      "addressCountry": {{ store_country | json }}
+    }
+    {% if handling_time_days != blank or lead_time_min != blank %}
+      ,"deliveryTime": {
+        "@type": "ShippingDeliveryTime"
+        {% if handling_time_days != blank %}
+          ,"handlingTime": {
+            "@type": "QuantitativeValue",
+            "minValue": {{ handling_time_days }},
+            "maxValue": {{ handling_time_days }},
+            "unitCode": "DAY"
+          }
+        {% endif %}
+        {% if lead_time_min != blank %}
+          ,"transitTime": {
+            "@type": "QuantitativeValue",
+            "minValue": {{ lead_time_min }},
+            "maxValue": {{ lead_time_max }},
+            "unitCode": "DAY"
+          }
+        {% endif %}
+      }
+    {% endif %}
+  }
+  {% endcapture %}
+  {% assign shipping_details_json = shipping_details_json | strip %}
+{% endif %}
+
+{% capture offers_json %}
+[
+{% for variant in product.variants %}
+  {%- assign availability = 'InStock' -%}
+  {%- if variant.available != true -%}
+    {%- if variant.inventory_policy == 'continue' -%}
+      {%- assign availability = 'PreOrder' -%}
+    {%- else -%}
+      {%- assign availability = 'OutOfStock' -%}
+    {%- endif -%}
+  {%- endif -%}
+  {%- assign variant_url = shop.secure_url | append: variant.url -%}
+  {%- assign restock_date = variant.metafields.custom.restock_date | default: blank -%}
+  {%- assign price_string = variant.price | money_without_currency | replace: ',', '' -%}
+  {
+    "@type": "Offer",
+    "url": {{ variant_url | json }},
+    "priceCurrency": {{ shop.currency | json }},
+    "price": "{{ price_string }}",
+    "priceValidUntil": {{ price_expiry | json }},
+    "itemCondition": "https://schema.org/NewCondition",
+    "availability": "https://schema.org/{{ availability }}",
+    "sku": {{ variant.sku | json }},
+    "mpn": {{ variant.barcode | json }}
+    {% if variant.barcode != blank %}
+      {% case variant.barcode.size %}
+        {% when 8 %}
+          ,"gtin8": {{ variant.barcode | json }}
+        {% when 12 %}
+          ,"gtin12": {{ variant.barcode | json }}
+        {% when 13 %}
+          ,"gtin13": {{ variant.barcode | json }}
+        {% when 14 %}
+          ,"gtin14": {{ variant.barcode | json }}
+      {% endcase %}
+    {% endif %}
+    {% if variant.available and variant.inventory_quantity %}
+      ,"inventoryLevel": {
+        "@type": "QuantitativeValue",
+        "value": {{ variant.inventory_quantity }},
+        "unitCode": "C62"
+      }
+    {% endif %}
+    {% if restock_date != blank %}
+      ,"availabilityStarts": {{ restock_date | date: '%Y-%m-%d' | json }}
+    {% endif %}
+    {% if shipping_details_json %}
+      ,"shippingDetails": [{{ shipping_details_json }}]
+    {% endif %}
+  }{% unless forloop.last %},{% endunless %}
+{% endfor %}
+]
+{% endcapture %}
+{% assign offers_json = offers_json | strip_newlines %}
+
+{% capture aggregate_json %}
+{% if review_provider %}
+  {% case review_provider %}
+    {% when 'kudo_buzz' %}
+      {% if product.metafields.kudobuzz.reviews_count and product.metafields.kudobuzz.reviews_count != '0' %}
+        "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingCount": {{ product.metafields.kudobuzz.reviews_count }},
+          "ratingValue": {{ product.metafields.kudobuzz.review_rating }}
+        }
+      {% endif %}
+    {% when 'okendo' %}
+      {% if product.metafields.okendo.RatingAndReviewCount and product.metafields.okendo.RatingAndReviewCount != '0' %}
+        "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingCount": {{ product.metafields.okendo.RatingAndReviewCount }},
+          "ratingValue": {{ product.metafields.okendo.RatingAndReviewAverageValue }}
+        }
+      {% endif %}
+    {% when 'egg_views' %}
+      {% if product.metafields.eggviews.reviews_count and product.metafields.eggviews.reviews_count != '0' %}
+        "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingCount": {{ product.metafields.eggviews.reviews_count }},
+          "ratingValue": {{ product.metafields.eggviews.reviews_average }}
+        }
+      {% endif %}
+    {% when 'opinew' %}
+      {% if product.metafields.opinew.reviews_rich_snippet %}
+        {%- assign rating_count = product.metafields.opinew.reviews_rich_snippet | split: 'ratingCount" content="' | last | split: '"' | first | plus: 0 -%}
+        {%- assign rating_value = product.metafields.opinew.reviews_rich_snippet | split: 'ratingValue" content="' | last | split: '"' | first | plus: 0 -%}
+        {% if rating_count > 0 and rating_value > 0 %}
+          "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingCount": {{ rating_count }},
+            "ratingValue": {{ rating_value }}
+          }
+        {% endif %}
+      {% endif %}
+    {% when 'orankl' %}
+      {% if product.metafields.orankl.review_count and product.metafields.orankl.review_count != '0' %}
+        "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingCount": {{ product.metafields.orankl.review_count }},
+          "ratingValue": {{ product.metafields.orankl.rating }}
+        }
+      {% endif %}
+    {% when 'reviews_io' %}
+      {% if product.metafields.reviewscouk.total and product.metafields.reviewscouk.total != '0' %}
+        "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingCount": {{ product.metafields.reviewscouk.total }},
+          "ratingValue": {{ product.metafields.reviewscouk.rating }}
+        }
+      {% endif %}
+    {% when 'loox' %}
+      {% if product.metafields.loox.num_reviews and product.metafields.loox.num_reviews != '0' %}
+        "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingCount": {{ product.metafields.loox.num_reviews }},
+          "ratingValue": {{ product.metafields.loox.avg_rating }}
+        }
+      {% endif %}
+    {% when 'ryviu' %}
+      {% if product.metafields.ryviu.reviews %}
+        {%- assign ryviu_count = product.metafields.ryviu.reviews | split: 'reviewCount" content="' | last | split: '"' | first | plus: 0 -%}
+        {%- assign ryviu_value = product.metafields.ryviu.reviews | split: 'ratingValue" content="' | last | split: '"' | first | plus: 0 -%}
+        {% if ryviu_count > 0 and ryviu_value > 0 %}
+          "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingCount": {{ ryviu_count }},
+            "ratingValue": {{ ryviu_value }}
+          }
+        {% endif %}
+      {% endif %}
+    {% when 'trust' %}
+      {% if product.metafields.vnreviews.reviewCount and product.metafields.vnreviews.reviewCount != '0' %}
+        "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingCount": {{ product.metafields.vnreviews.reviewCount }},
+          "ratingValue": {{ product.metafields.vnreviews.ratingValue }}
+        }
+      {% endif %}
+    {% when 'yotpo' %}
+      {% if product.metafields.yotpo.reviews_count and product.metafields.yotpo.reviews_count != '0' %}
+        "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingCount": {{ product.metafields.yotpo.reviews_count }},
+          "ratingValue": {{ product.metafields.yotpo.reviews_average }}
+        }
+      {% endif %}
+    {% when 'shopify_reviews' %}
+      {% if product.metafields.spr.reviews %}
+        {%- assign spr_count = product.metafields.spr.reviews | split: 'reviewCount" content="' | last | split: '"' | first | plus: 0 -%}
+        {%- assign spr_value = product.metafields.spr.reviews | split: 'ratingValue" content="' | last | split: '"' | first | plus: 0 -%}
+        {% if spr_count > 0 and spr_value > 0 %}
+          "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingCount": {{ spr_count }},
+            "ratingValue": {{ spr_value }}
+          }
+        {% endif %}
+      {% endif %}
+    {% when 'rivio' %}
+      {% if product.metafields.reevio.reviews_count and product.metafields.reevio.reviews_count != '0' %}
+        "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingCount": {{ product.metafields.reevio.reviews_count }},
+          "ratingValue": {{ product.metafields.reevio.reviews_average }}
+        }
+      {% endif %}
+    {% when 'social_shop_wave' %}
+      {% if product.metafields.ssw.count_rate and product.metafields.ssw.count_rate != '0' %}
+        "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingCount": {{ product.metafields.ssw.count_rate }},
+          "ratingValue": {{ product.metafields.ssw.avg_rate }}
+        }
+      {% endif %}
+    {% when 'stampedio' %}
+      {% if product.metafields.stamped.reviews_count and product.metafields.stamped.reviews_count != '0' %}
+        "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingCount": {{ product.metafields.stamped.reviews_count }},
+          "ratingValue": {{ product.metafields.stamped.reviews_average }}
+        }
+      {% endif %}
+  {% endcase %}
+{% else %}
+  {% if product.metafields.loox.num_reviews and product.metafields.loox.num_reviews != '0' %}
     "aggregateRating": {
       "@type": "AggregateRating",
-      "ratingValue": "5",
-      "reviewCount": "1"
-    },
-    "review": {
-      "@type": "Review",
-      "author": {
-        "@type": "Person",
-        "name": "Neil Thomas"
+      "ratingCount": {{ product.metafields.loox.num_reviews }},
+      "ratingValue": {{ product.metafields.loox.avg_rating }}
+    }
+  {% elsif product.metafields.kudobuzz.reviews_count and product.metafields.kudobuzz.reviews_count != '0' %}
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingCount": {{ product.metafields.kudobuzz.reviews_count }},
+      "ratingValue": {{ product.metafields.kudobuzz.review_rating }}
+    }
+  {% elsif product.metafields.orankl.review_count and product.metafields.orankl.review_count != '0' %}
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingCount": {{ product.metafields.orankl.review_count }},
+      "ratingValue": {{ product.metafields.orankl.rating }}
+    }
+  {% elsif product.metafields.okendo.RatingAndReviewAverageValue and product.metafields.okendo.RatingAndReviewAverageValue != '0' %}
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingCount": {{ product.metafields.okendo.RatingAndReviewCount }},
+      "ratingValue": {{ product.metafields.okendo.RatingAndReviewAverageValue }}
+    }
+  {% elsif product.metafields.vnreviews.reviewCount and product.metafields.vnreviews.reviewCount != '0' %}
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingCount": {{ product.metafields.vnreviews.reviewCount }},
+      "ratingValue": {{ product.metafields.vnreviews.ratingValue }}
+    }
+  {% endif %}
+{% endif %}
+{% endcapture %}
+{% assign aggregate_json = aggregate_json | strip %}
+
+{% capture additional_properties_json %}
+{% if schema_properties != blank %}
+  "additionalProperty": {{ schema_properties | replace: '"[', '[' | replace: ']"', ']' | replace: '\"', '"' }}
+{% endif %}
+{% endcapture %}
+{% assign additional_properties_json = additional_properties_json | strip %}
+
+{% capture return_policy_json %}
+{% if return_policy_flag == true %}
+  "hasMerchantReturnPolicy": {
+    "@type": "MerchantReturnPolicy",
+    "applicableCountry": {{ store_country | json }},
+    "returnPolicyCategory": "https://schema.org/MerchantReturnFiniteReturnWindow",
+    "returnMethod": "https://schema.org/ReturnByMail",
+    "returnFees": "https://schema.org/FreeReturn",
+    "merchantReturnDays": {{ return_window_days | default: 30 }}
+  }
+{% elsif return_policy_flag == false %}
+  "hasMerchantReturnPolicy": {
+    "@type": "MerchantReturnPolicy",
+    "applicableCountry": {{ store_country | json }},
+    "returnPolicyCategory": "https://schema.org/MerchantReturnNotPermitted"
+  }
+{% endif %}
+{% endcapture %}
+{% assign return_policy_json = return_policy_json | strip %}
+
+{% assign warranty_term = product.metafields.custom.product_warranty_term | default: blank %}
+{% capture warranty_json %}
+{% if warranty_text != blank %}
+  "hasWarrantyPromise": {
+    "@type": "WarrantyPromise",
+    {% if warranty_term != blank %}
+      "durationOfWarranty": {
+        "@type": "QuantitativeValue",
+        "value": {{ warranty_term }},
+        "unitCode": "MON"
       },
-      "reviewRating": {
-        "@type": "Rating",
-        "ratingValue": "5"
-      },
-      "reviewBody": "Many thanks for the technical advice from John who took considerable time to research my machine and resolve my problem. There was no 'sell' just generous sharing of expertise. I 100% recommend Excision."
+    {% endif %}
+    "warrantyScope": {{ warranty_text | json }}
+  }
+{% endif %}
+{% endcapture %}
+{% assign warranty_json = warranty_json | strip %}
+
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": {{ product.title | json }},
+    {% if secondary_title != blank %}
+      "alternateName": {{ secondary_title | json }},
+    {% endif %}
+    "description": {{ description_text | json }},
+    "url": {{ product_url | json }},
+    "image": {{ images_json }},
+    "brand": {
+      "@type": "Brand",
+      "name": {{ brand_name | json }}
     },
-    "additionalProperty": {{ product.metafields.custom.schema | replace: '"[', '[' | replace: ']"', ']' | replace: '\"', '"' }}
+    "sku": {{ product.selected_or_first_available_variant.sku | json }},
+    "mpn": {{ product.selected_or_first_available_variant.barcode | json }},
+    {% if product.type != blank %}
+      "category": {{ product.type | json }},
+    {% endif %}
+    "offers": {{ offers_json }}
+    {% if aggregate_json != '' %}
+      ,{{ aggregate_json }}
+    {% endif %}
+    {% if additional_properties_json != '' %}
+      ,{{ additional_properties_json }}
+    {% endif %}
+    {% if return_policy_json != '' %}
+      ,{{ return_policy_json }}
+    {% endif %}
+    {% if warranty_json != '' %}
+      ,{{ warranty_json }}
+    {% endif %}
   }
 </script>
 
