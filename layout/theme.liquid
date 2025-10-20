@@ -14,34 +14,11 @@
   <meta name="robots" content="noindex, follow">
 {% endif %}
 
-    <link rel="preconnect" href="https://cdn.shopify.com" crossorigin>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="{{ 'select2.min.css' | asset_url }}" rel="stylesheet">
+    <script src="{{ 'select2.min.js' | asset_url }}"></script>
 
-    <link
-      rel="preload"
-      href="{{ 'Humanist777BT-BlackB.woff2' | asset_url }}"
-      as="font"
-      type="font/woff2"
-      crossorigin
-    >
-    <link
-      rel="preload"
-      href="{{ 'Humanist777BT-BlackB.woff' | asset_url }}"
-      as="font"
-      type="font/woff"
-      crossorigin
-    >
-
-    <link
-      rel="preload"
-      href="{{ 'select2.min.css' | asset_url }}"
-      as="style"
-      onload="this.onload=null;this.rel='stylesheet'"
-    >
-    <noscript>
-      <link href="{{ 'select2.min.css' | asset_url }}" rel="stylesheet">
-    </noscript>
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.4.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.4.2/dist/js/tom-select.complete.min.js"></script>
 
     {%- render 'ecom_header' -%}
     <meta name="google-site-verification" content="EIKmIQXH2zL9-cCyS0Kfv4x85vRR6EMM0q9lD18Fz6E" />
@@ -83,50 +60,27 @@
     </title>
     {%- if page_description -%}
       <meta name="description" content="{{ page_description | escape }}">
-    {%- elsif template contains 'product' and product -%}
-      <meta name="description" content="{{ product.description | strip_html | truncate: 160 | escape }}">
     {%- else -%}
-      <meta name="description" content="{{ shop.meta_description | default: shop.description | escape }}">
+      <meta name="description" content="{{ page_description | escape }}">
     {%- endif -%}
     <!-- Product meta ================================================== -->
     {%- include 'social-meta-tags' -%}
     <!-- Helpers ================================================== -->
-    <link rel="canonical" href="{{ canonical_url }}">
+    <link rel="canonical" href="{{ canonical_url }}" async="async">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <meta name="theme-color" content="#0069a7">
     <!-- CSS ================================================== -->
-    {{ 'theme.css' | asset_url | stylesheet_tag }}
+    {%- comment -%} New CSS layers {%- endcomment -%}
+{{ 'tokens.css' | asset_url | stylesheet_tag }}
+{{ 'typography.css' | asset_url | stylesheet_tag }}
+{{ 'components.css' | asset_url | stylesheet_tag }}
     {{ 'custom.css' | asset_url | stylesheet_tag }}
+    {% comment %} {{ 'theme.scss.css' | asset_url | stylesheet_tag }}  {% endcomment %}
     <link rel="stylesheet" href="{{ 'theme.scss.css' | asset_url }}" media="print" as="style" onload="this.media='all'">
     {%- if template contains 'product' -%}
-      <link
-        rel="preload"
-        href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.5.9/slick.min.css"
-        as="style"
-        onload="this.onload=null;this.rel='stylesheet'"
-      >
-      <noscript>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.5.9/slick.min.css">
-      </noscript>
-      <link
-        rel="preload"
-        href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.5.9/slick-theme.min.css"
-        as="style"
-        onload="this.onload=null;this.rel='stylesheet'"
-      >
-      <noscript>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.5.9/slick-theme.min.css">
-      </noscript>
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.5.9/slick.min.css">
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.5.9/slick-theme.min.css">
     {%- endif -%}
-    <link
-      rel="preload"
-      href="{{ 'plyr.css' | asset_url }}"
-      as="style"
-      onload="this.onload=null;this.rel='stylesheet'"
-    >
-    <noscript>
-      {{ 'plyr.css' | asset_url | stylesheet_tag }}
-    </noscript>
+    {{ 'plyr.css' | asset_url | stylesheet_tag }}
     <!-- Header hook for plugins ================================================== -->
     {{ content_for_header }}
     {%- if request.page_type contains 'customers/' -%}
@@ -135,14 +89,21 @@
       {{ 'account.css' | asset_url | stylesheet_tag }}
       <script src="{{ 'account.js' | asset_url }}" defer></script>
     {%- endif -%}
-    <script src="{{ 'jquery-2.2.3.min.js' | asset_url }}" defer></script>
-    <script src="{{ 'select2.min.js' | asset_url }}" defer></script>
+    <script src="{{ 'jquery-2.2.3.min.js' | asset_url }}"></script>
     <script src="{{ 'lazysizes.min.js' | asset_url }}" async="async"></script>
     <script src="{{ 'vendor.js' | asset_url }}" defer></script>
     <script src="{{ 'theme.js' | asset_url }}" defer></script>
     <!-- Excision: Minimum Order logic -->
     <script src="{{ 'ex-min-order.js' | asset_url }}" defer></script>
     {% comment %}<link rel="stylesheet" href="{{ 'bootstrap.min.css' | asset_url }}" media="print" as="style" onload="this.media='all'"> {% endcomment %}
+    <link
+      rel="stylesheet"
+      href="{{ 'bootstrap.min.css' | asset_url }}"
+      media="print"
+      as="style"
+      onload="this.media='all'"
+      async="async"
+    >
     {% comment %}<link rel="stylesheet" defer="defer" type="text/css" href="" media="all" /> {% endcomment %}
     <link
       rel="preload"
@@ -151,14 +112,9 @@
       onload="this.onload=null;this.rel='stylesheet'"
     >
 
-    <script>
-      document.addEventListener('DOMContentLoaded', function () {
-        document.querySelectorAll('.advanced-filter[data-group="Price"]').forEach(function (filter) {
-          var parent = filter.closest('.grid-item');
-          if (parent) {
-            parent.hidden = true;
-          }
-        });
+    <script type="text/javascript">
+      jQuery(document).ready(function(){
+      	$('.advanced-filter[data-group=Price]').closest(".grid-item").hide();
       });
     </script>
     <!-- Google Tag Manager -->
@@ -496,6 +452,7 @@
     <ul hidden>
       <li id="a11y-refresh-page-message">{{ 'general.accessibility.refresh_page' | t }}</li>
     </ul>
+    {{ 'bootstrap.min.js' | asset_url | script_tag }}
     <script
       src="https://cdn.shopify.com/s/files/1/0439/5597/8399/files/plyr.js"
       crossorigin="anonymous"
@@ -527,31 +484,17 @@
       <!-- WPD End -->
     {%- endcomment -%}
     <script>
-      document.addEventListener('DOMContentLoaded', function () {
-        document.querySelectorAll('a.dust-and-fume-control__nav-link').forEach(function (link) {
-          link.setAttribute('target', '_blank');
-          link.setAttribute('rel', 'noopener');
-        });
+       $(document).ready(function(){
+         $('a.dust-and-fume-control__nav-link').attr('target', '_blank');
+         //Product page specifications tab
+         $("<h5>Specifications</h5>").insertBefore(".pdp.product- 'variant-matrix.description table:first-of-type");
+       });
 
-        var specTable = document.querySelector('.pdp.product-variant-matrix .description table');
-        if (specTable && !specTable.previousElementSibling?.classList.contains('pdp-spec-title')) {
-          var heading = document.createElement('h5');
-          heading.className = 'pdp-spec-title';
-          heading.textContent = 'Specifications';
-          specTable.parentNode.insertBefore(heading, specTable);
-        }
-
-        var mobileNavBar = document.getElementById('mobileNavBar');
-        if (mobileNavBar) {
-          var handleScroll = function () {
-            if (window.scrollY > 50) {
-              mobileNavBar.classList.add('NavBarsticky');
-            } else {
-              mobileNavBar.classList.remove('NavBarsticky');
-            }
-          };
-          handleScroll();
-          window.addEventListener('scroll', handleScroll, { passive: true });
+      $(window).scroll(function() {
+      if ($(this).scrollTop() > 50) {
+          $('#mobileNavBar').addClass("NavBarsticky");
+        } else {
+          $('#mobileNavBar').removeClass("NavBarsticky");
         }
       });
     </script>
@@ -568,17 +511,6 @@
 
   let progress = 0;
   let animationFrame;
-  if (!preloader) {
-    return;
-  }
-
-  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  if (reduceMotion) {
-    updateBar(100);
-    preloader.style.opacity = '0';
-    preloader.style.display = 'none';
-  }
 
   function updateBar(value) {
     const clamped = Math.min(value, 100);
@@ -595,9 +527,7 @@
   }
 
   // Start simulating progress
-  if (!reduceMotion) {
-    requestAnimationFrame(animateProgress);
-  }
+  requestAnimationFrame(animateProgress);
 
   // Use PerformanceObserver to detect First Contentful Paint
   const po = new PerformanceObserver((entryList, observer) => {
@@ -606,15 +536,10 @@
         // Finish progress bar
         cancelAnimationFrame(animationFrame);
         updateBar(100);
-        const finish = () => {
+        setTimeout(() => {
           preloader.style.opacity = '0';
           setTimeout(() => preloader.style.display = 'none', 300);
-        };
-        if (reduceMotion) {
-          finish();
-        } else {
-          setTimeout(finish, 200);
-        }
+        }, 200); // small delay to show 100%
         observer.disconnect();
       }
     }
@@ -626,15 +551,10 @@
     // Fallback if unsupported
     window.addEventListener('DOMContentLoaded', () => {
       updateBar(100);
-      const finish = () => {
+      setTimeout(() => {
         preloader.style.opacity = '0';
         setTimeout(() => preloader.style.display = 'none', 300);
-      };
-      if (reduceMotion) {
-        finish();
-      } else {
-        setTimeout(finish, 200);
-      }
+      }, 200);
     });
   }
 </script>
@@ -651,9 +571,13 @@
   </div>
 </div>
 
-<noscript>
-  <style>.ex-modal[hidden]{display:none}</style>
-</noscript>
+<style>
+  .ex-modal[hidden]{display:none}
+  .ex-modal{position:fixed;inset:0;z-index:9999}
+  .ex-modal__backdrop{position:absolute;inset:0;background:rgba(0,0,0,.45)}
+  .ex-modal__dialog{position:relative;margin:6vh auto;max-width:720px;background:#fff;border-radius:12px;padding:24px}
+  .ex-modal__close{position:absolute;top:8px;right:8px;background:none;border:0;font-size:24px;line-height:1;cursor:pointer}
+</style>
 
 <script>
   // Lightweight global to open the HS form modal and inject product context

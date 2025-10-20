@@ -233,16 +233,9 @@
 
             {% assign selectr_handles = 'coolants,soluble-oils,neat-oils,other-metal-working-fluids,tct-bandsaw-blades,other,bread-cutting,vegetable-harvesting,meat,timber-plastic,metals,high-speed-steel,high-speed-steel-cobalt,other-coldsaw-blades,blank-hss-blades,blank-hss-cobalt-blades,gf-blades,holesaw-sets,safety-hole-cutters,accessories-holesaws,tct-frp-series-holesaws,tct-short-series-holesaws,fine-toothed-holesaws,coarse-toothed-holesaws,tct-dry-cut-blades,tct-alu-blades,cermet-tipped-blades,other-tct-circular-blades,rqx-rail-core-drills,rail-core-drills' | split: ',' %}
             {% if selectr_handles contains collection.handle %}
-              <script>
-                document.addEventListener('DOMContentLoaded', function () {
-                  if (window.Selectr) {
-                    document.querySelectorAll('select.dtm').forEach(function (el) {
-                      new Selectr(el, { searchable: false });
-                    });
-                  }
-                });
-              </script>
+              {{ 'bootstrap-v3.1.1.min.css' | asset_url | stylesheet_tag }}
               {{ 'selectr.js' | asset_url | script_tag }}
+              <script>$(document).ready(()=>$('select.dtm').selectr());</script>
             {% endif %}
 
             <div class="grid grid--uniform">
