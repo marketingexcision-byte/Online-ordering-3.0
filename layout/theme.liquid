@@ -1,18 +1,39 @@
 <!doctype html>
 <html class="no-touch no-js" lang="en" dir="ltr">
   <head>
-    
-{% if template.name == 'collection' and request.path contains '/collections/' and request.path contains '_' %}
-  <meta name="robots" content="noindex, follow">
-{% endif %}
+    {% liquid
+      assign robots_directive = ''
+      assign googlebot_directive = ''
+      assign request_path = request.path | default: '' | downcase
+      assign request_query = request.query_string | default: '' | downcase
+      assign has_collection_filters = false
 
-    {% if request.path contains 'compare' %}
-  <meta name="robots" content="noindex, follow">
-{% endif %}
+      if template.name == 'collection'
+        if current_tags != blank
+          assign has_collection_filters = true
+        elsif request_query contains 'filter.'
+          assign has_collection_filters = true
+        elsif request_query contains 'pf_'
+          assign has_collection_filters = true
+        elsif request_query contains 'constraint='
+          assign has_collection_filters = true
+        elsif request_path contains '+'
+          assign has_collection_filters = true
+        endif
+      endif
 
-        {% if request.path contains 'search' %}
-  <meta name="robots" content="noindex, follow">
-{% endif %}
+      if has_collection_filters
+        assign robots_directive = 'noindex, follow'
+      endif
+
+      if request_path contains 'compare'
+        assign robots_directive = 'noindex, follow'
+      endif
+
+      if request_path contains 'search'
+        assign robots_directive = 'noindex, follow'
+      endif
+    %}
 
     <link href="{{ 'select2.min.css' | asset_url }}" rel="stylesheet">
     <script src="{{ 'select2.min.js' | asset_url }}"></script>
@@ -27,16 +48,23 @@
     {% endif %}
 
     {% if template contains 'product' and product %}
-  {% assign is_service = product.tags contains 'Custom Length Service' or product.tags contains 'Service Product' or product.title contains ' · svc' %}
-  {% if is_service %}
-    <meta name="robots" content="noindex, nofollow">
-    <meta name="googlebot" content="noindex, nofollow">
-    {%- comment -%}
-      Optional: point canonical back to a safer landing (e.g., parent category)
-    {%- endcomment -%}
-    <link rel="canonical" href="{{ routes.collections_url }}/all">
-  {% endif %}
-{% endif %}
+      {% assign is_service = product.tags contains 'Custom Length Service' or product.tags contains 'Service Product' or product.title contains ' · svc' %}
+      {% if is_service %}
+        {% assign robots_directive = 'noindex, nofollow' %}
+        {% assign googlebot_directive = 'noindex, nofollow' %}
+        {%- comment -%}
+          Optional: point canonical back to a safer landing (e.g., parent category)
+        {%- endcomment -%}
+        <link rel="canonical" href="{{ routes.collections_url }}/all">
+      {% endif %}
+    {% endif %}
+
+    {% if robots_directive != '' %}
+      <meta name="robots" content="{{ robots_directive }}">
+    {% endif %}
+    {% if googlebot_directive != '' %}
+      <meta name="googlebot" content="{{ googlebot_directive }}">
+    {% endif %}
 
 
     <script>
