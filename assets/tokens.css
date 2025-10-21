@@ -14,6 +14,10 @@
 
     --color-tertiary-marine: #0a4875;
     --color-tertiary-gold: #f6b419;
+    --color-surface: #ffffff;
+
+    /* Layout */
+    --container-max-width: 1200px;
 
     /* Typography families (update names to match your actual @font-face) */
     --font-base: "Humanist 777BT", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
