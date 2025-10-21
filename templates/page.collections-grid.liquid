@@ -48,6 +48,9 @@
             {% if collection == blank %}
               {% continue %}
             {% endif %}
+      {% if selected_collections != blank and selected_collections.size > 0 %}
+        <div class="collection-grid" role="list">
+          {% for collection in selected_collections %}
             {% liquid
               assign short_description = collection.metafields.custom.short_description
               assign collection_image = collection.image
@@ -86,6 +89,7 @@
         {% else %}
           <p class="collection-grid__empty text-p1" role="status">No collections have been assigned to this page yet.</p>
         {% endif %}
+        </div>
       {% else %}
         <p class="collection-grid__empty text-p1" role="status">No collections have been assigned to this page yet.</p>
       {% endif %}
