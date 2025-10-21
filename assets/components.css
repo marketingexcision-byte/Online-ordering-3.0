@@ -134,12 +134,11 @@
   }
 
   .collection-card:hover {
-    box-shadow: var(--shadow-md);
-    transform: translateY(-2px);
+    
   }
 
   .collection-card__media {
-    aspect-ratio: 4 / 3;
+    aspect-ratio: 1 / 1;
     border-radius: var(--radius-md);
     overflow: hidden;
     background: var(--color-secondary-grey-light);
