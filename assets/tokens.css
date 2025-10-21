@@ -14,6 +14,10 @@
 
     --color-tertiary-marine: #0a4875;
     --color-tertiary-gold: #f6b419;
+    --color-surface: #ffffff;
+
+    /* Layout */
+    --container-max-width: 1200px;
 
     /* Typography families (update names to match your actual @font-face) */
     --font-base: "Humanist 777BT", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
@@ -74,9 +78,9 @@
   .u-text-xl { font-size: 1.25em; }
 
   /* Font-family overrides */
-  .u-font-base  { font-family: var(--font-base) !important; }
-  .u-font-bold  { font-family: var(--font-bold) !important; }
-  .u-font-black { font-family: var(--font-black) !important; }
+  .u-font-base  { font-family: var(--font-base); }
+  .u-font-bold  { font-family: var(--font-bold); }
+  .u-font-black { font-family: var(--font-black); }
 
   /* Weight helpers (if your font files have these) */
   .u-fw-400 { font-weight: 400; }

@@ -1,0 +1,66 @@
+{% layout 'theme' %}
+
+{% liquid
+  assign selected_collections = blank
+  if page and page.metafields.custom.collection_grid_collections and page.metafields.custom.collection_grid_collections.value != blank
+    assign selected_collections = page.metafields.custom.collection_grid_collections.value
+  endif
+
+  assign page_heading = page.title
+  assign show_page_content = page and page.content != blank
+  assign button_label = 'Shop collection'
+%}
+
+<main id="main-collection-grid" class="collections-grid-page" role="main">
+  <section class="section section--collections-grid" aria-labelledby="collection-grid-heading">
+    <div class="container">
+      {% if page_heading != blank or show_page_content %}
+        <header class="section__header">
+          {% if page_heading != blank %}
+            <h1 id="collection-grid-heading" class="section__title text-h2">{{ page_heading | escape }}</h1>
+          {% endif %}
+          {% if show_page_content %}
+            <div class="section__content rte">{{ page.content }}</div>
+          {% endif %}
+        </header>
+      {% endif %}
+
+      {% if selected_collections != blank and selected_collections.size > 0 %}
+        <div class="collection-grid" role="list">
+          {% for collection in selected_collections %}
+            {% liquid
+              assign short_description = collection.metafields.custom.short_description
+              assign collection_image = collection.image
+              assign image_alt = collection.title
+              if collection_image and collection_image.alt != blank
+                assign image_alt = collection_image.alt
+              endif
+            %}
+            <article class="collection-card" role="listitem">
+              <div class="collection-card__media">
+                {% if collection_image %}
+                  {{ collection_image | image_url: width: 960 | image_tag: class: 'collection-card__image', loading: 'lazy', widths: '320, 480, 640, 800, 960', sizes: '(min-width: 1200px) 320px, (min-width: 768px) 45vw, 92vw', alt: image_alt, decoding: 'async' }}
+                {% else %}
+                  <div class="collection-card__placeholder text-p1" role="img" aria-label="{{ collection.title | escape }} image placeholder">Image coming soon</div>
+                {% endif %}
+              </div>
+              <div class="collection-card__body">
+                <h2 class="collection-card__title text-h4">
+                  <a href="{{ collection.url }}" class="collection-card__link">{{ collection.title }}</a>
+                </h2>
+                {% if short_description != blank %}
+                  <p class="collection-card__description text-p1">{{ short_description | strip_html }}</p>
+                {% endif %}
+                <div class="collection-card__actions">
+                  <a class="btn btn--primary" href="{{ collection.url }}">{{ button_label | escape }}</a>
+                </div>
+              </div>
+            </article>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="collection-grid__empty text-p1" role="status">No collections have been assigned to this page yet.</p>
+      {% endif %}
+    </div>
+  </section>
+</main>
