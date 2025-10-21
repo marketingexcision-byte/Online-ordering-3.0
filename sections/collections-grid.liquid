@@ -1,8 +1,9 @@
 {% liquid
-  assign selected_collections = blank
-  if page and page.metafields.custom.collection_grid_collections and page.metafields.custom.collection_grid_collections.value != blank
-    assign selected_collections = page.metafields.custom.collection_grid_collections.value
+      assign selected_collections = blank
+  if page and page.metafields.custom.collection_grid_collections
+    assign selected_collections = page.metafields.custom.collection_grid_collections.references
   endif
+
 
   assign heading = section.settings.heading | default: page.title
   assign intro = section.settings.intro
