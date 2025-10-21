@@ -78,9 +78,9 @@
   .u-text-xl { font-size: 1.25em; }
 
   /* Font-family overrides */
-  .u-font-base  { font-family: var(--font-base) !important; }
-  .u-font-bold  { font-family: var(--font-bold) !important; }
-  .u-font-black { font-family: var(--font-black) !important; }
+  .u-font-base  { font-family: var(--font-base); }
+  .u-font-bold  { font-family: var(--font-bold); }
+  .u-font-black { font-family: var(--font-black); }
 
   /* Weight helpers (if your font files have these) */
   .u-fw-400 { font-weight: 400; }

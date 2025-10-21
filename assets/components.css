@@ -14,22 +14,26 @@
     transition: background .2s ease, border-color .2s ease, color .2s ease;
   }
 
-  .btn-primary {
+  .btn-primary,
+  .btn--primary {
     background: var(--color-primary-blue);
     color: #fff;
     border-color: var(--color-primary-blue);
   }
-  .btn-primary:hover {
+  .btn-primary:hover,
+  .btn--primary:hover {
     background: #fff;
     color: var(--color-primary-blue);
   }
 
-  .btn-accent {
+  .btn-accent,
+  .btn--accent {
     background: var(--color-primary-orange);
     color: #fff;
     border-color: var(--color-primary-orange);
   }
-  .btn-accent:hover {
+  .btn-accent:hover,
+  .btn--accent:hover {
     background: #fff;
     color: var(--color-primary-orange);
   }
