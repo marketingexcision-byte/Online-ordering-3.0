@@ -53,7 +53,7 @@
   /* ----- COLLECTION GRID LAYOUT ----- */
   .section--collections-grid .collection-grid{
     display:grid;
-    gap:32px;
+    gap:40px;
     grid-template-columns: repeat(3, 1fr);
     max-width: 1300px; /* 3 x 412px + 2 x 32px gap (approx) */
     margin-inline:auto;
@@ -111,7 +111,7 @@
 
 <div class="wrapper">
 <section class="section section--collections-grid" aria-labelledby="collection-grid-heading">
-  <div class="layout-constrained">
+  <div>
     {% if heading != blank or intro != blank or show_page_content %}
       <header class="section__header">
         {% if heading != blank %}
