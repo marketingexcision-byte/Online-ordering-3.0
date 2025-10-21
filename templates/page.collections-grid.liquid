@@ -5,7 +5,7 @@
   assign button_label = section.settings.button_label | default: 'Shop collection'
 
   # ---- Read the Page metafield (List -> Collection) ----
-  assign mf = nil
+  assign mf = null
   if page and page.metafields and page.metafields.custom and page.metafields.custom.collection_grid_collections
     assign mf = page.metafields.custom.collection_grid_collections
   endif
@@ -111,56 +111,37 @@
 </style>
 
 <div class="wrapper">
-<section class="section section--collections-grid" aria-labelledby="collection-grid-heading">
-  <div>
-    {% if heading != blank or intro != blank or show_page_content %}
-      <header class="section__header">
-        {% if heading != blank %}
-          <h1 id="collection-grid-heading" class="section__title text-h2">{{ heading | escape }}</h1>
-        {% endif %}
-        {% if intro != blank %}
-          <div class="section__intro text-p1">{{ intro }}</div>
-        {% endif %}
-        {% if show_page_content %}
-          <div class="section__content rte">{{ page.content }}</div>
-        {% endif %}
-      </header>
-    {% endif %}
+  <section class="section section--collections-grid" aria-labelledby="collection-grid-heading">
+    <div>
+      {%- if collection.metafields.custom.parent_collection.value != blank -%}
+        <div class="w-btn-wrapper lazyload-element">
+          <a
+            class="w-btn icon_atleft"
+            href="{{ page.metafields.custom.parent_collection }}"
+            data-url="{{ page.metafields.custom.parent_collection }}"
+          >
+            <span class="w-btn-label font-bold"><em>←</em> Back</span>
+          </a>
+        </div>
+      {%- endif -%}
+      {% if heading != blank or intro != blank or show_page_content %}
+        <header class="section__header">
+          {% if heading != blank %}
+            <h1 id="collection-grid-heading" class="section__title text-h2">{{ heading | escape }}</h1>
+          {% endif %}
+          {% if intro != blank %}
+            <div class="section__intro text-p1">{{ intro }}</div>
+          {% endif %}
+          {% if show_page_content %}
+            <div class="section__content rte">{{ page.content }}</div>
+          {% endif %}
+        </header>
+      {% endif %}
 
-    {% if have_items or have_handles %}
-      <div class="collection-grid" role="list">
-
-        {% if have_items %}
-          {% for collection in items %}
-            {% liquid
-              assign summary = collection.metafields.custom.short_description | default: collection.description
-              assign collection_image = collection.image
-              assign image_alt = collection_image and collection_image.alt != blank ? collection_image.alt : collection.title
-            %}
-            <article class="collection-card" role="listitem">
-              <div class="collection-card__media">
-                {% if collection_image %}
-                  {{ collection_image | image_url: width: 960 | image_tag: class: 'collection-card__image', loading: 'lazy', widths: '320, 480, 640, 800, 960', sizes: '(min-width: 1080px) 320px, (min-width: 768px) 45vw, 90vw', alt: image_alt, decoding: 'async' }}
-                {% else %}
-                  <div class="collection-card__image" role="img" aria-label="{{ collection.title | escape }} image placeholder" style="background:#f2f4f7;"></div>
-                {% endif %}
-              </div>
-              <div class="collection-card__body">
-                <h3 class="collection-card__title"><a href="{{ collection.url }}" class="collection-card__link"><strong>{{ collection.title }}</strong></a></h3>
-                {% if summary != blank %}
-                  <p class="collection-card__description text-p1">{{ summary | strip_html }}</p>
-                {% endif %}
-                <div class="collection-card__actions">
-                  <a class="collection-card__button" href="{{ collection.url }}">{{ button_label | escape }}</a>
-                </div>
-              </div>
-            </article>
-          {% endfor %}
-
-        {% else %}
-          {% for handle in handle_list %}
-            {% assign collection = collections[handle] %}
-            {% if collection %}
+      {% if have_items or have_handles %}
+        <div class="collection-grid" role="list">
+          {% if have_items %}
+            {% for collection in items %}
               {% liquid
                 assign summary = collection.metafields.custom.short_description | default: collection.description
                 assign collection_image = collection.image
@@ -169,13 +150,32 @@
               <article class="collection-card" role="listitem">
                 <div class="collection-card__media">
                   {% if collection_image %}
-                    {{ collection_image | image_url: width: 960 | image_tag: class: 'collection-card__image', loading: 'lazy', widths: '320, 480, 640, 800, 960', sizes: '(min-width: 1080px) 320px, (min-width: 768px) 45vw, 90vw', alt: image_alt, decoding: 'async' }}
+                    {{
+                      collection_image
+                      | image_url: width: 960
+                      | image_tag:
+                        class: 'collection-card__image',
+                        loading: 'lazy',
+                        widths: '320, 480, 640, 800, 960',
+                        sizes: '(min-width: 1080px) 320px, (min-width: 768px) 45vw, 90vw',
+                        alt: image_alt,
+                        decoding: 'async'
+                    }}
                   {% else %}
-                    <div class="collection-card__image" role="img" aria-label="{{ collection.title | escape }} image placeholder" style="background:#f2f4f7;"></div>
+                    <div
+                      class="collection-card__image"
+                      role="img"
+                      aria-label="{{ collection.title | escape }} image placeholder"
+                      style="background:#f2f4f7;"
+                    ></div>
                   {% endif %}
                 </div>
                 <div class="collection-card__body">
-                  <h3 class="collection-card__title"><a href="{{ collection.url }}" class="collection-card__link"><strong>{{ collection.title }}</strong></a></h3>
+                  <h3 class="collection-card__title">
+                    <a href="{{ collection.url }}" class="collection-card__link"
+                      ><strong>{{ collection.title }}</strong></a
+                    >
+                  </h3>
                   {% if summary != blank %}
                     <p class="collection-card__description text-p1">{{ summary | strip_html }}</p>
                   {% endif %}
@@ -184,14 +184,61 @@
                   </div>
                 </div>
               </article>
-            {% endif %}
-          {% endfor %}
-        {% endif %}
+            {% endfor %}
 
-      </div>
-    {% else %}
-      <div class="collection-grid__empty text-p1">No collections have been assigned to this page yet.</div>
-    {% endif %}
-  </div>
-</section>
+          {% else %}
+            {% for handle in handle_list %}
+              {% assign collection = collections[handle] %}
+              {% if collection %}
+                {% liquid
+                  assign summary = collection.metafields.custom.short_description | default: collection.description
+                  assign collection_image = collection.image
+                  assign image_alt = collection_image and collection_image.alt != blank ? collection_image.alt : collection.title
+                %}
+                <article class="collection-card" role="listitem">
+                  <div class="collection-card__media">
+                    {% if collection_image %}
+                      {{
+                        collection_image
+                        | image_url: width: 960
+                        | image_tag:
+                          class: 'collection-card__image',
+                          loading: 'lazy',
+                          widths: '320, 480, 640, 800, 960',
+                          sizes: '(min-width: 1080px) 320px, (min-width: 768px) 45vw, 90vw',
+                          alt: image_alt,
+                          decoding: 'async'
+                      }}
+                    {% else %}
+                      <div
+                        class="collection-card__image"
+                        role="img"
+                        aria-label="{{ collection.title | escape }} image placeholder"
+                        style="background:#f2f4f7;"
+                      ></div>
+                    {% endif %}
+                  </div>
+                  <div class="collection-card__body">
+                    <h3 class="collection-card__title">
+                      <a href="{{ collection.url }}" class="collection-card__link"
+                        ><strong>{{ collection.title }}</strong></a
+                      >
+                    </h3>
+                    {% if summary != blank %}
+                      <p class="collection-card__description text-p1">{{ summary | strip_html }}</p>
+                    {% endif %}
+                    <div class="collection-card__actions">
+                      <a class="collection-card__button" href="{{ collection.url }}">{{ button_label | escape }}</a>
+                    </div>
+                  </div>
+                </article>
+              {% endif %}
+            {% endfor %}
+          {% endif %}
+        </div>
+      {% else %}
+        <div class="collection-grid__empty text-p1">No collections have been assigned to this page yet.</div>
+      {% endif %}
+    </div>
+  </section>
 </div>
