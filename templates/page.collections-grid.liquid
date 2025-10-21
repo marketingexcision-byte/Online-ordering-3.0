@@ -1,11 +1,27 @@
 {% layout 'theme' %}
 
 {% liquid
+  assign collection_grid_metafield = blank
   assign selected_collections = blank
-  if page and page.metafields.custom.collection_grid_collections and page.metafields.custom.collection_grid_collections.value != blank
-    assign selected_collections = page.metafields.custom.collection_grid_collections.value
+
+  if page and page.metafields and page.metafields.custom
+    assign collection_grid_metafield = page.metafields.custom.collection_grid_collections
   endif
 
+  if collection_grid_metafield != blank
+    assign selected_collections = collection_grid_metafield.value | default: collection_grid_metafield.references
+  endif
+
+  assign selected_collections_count = selected_collections | size
+  if selected_collections != blank and selected_collections_count == 0
+    assign selected_collections_count_fallback = selected_collections.size
+    if selected_collections_count_fallback == blank and selected_collections.count != blank
+      assign selected_collections_count_fallback = selected_collections.count
+    endif
+    if selected_collections_count_fallback != blank
+      assign selected_collections_count = selected_collections_count_fallback
+    endif
+  endif
   assign page_heading = page.title
   assign show_page_content = page and page.content != blank
   assign button_label = 'Shop collection'
@@ -25,6 +41,13 @@
         </header>
       {% endif %}
 
+      {% if selected_collections_count > 0 %}
+        {% assign has_renderable_collections = false %}
+        {% capture collection_grid_markup %}
+          {% for collection in selected_collections %}
+            {% if collection == blank %}
+              {% continue %}
+            {% endif %}
       {% if selected_collections != blank and selected_collections.size > 0 %}
         <div class="collection-grid" role="list">
           {% for collection in selected_collections %}
@@ -35,6 +58,7 @@
               if collection_image and collection_image.alt != blank
                 assign image_alt = collection_image.alt
               endif
+              assign has_renderable_collections = true
             %}
             <article class="collection-card" role="listitem">
               <div class="collection-card__media">
@@ -57,6 +81,14 @@
               </div>
             </article>
           {% endfor %}
+        {% endcapture %}
+        {% if has_renderable_collections %}
+          <div class="collection-grid" role="list">
+            {{ collection_grid_markup | strip }}
+          </div>
+        {% else %}
+          <p class="collection-grid__empty text-p1" role="status">No collections have been assigned to this page yet.</p>
+        {% endif %}
         </div>
       {% else %}
         <p class="collection-grid__empty text-p1" role="status">No collections have been assigned to this page yet.</p>

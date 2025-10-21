@@ -105,6 +105,7 @@
     color: var(--color-secondary-iron);
   }
 
+  .container,
   .layout-constrained {
     margin-inline: auto;
     max-width: var(--container-max-width);
@@ -112,6 +113,7 @@
   }
 
   @media (max-width: 599px) {
+    .container,
     .layout-constrained {
       padding-inline: var(--space-4);
     }
