@@ -118,9 +118,9 @@
 {%- if page and page.metafields and page.metafields.custom and page.metafields.custom.parent_page != blank -%}
   {%- assign mf_parent = page.metafields.custom.parent_page -%}
   {%- if mf_parent.value and mf_parent.value.url -%}
-    {%- assign parent_url = mf_parent.value.url -%}        {# Reference type → .value.url #}
+    {%- assign parent_url = mf_parent.value.url -%}    
   {%- else -%}
-    {%- assign parent_url = mf_parent | strip -%}          {# URL/text type #}
+    {%- assign parent_url = mf_parent | strip -%}       
   {%- endif -%}
 {%- endif -%}
 
