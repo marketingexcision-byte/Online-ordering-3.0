@@ -134,7 +134,7 @@
   .collection-grid {
     display: grid;
     gap: var(--space-8) var(--space-7);
-    grid-template-columns: repeat(auto-fit, minmax(412px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(412px, 0fr));
     margin-bottom: var(--space-9) !important;
   }
 
