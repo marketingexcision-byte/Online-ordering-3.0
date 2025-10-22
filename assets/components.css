@@ -99,10 +99,6 @@
     margin-bottom: var(--space-7) !important;
   }
 
-  .section--collections-grid .collection-card:hover .section--collections-grid .collection-card__image {
-    scale: 105%;
-  }
-
   .section__title {
     margin: 0;
   }
