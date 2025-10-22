@@ -293,7 +293,7 @@
                   assign collection_image = collection.image
                   assign image_alt = collection_image and collection_image.alt != blank ? collection_image.alt : collection.title
                 %}
-                <article class="collection-card" role="listitem">
+                <div class="collection-card" role="listitem">
                   <a href="{{ collection.url }}" class="collection-card__link">
                     <div class="collection-card__media">
                       {% if collection_image %}
@@ -322,7 +322,7 @@
                       </div>
                     </div>
                   </a>
-                </article>
+                </div>
               {% endif %}
             {% endfor %}
           {% endif %}
