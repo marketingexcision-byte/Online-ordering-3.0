@@ -186,28 +186,41 @@
   <p class="collection-card__description text-p1">{{ summary | strip_html }}</p>
 {% endif %}
 
-{%- comment -%} Work material chips {%- endcomment -%}
-{% assign work_material_array = collection.metafields.custom.work_material
-  | remove: '[' | remove: ']' | remove: '"' | split: ',' %}
-{% if work_material_array
-  and (
-    work_material_array contains 'P' or work_material_array contains 'P No' or
-    work_material_array contains 'M' or work_material_array contains 'M No' or
-    work_material_array contains 'K' or work_material_array contains 'K No' or
-    work_material_array contains 'N' or work_material_array contains 'N No' or
-    work_material_array contains 'S' or work_material_array contains 'S No' or
-    work_material_array contains 'H' or work_material_array contains 'H No'
-  )
-%}
+{%- comment -%} Work material chips (normalized + no parentheses) {%- endcomment -%}
+{%- assign work_material_array = collection.metafields.custom.work_material.value
+  | default: collection.metafields.custom.work_material -%}
+
+{%- if work_material_array == blank -%}
+  {%- comment -%} Fallback for legacy JSON strings {%- endcomment -%}
+  {%- assign work_material_array = collection.metafields.custom.work_material
+    | remove: '[' | remove: ']' | remove: '"' | split: ',' -%}
+{%- endif -%}
+
+{%- assign has_chip = false -%}
+{%- if work_material_array -%}
+  {%- for _m in work_material_array -%}
+    {%- assign m_clean = _m | strip -%}
+    {%- if m_clean == 'P' or m_clean == 'P No'
+       or m_clean == 'M' or m_clean == 'M No'
+       or m_clean == 'K' or m_clean == 'K No'
+       or m_clean == 'N' or m_clean == 'N No'
+       or m_clean == 'S' or m_clean == 'S No'
+       or m_clean == 'H' or m_clean == 'H No' -%}
+      {%- assign has_chip = true -%}{%- break -%}
+    {%- endif -%}
+  {%- endfor -%}
+{%- endif -%}
+
+{%- if has_chip -%}
   <div class="work-mat" aria-label="Work materials">
-    {% for m in work_material_array %}
-      {% assign label = m | split: ' ' | first %}
-      <div class="work-mat__chip" data-m="{{ m | strip }}" title="{{ m | strip }}">
-        {{ label }}
-      </div>
-    {% endfor %}
+    {%- for m in work_material_array -%}
+      {%- assign m_clean = m | strip -%}
+      {%- assign label = m_clean | split: ' ' | first -%}
+      <div class="work-mat__chip" data-m="{{ m_clean }}" title="{{ m_clean }}">{{ label }}</div>
+    {%- endfor -%}
   </div>
-{% endif %}
+{%- endif -%}
+
 
 <div class="collection-card__actions">
 
@@ -251,28 +264,41 @@
   <p class="collection-card__description text-p1">{{ summary | strip_html }}</p>
 {% endif %}
 
-{%- comment -%} Work material chips {%- endcomment -%}
-{% assign work_material_array = collection.metafields.custom.work_material
-  | remove: '[' | remove: ']' | remove: '"' | split: ',' %}
-{% if work_material_array
-  and (
-    work_material_array contains 'P' or work_material_array contains 'P No' or
-    work_material_array contains 'M' or work_material_array contains 'M No' or
-    work_material_array contains 'K' or work_material_array contains 'K No' or
-    work_material_array contains 'N' or work_material_array contains 'N No' or
-    work_material_array contains 'S' or work_material_array contains 'S No' or
-    work_material_array contains 'H' or work_material_array contains 'H No'
-  )
-%}
+{%- comment -%} Work material chips (normalized + no parentheses) {%- endcomment -%}
+{%- assign work_material_array = collection.metafields.custom.work_material.value
+  | default: collection.metafields.custom.work_material -%}
+
+{%- if work_material_array == blank -%}
+  {%- comment -%} Fallback for legacy JSON strings {%- endcomment -%}
+  {%- assign work_material_array = collection.metafields.custom.work_material
+    | remove: '[' | remove: ']' | remove: '"' | split: ',' -%}
+{%- endif -%}
+
+{%- assign has_chip = false -%}
+{%- if work_material_array -%}
+  {%- for _m in work_material_array -%}
+    {%- assign m_clean = _m | strip -%}
+    {%- if m_clean == 'P' or m_clean == 'P No'
+       or m_clean == 'M' or m_clean == 'M No'
+       or m_clean == 'K' or m_clean == 'K No'
+       or m_clean == 'N' or m_clean == 'N No'
+       or m_clean == 'S' or m_clean == 'S No'
+       or m_clean == 'H' or m_clean == 'H No' -%}
+      {%- assign has_chip = true -%}{%- break -%}
+    {%- endif -%}
+  {%- endfor -%}
+{%- endif -%}
+
+{%- if has_chip -%}
   <div class="work-mat" aria-label="Work materials">
-    {% for m in work_material_array %}
-      {% assign label = m | split: ' ' | first %}
-      <div class="work-mat__chip" data-m="{{ m | strip }}" title="{{ m | strip }}">
-        {{ label }}
-      </div>
-    {% endfor %}
+    {%- for m in work_material_array -%}
+      {%- assign m_clean = m | strip -%}
+      {%- assign label = m_clean | split: ' ' | first -%}
+      <div class="work-mat__chip" data-m="{{ m_clean }}" title="{{ m_clean }}">{{ label }}</div>
+    {%- endfor -%}
   </div>
-{% endif %}
+{%- endif -%}
+
 
 <div class="collection-card__actions">
 
@@ -329,28 +355,41 @@
   <p class="collection-card__description text-p1">{{ summary | strip_html }}</p>
 {% endif %}
 
-{%- comment -%} Work material chips {%- endcomment -%}
-{% assign work_material_array = collection.metafields.custom.work_material
-  | remove: '[' | remove: ']' | remove: '"' | split: ',' %}
-{% if work_material_array
-  and (
-    work_material_array contains 'P' or work_material_array contains 'P No' or
-    work_material_array contains 'M' or work_material_array contains 'M No' or
-    work_material_array contains 'K' or work_material_array contains 'K No' or
-    work_material_array contains 'N' or work_material_array contains 'N No' or
-    work_material_array contains 'S' or work_material_array contains 'S No' or
-    work_material_array contains 'H' or work_material_array contains 'H No'
-  )
-%}
+{%- comment -%} Work material chips (normalized + no parentheses) {%- endcomment -%}
+{%- assign work_material_array = collection.metafields.custom.work_material.value
+  | default: collection.metafields.custom.work_material -%}
+
+{%- if work_material_array == blank -%}
+  {%- comment -%} Fallback for legacy JSON strings {%- endcomment -%}
+  {%- assign work_material_array = collection.metafields.custom.work_material
+    | remove: '[' | remove: ']' | remove: '"' | split: ',' -%}
+{%- endif -%}
+
+{%- assign has_chip = false -%}
+{%- if work_material_array -%}
+  {%- for _m in work_material_array -%}
+    {%- assign m_clean = _m | strip -%}
+    {%- if m_clean == 'P' or m_clean == 'P No'
+       or m_clean == 'M' or m_clean == 'M No'
+       or m_clean == 'K' or m_clean == 'K No'
+       or m_clean == 'N' or m_clean == 'N No'
+       or m_clean == 'S' or m_clean == 'S No'
+       or m_clean == 'H' or m_clean == 'H No' -%}
+      {%- assign has_chip = true -%}{%- break -%}
+    {%- endif -%}
+  {%- endfor -%}
+{%- endif -%}
+
+{%- if has_chip -%}
   <div class="work-mat" aria-label="Work materials">
-    {% for m in work_material_array %}
-      {% assign label = m | split: ' ' | first %}
-      <div class="work-mat__chip" data-m="{{ m | strip }}" title="{{ m | strip }}">
-        {{ label }}
-      </div>
-    {% endfor %}
+    {%- for m in work_material_array -%}
+      {%- assign m_clean = m | strip -%}
+      {%- assign label = m_clean | split: ' ' | first -%}
+      <div class="work-mat__chip" data-m="{{ m_clean }}" title="{{ m_clean }}">{{ label }}</div>
+    {%- endfor -%}
   </div>
-{% endif %}
+{%- endif -%}
+
 
 <div class="collection-card__actions">
 
@@ -394,28 +433,41 @@
   <p class="collection-card__description text-p1">{{ summary | strip_html }}</p>
 {% endif %}
 
-{%- comment -%} Work material chips {%- endcomment -%}
-{% assign work_material_array = collection.metafields.custom.work_material
-  | remove: '[' | remove: ']' | remove: '"' | split: ',' %}
-{% if work_material_array
-  and (
-    work_material_array contains 'P' or work_material_array contains 'P No' or
-    work_material_array contains 'M' or work_material_array contains 'M No' or
-    work_material_array contains 'K' or work_material_array contains 'K No' or
-    work_material_array contains 'N' or work_material_array contains 'N No' or
-    work_material_array contains 'S' or work_material_array contains 'S No' or
-    work_material_array contains 'H' or work_material_array contains 'H No'
-  )
-%}
+{%- comment -%} Work material chips (normalized + no parentheses) {%- endcomment -%}
+{%- assign work_material_array = collection.metafields.custom.work_material.value
+  | default: collection.metafields.custom.work_material -%}
+
+{%- if work_material_array == blank -%}
+  {%- comment -%} Fallback for legacy JSON strings {%- endcomment -%}
+  {%- assign work_material_array = collection.metafields.custom.work_material
+    | remove: '[' | remove: ']' | remove: '"' | split: ',' -%}
+{%- endif -%}
+
+{%- assign has_chip = false -%}
+{%- if work_material_array -%}
+  {%- for _m in work_material_array -%}
+    {%- assign m_clean = _m | strip -%}
+    {%- if m_clean == 'P' or m_clean == 'P No'
+       or m_clean == 'M' or m_clean == 'M No'
+       or m_clean == 'K' or m_clean == 'K No'
+       or m_clean == 'N' or m_clean == 'N No'
+       or m_clean == 'S' or m_clean == 'S No'
+       or m_clean == 'H' or m_clean == 'H No' -%}
+      {%- assign has_chip = true -%}{%- break -%}
+    {%- endif -%}
+  {%- endfor -%}
+{%- endif -%}
+
+{%- if has_chip -%}
   <div class="work-mat" aria-label="Work materials">
-    {% for m in work_material_array %}
-      {% assign label = m | split: ' ' | first %}
-      <div class="work-mat__chip" data-m="{{ m | strip }}" title="{{ m | strip }}">
-        {{ label }}
-      </div>
-    {% endfor %}
+    {%- for m in work_material_array -%}
+      {%- assign m_clean = m | strip -%}
+      {%- assign label = m_clean | split: ' ' | first -%}
+      <div class="work-mat__chip" data-m="{{ m_clean }}" title="{{ m_clean }}">{{ label }}</div>
+    {%- endfor -%}
   </div>
-{% endif %}
+{%- endif -%}
+
 
 <div class="collection-card__actions">
 
