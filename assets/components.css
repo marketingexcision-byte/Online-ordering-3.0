@@ -99,7 +99,7 @@
     margin-bottom: var(--space-7) !important;
   }
 
-  .collection-card:hover .collection-card__image {
+  .section--collections-grid .collection-card:hover .collection-card__image {
     size: 110%;
   }
 
