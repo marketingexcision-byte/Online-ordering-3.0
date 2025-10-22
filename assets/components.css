@@ -162,14 +162,13 @@
   }
 
   /* make the image fill without distortion */
-.collection-card__image {
+  .collection-card__image {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;          /* preserves aspect ratio */
+  object-fit: cover;
   object-position: center;
-  /* IMPORTANT: no aspect-ratio here */
-}
+  }
 
   .collection-card__placeholder {
     align-items: center;
