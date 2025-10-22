@@ -161,7 +161,7 @@
                   {% if collection_image %}
                     {{
                       collection_image
-                      | image_url: width: 1240, height: 1240, crop: 'center'  # square from the CDN (crisper + smaller bytes)
+                      | image_url: width: 1240, height: 1240, crop: 'center'
                       | image_tag:
                       class: 'collection-card__image',
                       loading: 'lazy',
