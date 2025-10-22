@@ -89,6 +89,10 @@
     padding-block: calc(var(--space-6) * 2);
   }
 
+  .w-btn-label .font-bold {
+    margin-bottom: var(--space-3);
+  }
+
   .section__header {
     display: grid;
     gap: var(--space-3);
