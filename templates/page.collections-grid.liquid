@@ -161,11 +161,11 @@
                   {% if collection_image %}
                     {{
                       collection_image
-                      | image_url: width: 1240, height: 1240, crop: 'center'
+                      | image_url: width: 1036             # ~2.5× 412px for crisp retina
                       | image_tag:
                       class: 'collection-card__image',
                       loading: 'lazy',
-                      widths: '412, 568, 824, 1036, 1240',        
+                      widths: '412, 568, 824, 1036',
                       sizes: '(min-width: 1280px) 412px, (min-width: 1024px) 33vw, (min-width: 640px) 45vw, 90vw',
                       alt: image_alt,
                       decoding: 'async'
@@ -306,11 +306,11 @@
                     {% if collection_image %}
                       {{
                         collection_image
-                        | image_url: width: 1240, height: 1240, crop: 'center'  # square from the CDN (crisper + smaller bytes)
+                        | image_url: width: 1036             # ~2.5× 412px for crisp retina
                         | image_tag:
                         class: 'collection-card__image',
                         loading: 'lazy',
-                        widths: '412, 568, 824, 1036, 1240',                  # 1x..3x-ish
+                        widths: '412, 568, 824, 1036',
                         sizes: '(min-width: 1280px) 412px, (min-width: 1024px) 33vw, (min-width: 640px) 45vw, 90vw',
                         alt: image_alt,
                         decoding: 'async'
@@ -471,11 +471,11 @@
                     {% if collection_image %}
                       {{
                         collection_image
-                        | image_url: width: 1240, height: 1240, crop: 'center'  # square from the CDN (crisper + smaller bytes)
+                        | image_url: width: 1036             # ~2.5× 412px for crisp retina
                         | image_tag:
                         class: 'collection-card__image',
                         loading: 'lazy',
-                        widths: '412, 568, 824, 1036, 1240',                  # 1x..3x-ish
+                        widths: '412, 568, 824, 1036',
                         sizes: '(min-width: 1280px) 412px, (min-width: 1024px) 33vw, (min-width: 640px) 45vw, 90vw',
                         alt: image_alt,
                         decoding: 'async'
@@ -623,11 +623,11 @@
                       {% if collection_image %}
                         {{
                           collection_image
-                          | image_url: width: 1240, height: 1240, crop: 'center'  # square from the CDN (crisper + smaller bytes)
+                          | image_url: width: 1036             # ~2.5× 412px for crisp retina
                           | image_tag:
                           class: 'collection-card__image',
                           loading: 'lazy',
-                          widths: '412, 568, 824, 1036, 1240',                  # 1x..3x-ish
+                          widths: '412, 568, 824, 1036',
                           sizes: '(min-width: 1280px) 412px, (min-width: 1024px) 33vw, (min-width: 640px) 45vw, 90vw',
                           alt: image_alt,
                           decoding: 'async'
