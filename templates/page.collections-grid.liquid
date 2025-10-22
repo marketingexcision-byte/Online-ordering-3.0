@@ -178,11 +178,15 @@
                         decoding: 'async'
                     }}
                   {% else %}
+                    <a href="{{ collection.url }}" class="collection-card__link"
+                      >
                     <div
                       class="collection-card__image"
                       role="img"
                       aria-label="{{ collection.title | escape }} image placeholder"
                     ></div>
+                    </a
+                    >
                   {% endif %}
                 </div>
                 <div class="collection-card__body">
