@@ -5238,7 +5238,7 @@ button[name="checkout"][disabled]{
 }
 
 /* Zoom the image when the card is hovered */
-.section--collections-grid .collection-card:hover .collection-card__image {
+.collection-card:hover .collection-card__image {
   transform: scale(1.05);
 }
 
