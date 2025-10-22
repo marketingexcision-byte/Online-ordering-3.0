@@ -221,16 +221,20 @@
   </div>
 {%- endif -%}
 
-{%- comment -%} Performance rating → stars (robust) {%- endcomment -%}
-{%- assign mf_rating = collection.metafields.custom.performance_rating -%}
+{%- comment -%} Performance rating → stars (robust, no json) {%- endcomment -%}
+{%- assign mf = collection.metafields.custom.performance_rating -%}
 {%- assign rating = nil -%}
-{%- if mf_rating != blank -%}
-  {%- if mf_rating.value != blank -%}
-    {%- assign rating = mf_rating.value | plus: 0 -%}
-  {%- elsif mf_rating.rating != blank -%} {# some themes expose .rating on "rating" type #}
-    {%- assign rating = mf_rating.rating | plus: 0 -%}
+
+{%- if mf != blank -%}
+  {%- if mf.value != blank -%}
+    {%- assign rating = mf.value | plus: 0 -%}
+  {%- elsif mf.rating != blank -%}   {# some stores expose `.rating` on the object #}
+    {%- assign rating = mf.rating | plus: 0 -%}
   {%- else -%}
-    {%- assign rating = mf_rating | plus: 0 -%}  {# plain string fallback #}
+    {%- assign txt = mf | metafield_text | strip -%}
+    {%- if txt != blank -%}
+      {%- assign rating = txt | replace: ',', '.' | plus: 0 -%}
+    {%- endif -%}
   {%- endif -%}
 {%- endif -%}
 
@@ -270,7 +274,6 @@
   </div>
 {%- endif -%}
 
-<p style="font-size:12px;color:#888">debug: {{ collection.metafields.custom.performance_rating | json }}</p>
 
 
 
@@ -351,16 +354,20 @@
   </div>
 {%- endif -%}
 
-{%- comment -%} Performance rating → stars (robust) {%- endcomment -%}
-{%- assign mf_rating = collection.metafields.custom.performance_rating -%}
+{%- comment -%} Performance rating → stars (robust, no json) {%- endcomment -%}
+{%- assign mf = collection.metafields.custom.performance_rating -%}
 {%- assign rating = nil -%}
-{%- if mf_rating != blank -%}
-  {%- if mf_rating.value != blank -%}
-    {%- assign rating = mf_rating.value | plus: 0 -%}
-  {%- elsif mf_rating.rating != blank -%} {# some themes expose .rating on "rating" type #}
-    {%- assign rating = mf_rating.rating | plus: 0 -%}
+
+{%- if mf != blank -%}
+  {%- if mf.value != blank -%}
+    {%- assign rating = mf.value | plus: 0 -%}
+  {%- elsif mf.rating != blank -%}   {# some stores expose `.rating` on the object #}
+    {%- assign rating = mf.rating | plus: 0 -%}
   {%- else -%}
-    {%- assign rating = mf_rating | plus: 0 -%}  {# plain string fallback #}
+    {%- assign txt = mf | metafield_text | strip -%}
+    {%- if txt != blank -%}
+      {%- assign rating = txt | replace: ',', '.' | plus: 0 -%}
+    {%- endif -%}
   {%- endif -%}
 {%- endif -%}
 
@@ -400,7 +407,6 @@
   </div>
 {%- endif -%}
 
-<p style="font-size:12px;color:#888">debug: {{ collection.metafields.custom.performance_rating | json }}</p>
 
 
 <div class="collection-card__actions">
@@ -493,16 +499,20 @@
   </div>
 {%- endif -%}
 
-{%- comment -%} Performance rating → stars (robust) {%- endcomment -%}
-{%- assign mf_rating = collection.metafields.custom.performance_rating -%}
+{%- comment -%} Performance rating → stars (robust, no json) {%- endcomment -%}
+{%- assign mf = collection.metafields.custom.performance_rating -%}
 {%- assign rating = nil -%}
-{%- if mf_rating != blank -%}
-  {%- if mf_rating.value != blank -%}
-    {%- assign rating = mf_rating.value | plus: 0 -%}
-  {%- elsif mf_rating.rating != blank -%} {# some themes expose .rating on "rating" type #}
-    {%- assign rating = mf_rating.rating | plus: 0 -%}
+
+{%- if mf != blank -%}
+  {%- if mf.value != blank -%}
+    {%- assign rating = mf.value | plus: 0 -%}
+  {%- elsif mf.rating != blank -%}   {# some stores expose `.rating` on the object #}
+    {%- assign rating = mf.rating | plus: 0 -%}
   {%- else -%}
-    {%- assign rating = mf_rating | plus: 0 -%}  {# plain string fallback #}
+    {%- assign txt = mf | metafield_text | strip -%}
+    {%- if txt != blank -%}
+      {%- assign rating = txt | replace: ',', '.' | plus: 0 -%}
+    {%- endif -%}
   {%- endif -%}
 {%- endif -%}
 
@@ -542,7 +552,6 @@
   </div>
 {%- endif -%}
 
-<p style="font-size:12px;color:#888">debug: {{ collection.metafields.custom.performance_rating | json }}</p>
 
 
 <div class="collection-card__actions">
@@ -622,16 +631,20 @@
   </div>
 {%- endif -%}
 
-{%- comment -%} Performance rating → stars (robust) {%- endcomment -%}
-{%- assign mf_rating = collection.metafields.custom.performance_rating -%}
+{%- comment -%} Performance rating → stars (robust, no json) {%- endcomment -%}
+{%- assign mf = collection.metafields.custom.performance_rating -%}
 {%- assign rating = nil -%}
-{%- if mf_rating != blank -%}
-  {%- if mf_rating.value != blank -%}
-    {%- assign rating = mf_rating.value | plus: 0 -%}
-  {%- elsif mf_rating.rating != blank -%} {# some themes expose .rating on "rating" type #}
-    {%- assign rating = mf_rating.rating | plus: 0 -%}
+
+{%- if mf != blank -%}
+  {%- if mf.value != blank -%}
+    {%- assign rating = mf.value | plus: 0 -%}
+  {%- elsif mf.rating != blank -%}   {# some stores expose `.rating` on the object #}
+    {%- assign rating = mf.rating | plus: 0 -%}
   {%- else -%}
-    {%- assign rating = mf_rating | plus: 0 -%}  {# plain string fallback #}
+    {%- assign txt = mf | metafield_text | strip -%}
+    {%- if txt != blank -%}
+      {%- assign rating = txt | replace: ',', '.' | plus: 0 -%}
+    {%- endif -%}
   {%- endif -%}
 {%- endif -%}
 
@@ -671,7 +684,6 @@
   </div>
 {%- endif -%}
 
-<p style="font-size:12px;color:#888">debug: {{ collection.metafields.custom.performance_rating | json }}</p>
 
 
 
