@@ -146,10 +146,6 @@
     transition: transform 0.2s ease, box-shadow 0.2s ease;
   }
 
-  .collection-card:hover {
-    
-  }
-
   .collection-card__media {
     aspect-ratio: 1 / 1;
     border-radius: var(--radius-md);
@@ -212,4 +208,42 @@
     color: var(--color-secondary-iron);
     text-align: center;
   }
+
+  /* Work-material chips under collection cards */
+  .work-mat {
+    display: flex;
+    gap: var(--space-2);
+    margin-top: var(--space-4);
+  }
+  .work-mat__chip {
+    width: 34px;
+    height: 34px;
+    border-radius: var(--radius-md);
+    display: grid;
+    place-items: center;
+    font-family: var(--font-bold);
+    font-size: 14px;
+    line-height: 1;
+    color: #fff;
+  }
+  /* Colors (match your existing mapping) */
+  .work-mat__chip[data-m="P"]     { background: #0069a7; } /* Blue */
+  .work-mat__chip[data-m="P No"]  { background: #e8e8e8; color:#111; }
+
+  .work-mat__chip[data-m="M"]     { background: #f6b519; } /* Gold */
+  .work-mat__chip[data-m="M No"]  { background: #e8e8e8; color:#111; }
+
+  .work-mat__chip[data-m="K"]     { background: #e0592a; } /* Copper */
+  .work-mat__chip[data-m="K No"]  { background: #e8e8e8; color:#111; }
+
+  .work-mat__chip[data-m="N"]     { background: #109954; } /* Green */
+  .work-mat__chip[data-m="N No"]  { background: #e8e8e8; color:#111; }
+
+  .work-mat__chip[data-m="S"]     { background: #f88d2b; } /* Bronze */
+  .work-mat__chip[data-m="S No"]  { background: #e8e8e8; color:#111; }
+
+  .work-mat__chip[data-m="H"]     { background: #666666; } /* Iron */
+  .work-mat__chip[data-m="H No"]  { background: #e8e8e8; color:#111; }
+
+
 }
