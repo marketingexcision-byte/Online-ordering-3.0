@@ -124,7 +124,7 @@
 
   .collection-grid {
     display: grid;
-    gap: var(--space-5);
+    gap: var(--space-7);
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   }
 
