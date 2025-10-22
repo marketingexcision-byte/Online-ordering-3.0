@@ -106,6 +106,7 @@
     display: grid;
     gap: var(--space-3);
     margin-bottom: var(--space-7) !important;
+    margin-top: var(--space-4) !important;
   }
 
   .section__title {
