@@ -89,7 +89,7 @@
     padding-block: calc(var(--space-6) * 2);
   }
 
-  .w-btn-label .font-bold {
+  .w-btn-wrapper {
     margin-bottom: var(--space-3);
   }
 
