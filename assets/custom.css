@@ -5227,11 +5227,10 @@ button[name="checkout"][disabled]{
 }
 
 /* Prep the image for animation */
-.section--collections-grid .collection-card__image {
+.collection-card__image {
   display: block;                /* avoids inline-gap jitter on <img> */
   transform: scale(1);
   transition: transform .35s ease;
-  /* optional, if it's an <img>: */
   width: 100%;
   height: 100%;
   object-fit: cover;
