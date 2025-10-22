@@ -90,7 +90,7 @@
   }
 
   .w-btn-wrapper {
-    margin-bottom: var(--space-3);
+    margin-bottom: var(--space-3) !important;
   }
 
   .section__header {
