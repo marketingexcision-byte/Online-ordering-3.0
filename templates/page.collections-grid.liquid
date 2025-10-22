@@ -113,17 +113,29 @@
 <div class="wrapper">
   <section class="section section--collections-grid" aria-labelledby="collection-grid-heading">
     <div>
-      {%- if page.metafields.custom.parent_page.value != blank -%}
-        <div class="w-btn-wrapper lazyload-element">
-          <a
-            class="w-btn icon_atleft"
-            href="{{ page.metafields.custom.parent_page }}"
-            data-url="{{ page.metafields.custom.parent_page }}"
-          >
-            <span class="w-btn-label font-bold"><em>←</em> Back</span>
-          </a>
-        </div>
-      {%- endif -%}
+      {%- comment -%} Resolve parent_page metafield to a usable URL {%- endcomment -%}
+{%- assign parent_url = nil -%}
+{%- if page and page.metafields and page.metafields.custom and page.metafields.custom.parent_page != blank -%}
+  {%- assign mf_parent = page.metafields.custom.parent_page -%}
+  {%- if mf_parent.value and mf_parent.value.url -%}
+    {%- assign parent_url = mf_parent.value.url -%}        {# Reference type → .value.url #}
+  {%- else -%}
+    {%- assign parent_url = mf_parent | strip -%}          {# URL/text type #}
+  {%- endif -%}
+{%- endif -%}
+
+{%- if parent_url -%}
+  <div class="w-btn-wrapper lazyload-element">
+    <a
+      class="w-btn icon_atleft"
+      href="{{ parent_url }}"
+      data-url="{{ parent_url }}"
+    >
+      <span class="w-btn-label font-bold"><em>←</em> Back</span>
+    </a>
+  </div>
+{%- endif -%}
+
       {% if heading != blank or intro != blank or show_page_content %}
         <header class="section__header">
           {% if heading != blank %}
@@ -242,3 +254,44 @@
     </div>
   </section>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var links = document.querySelectorAll('.w-btn-wrapper a[data-url]');
+  if (!links.length) return;
+
+  links.forEach(function (link) {
+    var raw = link.getAttribute('data-url');
+    if (!raw) return;
+
+    // Ensure same-origin to avoid CORS trouble
+    var url;
+    try {
+      url = new URL(raw, window.location.origin);
+      if (url.origin !== window.location.origin) return;
+    } catch (_e) {
+      return;
+    }
+
+    fetch(url.href, { credentials: 'same-origin' })
+      .then(function (res) { return res.text(); })
+      .then(function (html) {
+        var doc   = new DOMParser().parseFromString(html, 'text/html');
+        var title = (doc.querySelector('title') || {}).textContent || '';
+        var clean = title.trim();
+
+        // Split on common separators: en dash, em dash, hyphen, pipe
+        var parts = clean.split(/[\u2013\u2014\-|]/); // – — - |
+        if (parts.length > 1) clean = parts[0].trim();
+        if (!clean) clean = 'Page';
+
+        var label = link.querySelector('.w-btn-label');
+        if (label) label.innerHTML = '<em>←</em> Back to ' + clean;
+      })
+      .catch(function (err) {
+        // Keep default "Back" if anything fails
+        console.error('Error fetching parent page title:', err);
+      });
+  });
+});
+</script>
