@@ -158,6 +158,11 @@
     margin-bottom: var(--space-5) !important;
   }
 
+  .collection-card__media .view-all {
+    aspect ratio: unset;
+    height: 100%;
+  }
+
   .collection-card__image {
     display: block;
     height: 100%;
