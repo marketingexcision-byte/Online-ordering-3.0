@@ -48,8 +48,7 @@
   }
 
   /* Full width */
-
-  .btn--fullwidth {
+  --fullwidth {
     width: 100%;
   }
 
