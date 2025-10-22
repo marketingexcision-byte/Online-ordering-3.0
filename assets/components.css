@@ -48,7 +48,8 @@
   }
 
   /* Full width */
-  .full-width {
+  .btn-primary.full-width,
+  .btn--primary.full-width {
     width: 100%;
   }
 
