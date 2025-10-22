@@ -145,6 +145,7 @@
     border-radius: var(--radius-md);
     overflow: hidden;
     background: var(--color-secondary-grey-light);
+    margin-bottom: var(--space-5) !important;
   }
 
   .collection-card__image {
