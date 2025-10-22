@@ -221,58 +221,51 @@
   </div>
 {%- endif -%}
 
-{%- comment -%} Performance rating → stars (robust, no json) {%- endcomment -%}
-{%- assign mf = collection.metafields.custom.performance_rating -%}
-{%- assign rating = nil -%}
+{%- comment -%} Performance rating → stars (self-contained) {%- endcomment -%}
+{%- assign rating_str = collection.metafields.custom.performance_rating | metafield_text | strip -%}
+{%- if rating_str != blank -%}
+  {%- assign rating = rating_str | replace: ',', '.' | plus: 0 -%}
+  {%- if rating > 0 -%}
+    {%- assign r = rating -%}
+    {%- if r > 5 -%}{%- assign r = 5 -%}{%- endif -%}
+    {%- if r < 0 -%}{%- assign r = 0 -%}{%- endif -%}
 
-{%- if mf != blank -%}
-  {%- if mf.value != blank -%}
-    {%- assign rating = mf.value | plus: 0 -%}
-  {%- elsif mf.rating != blank -%}   {# some stores expose `.rating` on the object #}
-    {%- assign rating = mf.rating | plus: 0 -%}
-  {%- else -%}
-    {%- assign txt = mf | metafield_text | strip -%}
-    {%- if txt != blank -%}
-      {%- assign rating = txt | replace: ',', '.' | plus: 0 -%}
-    {%- endif -%}
+    <div class="rating" aria-label="Performance rating: {{ r }} out of 5">
+      <div class="rating__stars" role="img" aria-hidden="true">
+        {%- for s in (1..5) -%}
+          {%- assign value = r | minus: forloop.index | plus: 1 -%}
+          {%- if value >= 1 -%}
+            {%- assign pct = 100 -%}
+          {%- elsif value <= 0 -%}
+            {%- assign pct = 0 -%}
+          {%- else -%}
+            {%- assign pct = value | times: 100 -%}
+          {%- endif -%}
+          <span class="rating__star" style="position:relative;display:inline-block;width:18px;height:18px">
+            <!-- empty star -->
+            <span class="is-bg" style="color:#e1e1e1;position:relative;display:block">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18" aria-hidden="true">
+                <path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.62L12 2 9.19 8.62 2 9.24l5.46 4.73L5.82 21z"/>
+              </svg>
+            </span>
+            {%- if pct > 0 -%}
+              <!-- filled portion -->
+              <span class="is-fill" style="position:absolute;inset:0;overflow:hidden;width:{{ pct }}%">
+                <span style="color:#f6b419;display:block">
+                  <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18" aria-hidden="true">
+                    <path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.62L12 2 9.19 8.62 2 9.24l5.46 4.73L5.82 21z"/>
+                  </svg>
+                </span>
+              </span>
+            {%- endif -%}
+          </span>
+        {%- endfor -%}
+      </div>
+      <span class="rating__label">{{ r | round: 1 }}/5</span>
+    </div>
   {%- endif -%}
 {%- endif -%}
 
-{%- if rating and rating > 0 -%}
-  {%- assign clamped = rating -%}
-  {%- if clamped > 5 -%}{%- assign clamped = 5 -%}{%- endif -%}
-  {%- if clamped < 0 -%}{%- assign clamped = 0 -%}{%- endif -%}
-
-  <div class="rating" aria-label="Performance rating: {{ clamped }} out of 5">
-    <div class="rating__stars" role="img" aria-hidden="true">
-      {%- for s in (1..5) -%}
-        {%- assign star_value = clamped | minus: forloop.index | plus: 1 -%}
-        {%- if star_value >= 1 -%}
-          {%- assign pct = 100 -%}
-        {%- elsif star_value <= 0 -%}
-          {%- assign pct = 0 -%}
-        {%- else -%}
-          {%- assign pct = star_value | times: 100 -%}
-        {%- endif -%}
-        <span class="rating__star">
-          <span class="is-bg">
-            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.62L12 2 9.19 8.62 2 9.24l5.46 4.73L5.82 21z"/>
-            </svg>
-          </span>
-          {%- if pct > 0 -%}
-          <span class="is-fill" style="width: {{ pct }}%;">
-            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.62L12 2 9.19 8.62 2 9.24l5.46 4.73L5.82 21z"/>
-            </svg>
-          </span>
-          {%- endif -%}
-        </span>
-      {%- endfor -%}
-    </div>
-    <span class="rating__label">{{ clamped | round: 1 }}/5</span>
-  </div>
-{%- endif -%}
 
 
 <!-- debug only -->
@@ -356,58 +349,51 @@
   </div>
 {%- endif -%}
 
-{%- comment -%} Performance rating → stars (robust, no json) {%- endcomment -%}
-{%- assign mf = collection.metafields.custom.performance_rating -%}
-{%- assign rating = nil -%}
+{%- comment -%} Performance rating → stars (self-contained) {%- endcomment -%}
+{%- assign rating_str = collection.metafields.custom.performance_rating | metafield_text | strip -%}
+{%- if rating_str != blank -%}
+  {%- assign rating = rating_str | replace: ',', '.' | plus: 0 -%}
+  {%- if rating > 0 -%}
+    {%- assign r = rating -%}
+    {%- if r > 5 -%}{%- assign r = 5 -%}{%- endif -%}
+    {%- if r < 0 -%}{%- assign r = 0 -%}{%- endif -%}
 
-{%- if mf != blank -%}
-  {%- if mf.value != blank -%}
-    {%- assign rating = mf.value | plus: 0 -%}
-  {%- elsif mf.rating != blank -%}   {# some stores expose `.rating` on the object #}
-    {%- assign rating = mf.rating | plus: 0 -%}
-  {%- else -%}
-    {%- assign txt = mf | metafield_text | strip -%}
-    {%- if txt != blank -%}
-      {%- assign rating = txt | replace: ',', '.' | plus: 0 -%}
-    {%- endif -%}
+    <div class="rating" aria-label="Performance rating: {{ r }} out of 5">
+      <div class="rating__stars" role="img" aria-hidden="true">
+        {%- for s in (1..5) -%}
+          {%- assign value = r | minus: forloop.index | plus: 1 -%}
+          {%- if value >= 1 -%}
+            {%- assign pct = 100 -%}
+          {%- elsif value <= 0 -%}
+            {%- assign pct = 0 -%}
+          {%- else -%}
+            {%- assign pct = value | times: 100 -%}
+          {%- endif -%}
+          <span class="rating__star" style="position:relative;display:inline-block;width:18px;height:18px">
+            <!-- empty star -->
+            <span class="is-bg" style="color:#e1e1e1;position:relative;display:block">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18" aria-hidden="true">
+                <path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.62L12 2 9.19 8.62 2 9.24l5.46 4.73L5.82 21z"/>
+              </svg>
+            </span>
+            {%- if pct > 0 -%}
+              <!-- filled portion -->
+              <span class="is-fill" style="position:absolute;inset:0;overflow:hidden;width:{{ pct }}%">
+                <span style="color:#f6b419;display:block">
+                  <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18" aria-hidden="true">
+                    <path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.62L12 2 9.19 8.62 2 9.24l5.46 4.73L5.82 21z"/>
+                  </svg>
+                </span>
+              </span>
+            {%- endif -%}
+          </span>
+        {%- endfor -%}
+      </div>
+      <span class="rating__label">{{ r | round: 1 }}/5</span>
+    </div>
   {%- endif -%}
 {%- endif -%}
 
-{%- if rating and rating > 0 -%}
-  {%- assign clamped = rating -%}
-  {%- if clamped > 5 -%}{%- assign clamped = 5 -%}{%- endif -%}
-  {%- if clamped < 0 -%}{%- assign clamped = 0 -%}{%- endif -%}
-
-  <div class="rating" aria-label="Performance rating: {{ clamped }} out of 5">
-    <div class="rating__stars" role="img" aria-hidden="true">
-      {%- for s in (1..5) -%}
-        {%- assign star_value = clamped | minus: forloop.index | plus: 1 -%}
-        {%- if star_value >= 1 -%}
-          {%- assign pct = 100 -%}
-        {%- elsif star_value <= 0 -%}
-          {%- assign pct = 0 -%}
-        {%- else -%}
-          {%- assign pct = star_value | times: 100 -%}
-        {%- endif -%}
-        <span class="rating__star">
-          <span class="is-bg">
-            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.62L12 2 9.19 8.62 2 9.24l5.46 4.73L5.82 21z"/>
-            </svg>
-          </span>
-          {%- if pct > 0 -%}
-          <span class="is-fill" style="width: {{ pct }}%;">
-            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.62L12 2 9.19 8.62 2 9.24l5.46 4.73L5.82 21z"/>
-            </svg>
-          </span>
-          {%- endif -%}
-        </span>
-      {%- endfor -%}
-    </div>
-    <span class="rating__label">{{ clamped | round: 1 }}/5</span>
-  </div>
-{%- endif -%}
 
 
 
@@ -501,58 +487,51 @@
   </div>
 {%- endif -%}
 
-{%- comment -%} Performance rating → stars (robust, no json) {%- endcomment -%}
-{%- assign mf = collection.metafields.custom.performance_rating -%}
-{%- assign rating = nil -%}
+{%- comment -%} Performance rating → stars (self-contained) {%- endcomment -%}
+{%- assign rating_str = collection.metafields.custom.performance_rating | metafield_text | strip -%}
+{%- if rating_str != blank -%}
+  {%- assign rating = rating_str | replace: ',', '.' | plus: 0 -%}
+  {%- if rating > 0 -%}
+    {%- assign r = rating -%}
+    {%- if r > 5 -%}{%- assign r = 5 -%}{%- endif -%}
+    {%- if r < 0 -%}{%- assign r = 0 -%}{%- endif -%}
 
-{%- if mf != blank -%}
-  {%- if mf.value != blank -%}
-    {%- assign rating = mf.value | plus: 0 -%}
-  {%- elsif mf.rating != blank -%}   {# some stores expose `.rating` on the object #}
-    {%- assign rating = mf.rating | plus: 0 -%}
-  {%- else -%}
-    {%- assign txt = mf | metafield_text | strip -%}
-    {%- if txt != blank -%}
-      {%- assign rating = txt | replace: ',', '.' | plus: 0 -%}
-    {%- endif -%}
+    <div class="rating" aria-label="Performance rating: {{ r }} out of 5">
+      <div class="rating__stars" role="img" aria-hidden="true">
+        {%- for s in (1..5) -%}
+          {%- assign value = r | minus: forloop.index | plus: 1 -%}
+          {%- if value >= 1 -%}
+            {%- assign pct = 100 -%}
+          {%- elsif value <= 0 -%}
+            {%- assign pct = 0 -%}
+          {%- else -%}
+            {%- assign pct = value | times: 100 -%}
+          {%- endif -%}
+          <span class="rating__star" style="position:relative;display:inline-block;width:18px;height:18px">
+            <!-- empty star -->
+            <span class="is-bg" style="color:#e1e1e1;position:relative;display:block">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18" aria-hidden="true">
+                <path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.62L12 2 9.19 8.62 2 9.24l5.46 4.73L5.82 21z"/>
+              </svg>
+            </span>
+            {%- if pct > 0 -%}
+              <!-- filled portion -->
+              <span class="is-fill" style="position:absolute;inset:0;overflow:hidden;width:{{ pct }}%">
+                <span style="color:#f6b419;display:block">
+                  <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18" aria-hidden="true">
+                    <path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.62L12 2 9.19 8.62 2 9.24l5.46 4.73L5.82 21z"/>
+                  </svg>
+                </span>
+              </span>
+            {%- endif -%}
+          </span>
+        {%- endfor -%}
+      </div>
+      <span class="rating__label">{{ r | round: 1 }}/5</span>
+    </div>
   {%- endif -%}
 {%- endif -%}
 
-{%- if rating and rating > 0 -%}
-  {%- assign clamped = rating -%}
-  {%- if clamped > 5 -%}{%- assign clamped = 5 -%}{%- endif -%}
-  {%- if clamped < 0 -%}{%- assign clamped = 0 -%}{%- endif -%}
-
-  <div class="rating" aria-label="Performance rating: {{ clamped }} out of 5">
-    <div class="rating__stars" role="img" aria-hidden="true">
-      {%- for s in (1..5) -%}
-        {%- assign star_value = clamped | minus: forloop.index | plus: 1 -%}
-        {%- if star_value >= 1 -%}
-          {%- assign pct = 100 -%}
-        {%- elsif star_value <= 0 -%}
-          {%- assign pct = 0 -%}
-        {%- else -%}
-          {%- assign pct = star_value | times: 100 -%}
-        {%- endif -%}
-        <span class="rating__star">
-          <span class="is-bg">
-            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.62L12 2 9.19 8.62 2 9.24l5.46 4.73L5.82 21z"/>
-            </svg>
-          </span>
-          {%- if pct > 0 -%}
-          <span class="is-fill" style="width: {{ pct }}%;">
-            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.62L12 2 9.19 8.62 2 9.24l5.46 4.73L5.82 21z"/>
-            </svg>
-          </span>
-          {%- endif -%}
-        </span>
-      {%- endfor -%}
-    </div>
-    <span class="rating__label">{{ clamped | round: 1 }}/5</span>
-  </div>
-{%- endif -%}
 
 
 
@@ -633,58 +612,51 @@
   </div>
 {%- endif -%}
 
-{%- comment -%} Performance rating → stars (robust, no json) {%- endcomment -%}
-{%- assign mf = collection.metafields.custom.performance_rating -%}
-{%- assign rating = nil -%}
+{%- comment -%} Performance rating → stars (self-contained) {%- endcomment -%}
+{%- assign rating_str = collection.metafields.custom.performance_rating | metafield_text | strip -%}
+{%- if rating_str != blank -%}
+  {%- assign rating = rating_str | replace: ',', '.' | plus: 0 -%}
+  {%- if rating > 0 -%}
+    {%- assign r = rating -%}
+    {%- if r > 5 -%}{%- assign r = 5 -%}{%- endif -%}
+    {%- if r < 0 -%}{%- assign r = 0 -%}{%- endif -%}
 
-{%- if mf != blank -%}
-  {%- if mf.value != blank -%}
-    {%- assign rating = mf.value | plus: 0 -%}
-  {%- elsif mf.rating != blank -%}   {# some stores expose `.rating` on the object #}
-    {%- assign rating = mf.rating | plus: 0 -%}
-  {%- else -%}
-    {%- assign txt = mf | metafield_text | strip -%}
-    {%- if txt != blank -%}
-      {%- assign rating = txt | replace: ',', '.' | plus: 0 -%}
-    {%- endif -%}
+    <div class="rating" aria-label="Performance rating: {{ r }} out of 5">
+      <div class="rating__stars" role="img" aria-hidden="true">
+        {%- for s in (1..5) -%}
+          {%- assign value = r | minus: forloop.index | plus: 1 -%}
+          {%- if value >= 1 -%}
+            {%- assign pct = 100 -%}
+          {%- elsif value <= 0 -%}
+            {%- assign pct = 0 -%}
+          {%- else -%}
+            {%- assign pct = value | times: 100 -%}
+          {%- endif -%}
+          <span class="rating__star" style="position:relative;display:inline-block;width:18px;height:18px">
+            <!-- empty star -->
+            <span class="is-bg" style="color:#e1e1e1;position:relative;display:block">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18" aria-hidden="true">
+                <path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.62L12 2 9.19 8.62 2 9.24l5.46 4.73L5.82 21z"/>
+              </svg>
+            </span>
+            {%- if pct > 0 -%}
+              <!-- filled portion -->
+              <span class="is-fill" style="position:absolute;inset:0;overflow:hidden;width:{{ pct }}%">
+                <span style="color:#f6b419;display:block">
+                  <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18" aria-hidden="true">
+                    <path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.62L12 2 9.19 8.62 2 9.24l5.46 4.73L5.82 21z"/>
+                  </svg>
+                </span>
+              </span>
+            {%- endif -%}
+          </span>
+        {%- endfor -%}
+      </div>
+      <span class="rating__label">{{ r | round: 1 }}/5</span>
+    </div>
   {%- endif -%}
 {%- endif -%}
 
-{%- if rating and rating > 0 -%}
-  {%- assign clamped = rating -%}
-  {%- if clamped > 5 -%}{%- assign clamped = 5 -%}{%- endif -%}
-  {%- if clamped < 0 -%}{%- assign clamped = 0 -%}{%- endif -%}
-
-  <div class="rating" aria-label="Performance rating: {{ clamped }} out of 5">
-    <div class="rating__stars" role="img" aria-hidden="true">
-      {%- for s in (1..5) -%}
-        {%- assign star_value = clamped | minus: forloop.index | plus: 1 -%}
-        {%- if star_value >= 1 -%}
-          {%- assign pct = 100 -%}
-        {%- elsif star_value <= 0 -%}
-          {%- assign pct = 0 -%}
-        {%- else -%}
-          {%- assign pct = star_value | times: 100 -%}
-        {%- endif -%}
-        <span class="rating__star">
-          <span class="is-bg">
-            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.62L12 2 9.19 8.62 2 9.24l5.46 4.73L5.82 21z"/>
-            </svg>
-          </span>
-          {%- if pct > 0 -%}
-          <span class="is-fill" style="width: {{ pct }}%;">
-            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.62L12 2 9.19 8.62 2 9.24l5.46 4.73L5.82 21z"/>
-            </svg>
-          </span>
-          {%- endif -%}
-        </span>
-      {%- endfor -%}
-    </div>
-    <span class="rating__label">{{ clamped | round: 1 }}/5</span>
-  </div>
-{%- endif -%}
 
 
 
