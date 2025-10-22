@@ -12,6 +12,7 @@
     padding: var(--space-2) var(--space-4);
     cursor: pointer;
     transition: background .2s ease, border-color .2s ease, color .2s ease;
+    min-height: 40px !important;
   }
 
   .btn-primary,
@@ -42,6 +43,12 @@
   .btn-outline {
     background: #fff;
     border-color: currentColor;
+  }
+
+  /* Full width */
+
+  .btn--fullwidth {
+    width: 100%;
   }
 
   /* Input styles */
