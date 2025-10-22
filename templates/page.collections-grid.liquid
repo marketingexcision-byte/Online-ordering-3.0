@@ -183,11 +183,34 @@
                 <div class="collection-card__body">
                   <h3 class="collection-card__title"><strong>{{ collection.title }}</strong></h3>
                   {% if summary != blank %}
-                    <p class="collection-card__description text-p1">{{ summary | strip_html }}</p>
-                  {% endif %}
-                    
+  <p class="collection-card__description text-p1">{{ summary | strip_html }}</p>
+{% endif %}
 
-                  <div class="collection-card__actions">
+{%- comment -%} Work material chips {%- endcomment -%}
+{% assign work_material_array = collection.metafields.custom.work_material
+  | remove: '[' | remove: ']' | remove: '"' | split: ',' %}
+{% if work_material_array
+  and (
+    work_material_array contains 'P' or work_material_array contains 'P No' or
+    work_material_array contains 'M' or work_material_array contains 'M No' or
+    work_material_array contains 'K' or work_material_array contains 'K No' or
+    work_material_array contains 'N' or work_material_array contains 'N No' or
+    work_material_array contains 'S' or work_material_array contains 'S No' or
+    work_material_array contains 'H' or work_material_array contains 'H No'
+  )
+%}
+  <div class="work-mat" aria-label="Work materials">
+    {% for m in work_material_array %}
+      {% assign label = m | split: ' ' | first %}
+      <div class="work-mat__chip" data-m="{{ m | strip }}" title="{{ m | strip }}">
+        {{ label }}
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+<div class="collection-card__actions">
+
                     <a class="btn btn-primary full-width" href="{{ collection.url }}">{{ button_label | escape }}</a>
                   </div>
                 </div>
@@ -303,9 +326,34 @@
                   <div class="collection-card__body">
                     <h3 class="collection-card__title"><strong>{{ collection.title }}</strong></h3>
                     {% if summary != blank %}
-                      <p class="collection-card__description text-p1">{{ summary | strip_html }}</p>
-                    {% endif %}
-                    <div class="collection-card__actions">
+  <p class="collection-card__description text-p1">{{ summary | strip_html }}</p>
+{% endif %}
+
+{%- comment -%} Work material chips {%- endcomment -%}
+{% assign work_material_array = collection.metafields.custom.work_material
+  | remove: '[' | remove: ']' | remove: '"' | split: ',' %}
+{% if work_material_array
+  and (
+    work_material_array contains 'P' or work_material_array contains 'P No' or
+    work_material_array contains 'M' or work_material_array contains 'M No' or
+    work_material_array contains 'K' or work_material_array contains 'K No' or
+    work_material_array contains 'N' or work_material_array contains 'N No' or
+    work_material_array contains 'S' or work_material_array contains 'S No' or
+    work_material_array contains 'H' or work_material_array contains 'H No'
+  )
+%}
+  <div class="work-mat" aria-label="Work materials">
+    {% for m in work_material_array %}
+      {% assign label = m | split: ' ' | first %}
+      <div class="work-mat__chip" data-m="{{ m | strip }}" title="{{ m | strip }}">
+        {{ label }}
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+<div class="collection-card__actions">
+
                       <a class="btn btn-primary full-width" href="{{ collection.url }}">{{ button_label | escape }}</a>
                     </div>
                   </div>
@@ -343,9 +391,34 @@
                     <div class="collection-card__body">
                       <h3 class="collection-card__title"><strong>{{ collection.title }}</strong></h3>
                       {% if summary != blank %}
-                        <p class="collection-card__description text-p1">{{ summary | strip_html }}</p>
-                      {% endif %}
-                      <div class="collection-card__actions">
+  <p class="collection-card__description text-p1">{{ summary | strip_html }}</p>
+{% endif %}
+
+{%- comment -%} Work material chips {%- endcomment -%}
+{% assign work_material_array = collection.metafields.custom.work_material
+  | remove: '[' | remove: ']' | remove: '"' | split: ',' %}
+{% if work_material_array
+  and (
+    work_material_array contains 'P' or work_material_array contains 'P No' or
+    work_material_array contains 'M' or work_material_array contains 'M No' or
+    work_material_array contains 'K' or work_material_array contains 'K No' or
+    work_material_array contains 'N' or work_material_array contains 'N No' or
+    work_material_array contains 'S' or work_material_array contains 'S No' or
+    work_material_array contains 'H' or work_material_array contains 'H No'
+  )
+%}
+  <div class="work-mat" aria-label="Work materials">
+    {% for m in work_material_array %}
+      {% assign label = m | split: ' ' | first %}
+      <div class="work-mat__chip" data-m="{{ m | strip }}" title="{{ m | strip }}">
+        {{ label }}
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+<div class="collection-card__actions">
+
                         <a class="btn btn-primary full-width" href="{{ collection.url }}">{{ button_label | escape }}</a>
                       </div>
                     </div>
