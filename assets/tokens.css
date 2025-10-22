@@ -20,9 +20,9 @@
     --container-max-width: 1200px;
 
     /* Typography families (update names to match your actual @font-face) */
-    --font-base: "Humanist 777BT", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-    --font-bold: "Humanist 777BT-Bold", var(--font-base);
-    --font-black: "Humanist 777BT-Black", var(--font-base);
+    --font-base: "Humanist777BT", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    --font-bold: "Humanist777BT-Bold", var(--font-base);
+    --font-black: "Humanist777BT-Black", var(--font-base);
 
     /* Type sizes (desktop endpoints) */
     --size-h1: 78px;
