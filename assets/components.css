@@ -161,6 +161,7 @@
   .collection-card__media.view-all {
     aspect ratio: unset;
     height: 100%;
+    max-width: 412px;
   }
 
   .collection-card__image {
