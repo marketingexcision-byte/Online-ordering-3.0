@@ -102,6 +102,70 @@
   endif
 %}
 
+{%- if page.metafields.custom.header_image.value != blank -%}
+  <style>
+    .template-collection .breadcrumb {
+      background: url({{ page.metafields.custom.header_image | file_url }});
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: cover;
+      position: relative;
+    }
+  </style>
+{%- endif -%}
+
+<nav class="breadcrumb simple-lazyload" role="navigation" aria-label="breadcrumbs">
+  {%- if page.metafields.custom.header_image.value != blank -%}
+    <div class="header-overlay" style="position:absolute;top:0;left:0;width:100%;height:100%;background-color:rgba(30,29,34,0.4);"></div>
+  {%- endif -%}
+  <div class="breadcrumbs container dt-prl-30">
+    <div class="row" style="display:flex;align-items:flex-start;">
+      <div class="col-md-7 lazyload-element">
+
+            {% if parent_url %}
+      <div class="w-btn-wrapper">
+        <a class="w-btn icon_atleft" href="{{ parent_url }}" data-url="{{ parent_url }}">
+          <span class="w-btn-label font-bold"><em>←</em> Back</span>
+        </a>
+      </div>
+    {% endif %}
+
+        <h1>{{ collection.title }}</h1>
+        {%- if collection.metafields.custom.collection_info.value != blank -%}
+          <div class="rte collection-banner__description">{{ collection.metafields.custom.collection_info.value }}</div>
+        {%- endif -%}
+
+        {% assign work_material_array = collection.metafields.custom.work_material | remove: '[' | remove: ']' | remove: '"' | split: ',' %}
+        {%- if work_material_array contains 'P' or work_material_array contains 'P No' or work_material_array contains 'M' or work_material_array contains 'M No' or work_material_array contains 'K' or work_material_array contains 'K No' or work_material_array contains 'N' or work_material_array contains 'N No' or work_material_array contains 'S' or work_material_array contains 'S No' or work_material_array contains 'H' or work_material_array contains 'H No' -%}
+          <div class="collection-icon" style="display:flex;gap:10px;margin-top:30px;">
+            {% for m in work_material_array %}
+              {% case m %}
+                {% when 'P' %}{% assign color = '#0069a7' %}
+                {% when 'P No' %}{% assign color = '#e8e8e8' %}
+                {% when 'M' %}{% assign color = '#f6b519' %}
+                {% when 'M No' %}{% assign color = '#e8e8e8' %}
+                {% when 'K' %}{% assign color = '#e0592a' %}
+                {% when 'K No' %}{% assign color = '#e8e8e8' %}
+                {% when 'N' %}{% assign color = '#109954' %}
+                {% when 'N No' %}{% assign color = '#e8e8e8' %}
+                {% when 'S' %}{% assign color = '#f88d2b' %}
+                {% when 'S No' %}{% assign color = '#e8e8e8' %}
+                {% when 'H' %}{% assign color = '#666666' %}
+                {% when 'H No' %}{% assign color = '#e8e8e8' %}
+                {% else %}{% assign color = '#000000' %}
+              {% endcase %}
+              <div class="Graph-Icon" style="background:{{ color }};" data-debug-m="{{ m }}" data-debug-color="{{ color }}">
+                <p>{{ m | split: ' ' | first }}</p>
+              </div>
+            {% endfor %}
+          </div>
+        {%- endif -%}
+      </div>
+    </div>
+  </div>
+</nav>
+
+
 <div class="section">
   <div class="container layout-constrained">
     {%- comment -%} Resolve parent_page metafield for back link {%- endcomment -%}
@@ -115,13 +179,7 @@
       {%- endif -%}
     {%- endif -%}
 
-    {% if parent_url %}
-      <div class="w-btn-wrapper">
-        <a class="w-btn icon_atleft" href="{{ parent_url }}" data-url="{{ parent_url }}">
-          <span class="w-btn-label font-bold"><em>←</em> Back</span>
-        </a>
-      </div>
-    {% endif %}
+
 
     {% if heading != blank or intro != blank %}
       <header class="section__header">
