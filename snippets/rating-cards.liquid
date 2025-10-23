@@ -1,0 +1,82 @@
+{% comment %} Rating cards pulled from Page metafields in namespace `custom` {% endcomment %}
+{% assign heading = section.settings.heading %}
+
+{%- capture pairs -%}
+Metal Removal|metal_removal
+Rates|rates
+Material Versatility|material_versatility
+Cutting Resistance|cutting_resistance
+Surface Finish|surface_finish
+High Accuracy Machining|high_accuracy_machining
+Square Shoulder Milling|square_shoulder_milling
+Copy Milling|copy_milling
+Chip Control|chip_control
+{%- endcapture -%}
+{% assign rows = pairs | split: '\n' %}
+
+{%- assign any = false -%}
+{%- for row in rows -%}
+  {%- assign row = row | strip -%}
+  {%- if row == '' -%}{%- continue -%}{%- endif -%}
+  {%- assign key = row | split: '|' | last | strip -%}
+  {%- if page.metafields.custom[key] != blank -%}{%- assign any = true -%}{%- break -%}{%- endif -%}
+{%- endfor -%}
+
+{% if any %}
+<section class="section section--rating-cards" aria-labelledby="rating-cards-heading-{{ section.id }}">
+  <div class="container layout-constrained">
+    {% if heading != blank %}
+      <header class="section__header" style="margin-bottom:var(--space-4) !important">
+        <h2 id="rating-cards-heading-{{ section.id }}" class="section__title text-h4">{{ heading | escape }}</h2>
+      </header>
+    {% endif %}
+
+    <div class="rc-grid" role="list">
+      {%- for row in rows -%}
+        {%- assign row = row | strip -%}
+        {%- if row == '' -%}{%- continue -%}{%- endif -%}
+        {%- assign parts = row | split: '|' -%}
+        {%- assign label = parts[0] | strip -%}
+        {%- assign key   = parts[1] | strip -%}
+        {%- assign raw   = page.metafields.custom[key] -%}
+        {%- if raw == blank -%}{%- continue -%}{%- endif -%}
+
+        {%- comment -%} coerce to 0–5 number (handles integer/decimal/text) {%- endcomment -%}
+        {%- assign rating_str = raw.value | default: raw | append: '' | strip -%}
+        {%- assign rating_num = rating_str | replace: ',', '.' | plus: 0 -%}
+        {%- if rating_num > 5 -%}{%- assign rating_num = 5 -%}{%- endif -%}
+        {%- if rating_num < 0 -%}{%- assign rating_num = 0 -%}{%- endif -%}
+
+        <article class="rc-card card" role="listitem" aria-label="{{ label }} rating {{ rating_num }}/5">
+          <div class="rc-label text-p1">{{ label }}</div>
+          <div class="rating rating--sm" aria-hidden="true">
+            <div class="rating__stars">
+              {%- for s in (1..5) -%}
+                {%- assign value = rating_num | minus: forloop.index | plus: 1 -%}
+                {%- if value >= 1 -%}{%- assign pct = 100 -%}
+                {%- elsif value <= 0 -%}{%- assign pct = 0 -%}
+                {%- else -%}{%- assign pct = value | times: 100 -%}{%- endif -%}
+                <span class="rating__star">
+                  <span class="is-bg">
+                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                      <path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.62L12 2 9.19 8.62 2 9.24l5.46 4.73L5.82 21z"/>
+                    </svg>
+                  </span>
+                  {%- if pct > 0 -%}
+                    <span class="is-fill" style="width:{{ pct }}%">
+                      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                        <path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.62L12 2 9.19 8.62 2 9.24l5.46 4.73L5.82 21z"/>
+                      </svg>
+                    </span>
+                  {%- endif -%}
+                </span>
+              {%- endfor -%}
+            </div>
+            <span class="rating__label">{{ rating_num }}/5</span>
+          </div>
+        </article>
+      {%- endfor -%}
+    </div>
+  </div>
+</section>
+{% endif %}
