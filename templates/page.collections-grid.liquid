@@ -102,10 +102,10 @@
   endif
 %}
 
-{%- if collection.metafields.custom.header_banner.value != blank -%}
+{%- if page.metafields.custom.header_banner.value != blank -%}
   <style>
     .template-collection .breadcrumb {
-      background: url({{ collection.metafields.custom.header_banner | file_url }});
+      background: url({{ page.metafields.custom.header_banner | file_url }});
       background-repeat: no-repeat;
       background-position: center;
       background-size: cover;
@@ -116,7 +116,7 @@
 
 
 <nav class="breadcrumb simple-lazyload" role="navigation" aria-label="breadcrumbs">
-  {%- if collection.metafields.custom.header_banner.value != blank -%}
+  {%- if page.metafields.custom.header_banner.value != blank -%}
     <div class="header-overlay" style="position:absolute;top:0;left:0;width:100%;height:100%;background-color:rgba(30,29,34,0.4);"></div>
   {%- endif -%}
   <div class="breadcrumbs container dt-prl-30">
@@ -148,7 +148,7 @@
 
         <!-- Performance rating → stars (self-contained, adapted to collection metafield) -->
         {%- comment -%} Reads number from metafield `custom.performance` and renders 0–5 stars with partial fill. {%- endcomment -%}
-        {%- assign rating_str = collection.metafields.custom.performance | metafield_text | strip -%}
+        {%- assign rating_str = page.metafields.custom.performance | metafield_text | strip -%}
         {%- if rating_str != blank -%}
           {%- assign rating = rating_str | replace: ',', '.' | plus: 0 -%}
           {%- if rating > 0 -%}
@@ -191,7 +191,7 @@
         {%- endif -%}
 
         <!-- Existing work material icons -->
-        {% assign work_material_array = collection.metafields.custom.work_material | remove: '[' | remove: ']' | remove: '"' | split: ',' %}
+        {% assign work_material_array = page.metafields.custom.work_material | remove: '[' | remove: ']' | remove: '"' | split: ',' %}
         {%- if work_material_array contains 'P' or work_material_array contains 'P No' or work_material_array contains 'M' or work_material_array contains 'M No' or work_material_array contains 'K' or work_material_array contains 'K No' or work_material_array contains 'N' or work_material_array contains 'N No' or work_material_array contains 'S' or work_material_array contains 'S No' or work_material_array contains 'H' or work_material_array contains 'H No' -%}
           <div class="collection-icon" style="display:flex;gap:10px;margin-top:30px;">
             {% for m in work_material_array %}
@@ -231,7 +231,7 @@
         {% if have_items %}
           {% for collection in items %}
             {% liquid
-              assign summary = collection.metafields.custom.short_description | default: collection.description
+              assign summary = page.metafields.custom.short_description | default: collection.description
               assign collection_image = collection.image
               assign image_alt = collection_image and collection_image.alt != blank ? collection_image.alt : collection.title
             %}
@@ -264,13 +264,13 @@
                   {% endif %}
 
                   {%- comment -%} Work material chips (normalized + no parentheses) {%- endcomment -%}
-                  {%- assign work_material_array = collection.metafields.custom.work_material.value
-                    | default: collection.metafields.custom.work_material
+                  {%- assign work_material_array = page.metafields.custom.work_material.value
+                    | default: page.metafields.custom.work_material
                   -%}
 
                   {%- if work_material_array == blank -%}
                     {%- comment -%} Fallback for legacy JSON strings {%- endcomment -%}
-                    {%- assign work_material_array = collection.metafields.custom.work_material
+                    {%- assign work_material_array = page.metafields.custom.work_material
                       | remove: '['
                       | remove: ']'
                       | remove: '"'
@@ -312,7 +312,7 @@
                   {%- endif -%}
 
                   {%- comment -%} Performance rating → stars (self-contained) {%- endcomment -%}
-                  {%- assign rating_str = collection.metafields.custom.performance_rating | metafield_text | strip -%}
+                  {%- assign rating_str = page.metafields.custom.performance_rating | metafield_text | strip -%}
                   {%- if rating_str != blank -%}
                     {%- assign rating = rating_str | replace: ',', '.' | plus: 0 -%}
                     {%- if rating > 0 -%}
@@ -376,7 +376,7 @@
             {% assign collection = collections[handle] %}
             {% if collection %}
               {% liquid
-                assign summary = collection.metafields.custom.short_description | default: collection.description
+                assign summary = page.metafields.custom.short_description | default: collection.description
                 assign collection_image = collection.image
                 assign image_alt = collection_image and collection_image.alt != blank ? collection_image.alt : collection.title
               %}
@@ -409,13 +409,13 @@
                     {% endif %}
 
                     {%- comment -%} Work material chips (normalized + no parentheses) {%- endcomment -%}
-                    {%- assign work_material_array = collection.metafields.custom.work_material.value
-                      | default: collection.metafields.custom.work_material
+                    {%- assign work_material_array = page.metafields.custom.work_material.value
+                      | default: page.metafields.custom.work_material
                     -%}
 
                     {%- if work_material_array == blank -%}
                       {%- comment -%} Fallback for legacy JSON strings {%- endcomment -%}
-                      {%- assign work_material_array = collection.metafields.custom.work_material
+                      {%- assign work_material_array = page.metafields.custom.work_material
                         | remove: '['
                         | remove: ']'
                         | remove: '"'
@@ -457,7 +457,7 @@
                     {%- endif -%}
 
                     {%- comment -%} Performance rating → stars (self-contained) {%- endcomment -%}
-                    {%- assign rating_str = collection.metafields.custom.performance_rating | metafield_text | strip -%}
+                    {%- assign rating_str = page.metafields.custom.performance_rating | metafield_text | strip -%}
                     {%- if rating_str != blank -%}
                       {%- assign rating = rating_str | replace: ',', '.' | plus: 0 -%}
                       {%- if rating > 0 -%}
@@ -545,7 +545,7 @@
           {% if pr_have_items %}
             {% for collection in pr_items %}
               {% liquid
-                assign summary = collection.metafields.custom.short_description | default: collection.description
+                assign summary = page.metafields.custom.short_description | default: collection.description
                 assign collection_image = collection.image
                 assign image_alt = collection_image and collection_image.alt != blank ? collection_image.alt : collection.title
               %}
@@ -578,13 +578,13 @@
                     {% endif %}
 
                     {%- comment -%} Work material chips (normalized + no parentheses) {%- endcomment -%}
-                    {%- assign work_material_array = collection.metafields.custom.work_material.value
-                      | default: collection.metafields.custom.work_material
+                    {%- assign work_material_array = page.metafields.custom.work_material.value
+                      | default: page.metafields.custom.work_material
                     -%}
 
                     {%- if work_material_array == blank -%}
                       {%- comment -%} Fallback for legacy JSON strings {%- endcomment -%}
-                      {%- assign work_material_array = collection.metafields.custom.work_material
+                      {%- assign work_material_array = page.metafields.custom.work_material
                         | remove: '['
                         | remove: ']'
                         | remove: '"'
@@ -626,7 +626,7 @@
                     {%- endif -%}
 
                     {%- comment -%} Performance rating → stars (self-contained) {%- endcomment -%}
-                    {%- assign rating_str = collection.metafields.custom.performance_rating | metafield_text | strip -%}
+                    {%- assign rating_str = page.metafields.custom.performance_rating | metafield_text | strip -%}
                     {%- if rating_str != blank -%}
                       {%- assign rating = rating_str | replace: ',', '.' | plus: 0 -%}
                       {%- if rating > 0 -%}
@@ -696,7 +696,7 @@
               {% assign collection = collections[handle] %}
               {% if collection %}
                 {% liquid
-                  assign summary = collection.metafields.custom.short_description | default: collection.description
+                  assign summary = page.metafields.custom.short_description | default: collection.description
                   assign collection_image = collection.image
                   assign image_alt = collection_image and collection_image.alt != blank ? collection_image.alt : collection.title
                 %}
@@ -729,13 +729,13 @@
                       {% endif %}
 
                       {%- comment -%} Work material chips (normalized + no parentheses) {%- endcomment -%}
-                      {%- assign work_material_array = collection.metafields.custom.work_material.value
-                        | default: collection.metafields.custom.work_material
+                      {%- assign work_material_array = page.metafields.custom.work_material.value
+                        | default: page.metafields.custom.work_material
                       -%}
 
                       {%- if work_material_array == blank -%}
                         {%- comment -%} Fallback for legacy JSON strings {%- endcomment -%}
-                        {%- assign work_material_array = collection.metafields.custom.work_material
+                        {%- assign work_material_array = page.metafields.custom.work_material
                           | remove: '['
                           | remove: ']'
                           | remove: '"'
@@ -777,7 +777,7 @@
                       {%- endif -%}
 
                       {%- comment -%} Performance rating → stars (self-contained) {%- endcomment -%}
-                      {%- assign rating_str = collection.metafields.custom.performance_rating
+                      {%- assign rating_str = page.metafields.custom.performance_rating
                         | metafield_text
                         | strip
                       -%}
