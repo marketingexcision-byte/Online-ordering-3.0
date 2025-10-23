@@ -354,6 +354,7 @@
     background:#fff;
     border: var(--border-width) solid var(--color-secondary-grey-light) !important;
     box-shadow: var(--shadow-sm);
+    padding: var(--space-5) !important;
   }
   .ap-card__icon{
     display:inline-flex;
