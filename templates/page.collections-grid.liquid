@@ -102,130 +102,6 @@
   endif
 %}
 
-{%- if page.metafields.custom.header_image.value != blank -%}
-  <style>
-    .template-collection .breadcrumb {
-      background: url({{ page.metafields.custom.header_image | file_url }});
-      background-repeat: no-repeat;
-      background-position: center;
-      background-size: cover;
-      position: relative;
-    }
-  </style>
-{%- endif -%}
-
-<nav class="breadcrumb simple-lazyload" role="navigation" aria-label="breadcrumbs">
-  {%- if page.metafields.custom.header_image.value != blank -%}
-    <div class="header-overlay" style="position:absolute;top:0;left:0;width:100%;height:100%;background-color:rgba(30,29,34,0.4);"></div>
-  {%- endif -%}
-  <div class="breadcrumbs container dt-prl-30">
-    <div class="row" style="display:flex;align-items:flex-start;">
-      <div class="col-md-7 lazyload-element">
-
-            {% if parent_url %}
-      <div class="w-btn-wrapper">
-        <a class="w-btn icon_atleft" href="{{ parent_url }}" data-url="{{ parent_url }}">
-          <span class="w-btn-label font-bold"><em>←</em> Back</span>
-        </a>
-      </div>
-    {% endif %}
-
-        {% if heading != blank %}
-          <h1 id="collection-grid-heading" class="section__title text-h2">{{ heading | escape }}</h1>
-        {% endif %}
-        {% if page.metafields.custom.short_description != blank %}
-          <h2 id="collection-grid-heading" class="section__title text-h2">{{ page.metafields.custom.short_description }}</h2>
-        {% endif %}
-
-      <section class="section section--page-intro" aria-label="Page content">
-          <div class="layout-constrained">
-            <div class="section__content rte">{{ page.content }}</div>
-          </div>
-        </section>
-        {%- comment -%} Performance rating → stars (self-contained) {%- endcomment -%}
-                  {%- assign rating_str = page.metafields.custom.performance | metafield_text | strip -%}
-                  {%- if rating_str != blank -%}
-                    {%- assign rating = rating_str | replace: ',', '.' | plus: 0 -%}
-                    {%- if rating > 0 -%}
-                      {%- assign r = rating -%}
-                      {%- if r > 5 -%}{%- assign r = 5 -%}{%- endif -%}
-                      {%- if r < 0 -%}{%- assign r = 0 -%}{%- endif -%}
-
-                      <div class="rating" aria-label="Performance rating: {{ r }} out of 5">
-                        <div class="rating__stars" role="img" aria-hidden="true">
-                          {%- for s in (1..5) -%}
-                            {%- assign value = r | minus: forloop.index | plus: 1 -%}
-                            {%- if value >= 1 -%}
-                              {%- assign pct = 100 -%}
-                            {%- elsif value <= 0 -%}
-                              {%- assign pct = 0 -%}
-                            {%- else -%}
-                              {%- assign pct = value | times: 100 -%}
-                            {%- endif -%}
-                            <span class="rating__star">
-                              <!-- empty star -->
-                              <span class="is-bg" style="color:#e1e1e1;position:relative;display:block">
-                                <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22" aria-hidden="true">
-                                  <path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.62L12 2 9.19 8.62 2 9.24l5.46 4.73L5.82 21z"/>
-                                </svg>
-                              </span>
-                              {%- if pct > 0 -%}
-                                <!-- filled portion -->
-                                <span
-                                  class="is-fill"
-                                  style="position:absolute;inset:0;overflow:hidden;width:{{ pct }}%"
-                                >
-                                  <span style="color:#f6b419;display:block">
-                                    <svg
-                                      viewBox="0 0 24 24"
-                                      fill="currentColor"
-                                      width="22"
-                                      height="22"
-                                      aria-hidden="true"
-                                    >
-                                      <path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.62L12 2 9.19 8.62 2 9.24l5.46 4.73L5.82 21z"/>
-                                    </svg>
-                                  </span>
-                                </span>
-                              {%- endif -%}
-                            </span>
-                          {%- endfor -%}
-                        </div>
-                      </div>
-                    {%- endif -%}
-                  {%- endif -%}
-
-        {% assign work_material_array = collection.metafields.custom.work_material | remove: '[' | remove: ']' | remove: '"' | split: ',' %}
-        {%- if work_material_array contains 'P' or work_material_array contains 'P No' or work_material_array contains 'M' or work_material_array contains 'M No' or work_material_array contains 'K' or work_material_array contains 'K No' or work_material_array contains 'N' or work_material_array contains 'N No' or work_material_array contains 'S' or work_material_array contains 'S No' or work_material_array contains 'H' or work_material_array contains 'H No' -%}
-          <div class="collection-icon" style="display:flex;gap:10px;margin-top:30px;">
-            {% for m in work_material_array %}
-              {% case m %}
-                {% when 'P' %}{% assign color = '#0069a7' %}
-                {% when 'P No' %}{% assign color = '#e8e8e8' %}
-                {% when 'M' %}{% assign color = '#f6b519' %}
-                {% when 'M No' %}{% assign color = '#e8e8e8' %}
-                {% when 'K' %}{% assign color = '#e0592a' %}
-                {% when 'K No' %}{% assign color = '#e8e8e8' %}
-                {% when 'N' %}{% assign color = '#109954' %}
-                {% when 'N No' %}{% assign color = '#e8e8e8' %}
-                {% when 'S' %}{% assign color = '#f88d2b' %}
-                {% when 'S No' %}{% assign color = '#e8e8e8' %}
-                {% when 'H' %}{% assign color = '#666666' %}
-                {% when 'H No' %}{% assign color = '#e8e8e8' %}
-                {% else %}{% assign color = '#000000' %}
-              {% endcase %}
-              <div class="Graph-Icon" style="background:{{ color }};" data-debug-m="{{ m }}" data-debug-color="{{ color }}">
-                <p>{{ m | split: ' ' | first }}</p>
-              </div>
-            {% endfor %}
-          </div>
-        {%- endif -%}
-      </div>
-    </div>
-  </div>
-</nav>
-
-
 <div class="section">
   <div class="container layout-constrained">
     {%- comment -%} Resolve parent_page metafield for back link {%- endcomment -%}
@@ -239,7 +115,13 @@
       {%- endif -%}
     {%- endif -%}
 
-
+    {% if parent_url %}
+      <div class="w-btn-wrapper">
+        <a class="w-btn icon_atleft" href="{{ parent_url }}" data-url="{{ parent_url }}">
+          <span class="w-btn-label font-bold"><em>←</em> Back</span>
+        </a>
+      </div>
+    {% endif %}
 
     {% if heading != blank or intro != blank %}
       <header class="section__header">
