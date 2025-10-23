@@ -102,21 +102,9 @@
   endif
 %}
 
-{%- if page.metafields.custom.header_image != blank -%}
-  <style>
-    .template-collection .breadcrumb {
-      background: url({{ page.metafields.custom.header_image | file_url }});
-      background-repeat: no-repeat;
-      background-position: center;
-      background-size: cover;
-      position: relative;
-    }
-  </style>
-{%- endif -%}
-
 
 <nav class="breadcrumb simple-lazyload" role="navigation" aria-label="breadcrumbs">
-  {%- if page.metafields.custom.header_banner.value != blank -%}
+  {%- if page.metafields.custom.header_image.value != blank -%}
     <div class="header-overlay" style="position:absolute;top:0;left:0;width:100%;height:100%;background-color:rgba(30,29,34,0.4);"></div>
   {%- endif -%}
   <div class="breadcrumbs container dt-prl-30">
