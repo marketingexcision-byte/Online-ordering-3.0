@@ -288,5 +288,43 @@
     color: var(--color-secondary-iron);
   }
 
+    /* === Feature points === */
+  .section--feature-points .fp-grid{
+    display: grid;
+    gap: var(--space-6) var(--space-6);
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  }
+
+  .fp-card{
+    display: grid;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    border-radius: var(--radius-lg);
+    background: #fff;
+    border: var(--border-width-thin) solid var(--color-secondary-grey-light);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .fp-card__icon{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px; height: 64px;
+    border-radius: var(--radius-pill);
+    background: var(--color-surface, #fff);
+  }
+  .fp-card__img{
+    width: 48px; height: 48px; object-fit: contain; display: block;
+  }
+
+  /* Fallback icon (bronze +) */
+  .fp-card__svg{ width: 48px; height: 48px; display: block; }
+  .fp-card__svg .fp--bronze{ fill: var(--color-secondary-bronze, #f88d2b); }
+  .fp-card__svg .fp--plus{ stroke: #fff; stroke-width: 3; stroke-linecap: round; }
+
+  .fp-card__title{ margin: 0; }
+  .fp-card__body{ margin: 0; color: var(--color-secondary-iron); }
+
+  .fp-empty{ color: var(--color-secondary-iron); text-align: center; }
 
 }
