@@ -140,13 +140,11 @@
 
 
         <!-- Rich content section (maps from page.content → use collection.description) -->
-        {%- if collection.description != blank -%}
           <section class="section section--page-intro" aria-label="Page content">
             <div class="layout-constrained">
-              <div class="section__content rte">{{ collection.description }}</div>
+              <div class="section__content rte">{{ page.content }}</div>
             </div>
           </section>
-        {%- endif -%}
 
         <!-- Performance rating → stars (self-contained, adapted to collection metafield) -->
         {%- comment -%} Reads number from metafield `custom.performance` and renders 0–5 stars with partial fill. {%- endcomment -%}
