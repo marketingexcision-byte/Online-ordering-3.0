@@ -231,7 +231,7 @@
         {% if have_items %}
           {% for collection in items %}
             {% liquid
-              assign summary = page.metafields.custom.short_description | default: collection.description
+              assign summary = collection.metafields.custom.short_description | default: collection.description
               assign collection_image = collection.image
               assign image_alt = collection_image and collection_image.alt != blank ? collection_image.alt : collection.title
             %}
@@ -376,7 +376,7 @@
             {% assign collection = collections[handle] %}
             {% if collection %}
               {% liquid
-                assign summary = page.metafields.custom.short_description | default: collection.description
+                assign summary = collection.metafields.custom.short_description | default: collection.description
                 assign collection_image = collection.image
                 assign image_alt = collection_image and collection_image.alt != blank ? collection_image.alt : collection.title
               %}
@@ -409,13 +409,13 @@
                     {% endif %}
 
                     {%- comment -%} Work material chips (normalized + no parentheses) {%- endcomment -%}
-                    {%- assign work_material_array = page.metafields.custom.work_material.value
-                      | default: page.metafields.custom.work_material
+                    {%- assign work_material_array = collection.metafields.custom.work_material.value
+                      | default: collection.metafields.custom.work_material
                     -%}
 
                     {%- if work_material_array == blank -%}
                       {%- comment -%} Fallback for legacy JSON strings {%- endcomment -%}
-                      {%- assign work_material_array = page.metafields.custom.work_material
+                      {%- assign work_material_array = collection.metafields.custom.work_material
                         | remove: '['
                         | remove: ']'
                         | remove: '"'
