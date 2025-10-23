@@ -33,7 +33,7 @@
 
 
 
-
+{% if page.metafields.custom.feature_points or page.metafields.custom.advantage_points != blank %}
 <section class="section section--feature-points" aria-labelledby="feature-points-heading-{{ section.id }}">
   <div class="container layout-constrained">
     {% if have_ap_items %}
@@ -146,3 +146,4 @@
     {% endif %}
   </div>
 </section>
+{% endif %}
