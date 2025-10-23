@@ -119,6 +119,7 @@
   {%- if page.metafields.custom.header_image.value != blank -%}
     <div class="header-overlay" style="position:absolute;top:0;left:0;width:100%;height:100%;background-color:rgba(30,29,34,0.4);"></div>
   {%- endif -%}
+  <div class="breadcrumbs container dt-prl-30">
 <div class="section">
   <div class="container layout-constrained">
     {%- comment -%} Resolve parent_page metafield for back link {%- endcomment -%}
@@ -211,6 +212,7 @@
       </header>
     {% endif %}
   </div>
+</div>
 </nav>
 
           {% render 'rating-cards', resource: page %}
