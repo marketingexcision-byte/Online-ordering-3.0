@@ -287,6 +287,31 @@
     color: var(--color-secondary-iron);
   }
 
+  @layer components {
+  /* Top-of-page compact rating cards */
+  .section--rating-cards { padding-block: var(--space-6); } /* a bit tighter than default */
+  .rc-grid{
+    display:grid;
+    gap: var(--space-4);
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  }
+  .rc-card{
+    display:grid;
+    gap: var(--space-2);
+    padding: var(--space-3);
+    border-radius: var(--radius-md);
+    background:#fff;
+    border: var(--border-width-thin) solid var(--color-secondary-grey-light);
+    box-shadow: var(--shadow-sm);
+  }
+  .rc-label{ font-family: var(--font-bold); }
+
+  /* Make stars smaller without touching your global star colors */
+  .rating--sm .rating__star { width:16px; height:16px; }
+  .rating--sm .rating__label { font-size:12px; }
+}
+
+
     /* === Feature points === */
   .section--feature-points .fp-grid{
     display: grid;
