@@ -308,7 +308,7 @@
     background: #0069a7;
   }
 
-  .section--feature-points .container .layout-constrained {
+  .section--feature-points .container.layout-constrained {
     padding: var(--space-5) var(--space-5) var(--space-8) !important;
   }
 
