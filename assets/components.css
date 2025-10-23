@@ -287,6 +287,16 @@
     color: var(--color-secondary-iron);
   }
 
+  /* Force stars to actually paint even if the theme resets SVG fill */
+.rating__star svg {
+  fill: currentColor !important;   /* critical */
+}
+
+/* Optional: make sure our colors win if other rules compete */
+.rating__star .is-bg svg   { color: var(--color-secondary-grey) !important; }
+.rating__star .is-fill svg { color: var(--color-primary-orange) !important; }
+
+
   .rc-row{
     display:grid;
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
