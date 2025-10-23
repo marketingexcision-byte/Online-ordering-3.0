@@ -292,7 +292,6 @@
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     gap: var(--space-6);
     align-items:start;
-    text-align:center;
   }
   .rc-item__label{ line-height:1.2; }
   .rc-item__rule{
