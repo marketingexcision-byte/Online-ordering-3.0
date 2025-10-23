@@ -304,6 +304,10 @@
     padding: var(--space-5) !important;
   }
 
+  section.section.section--feature-points {
+    margin-bottom: var(--space-9);
+  }
+
   .fp-card__icon{
     display: inline-flex;
     align-items: center;
