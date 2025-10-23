@@ -311,6 +311,10 @@
   .section--feature-points .container.layout-constrained {
     padding: var(--space-5) var(--space-5) var(--space-8) !important;
   }
+  
+  .section--feature-points .h2{
+    color: white;
+  }
 
   .fp-card__icon{
     display: inline-flex;
