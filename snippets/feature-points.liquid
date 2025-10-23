@@ -33,7 +33,9 @@
 
 
 
-
+{% if have_ap_items or 
+    have_items
+%}
 <section class="section section--feature-points" aria-labelledby="feature-points-heading-{{ section.id }}">
   <div class="container layout-constrained">
     {% if have_ap_items %}
@@ -146,3 +148,4 @@
     {% endif %}
   </div>
 </section>
+{% endif %}
