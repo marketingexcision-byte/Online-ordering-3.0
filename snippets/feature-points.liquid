@@ -23,14 +23,9 @@
   <div class="container layout-constrained">
     {% if heading != blank or intro != blank %}
       <header class="section__header">
-        {% if heading != blank %}
           <h2 id="feature-points-heading-{{ section.id }}" class="section__title text-h3">
-            {{ heading | escape }}
+            Features
           </h2>
-        {% endif %}
-        {% if intro != blank %}
-          <div class="section__intro text-p1">{{ intro }}</div>
-        {% endif %}
       </header>
     {% endif %}
 
