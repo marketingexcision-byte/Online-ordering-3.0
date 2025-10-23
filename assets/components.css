@@ -302,6 +302,7 @@
     border: var(--border-width) solid var(--color-secondary-grey-light) !important;
     padding: var(--space-4) !important;
     height: 100%;
+    min-height: 115px;
   }
 
   .rc-item__text{ color: var(--color-secondary-iron); }
