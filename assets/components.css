@@ -305,7 +305,7 @@
   }
 
   .section.section--feature-points {
-    margin-bottom: var(--space-9);
+    margin-bottom: var(--space-9) !important;
   }
 
   .fp-card__icon{
