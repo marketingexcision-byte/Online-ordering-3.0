@@ -1,7 +1,35 @@
-{% comment %} Rating cards pulled from Page metafields in namespace `custom` {% endcomment %}
-{% assign heading = section.settings.heading %}
+{% comment %}
+Small rating cards drawn from metafields on the current resource (page/product/collection/article).
+Namespace: custom
+Keys expected:
+- metal_removal
+- rates
+- material_versatility
+- cutting_resistance
+- surface_finish
+- high_accuracy_machining
+- square_shoulder_milling
+- copy_milling
+- chip_control
+{% endcomment %}
 
-{%- capture pairs -%}
+{% liquid
+  assign heading = section.settings.heading
+
+  # --- Determine which object to read metafields from ---
+  assign resource = nil
+  if page
+    assign resource = page
+  elsif product
+    assign resource = product
+  elsif collection
+    assign resource = collection
+  elsif article
+    assign resource = article
+  endif
+%}
+
+{%- capture rows -%}
 Metal Removal|metal_removal
 Rates|rates
 Material Versatility|material_versatility
@@ -12,17 +40,24 @@ Square Shoulder Milling|square_shoulder_milling
 Copy Milling|copy_milling
 Chip Control|chip_control
 {%- endcapture -%}
-{% assign rows = pairs | split: '\n' %}
+{% assign pairs = rows | split: '\n' %}
 
-{%- assign any = false -%}
-{%- for row in rows -%}
-  {%- assign row = row | strip -%}
-  {%- if row == '' -%}{%- continue -%}{%- endif -%}
-  {%- assign key = row | split: '|' | last | strip -%}
-  {%- if page.metafields.custom[key] != blank -%}{%- assign any = true -%}{%- break -%}{%- endif -%}
-{%- endfor -%}
+{%- assign has_any = false -%}
+{%- if resource -%}
+  {%- for r in pairs -%}
+    {%- assign r = r | strip -%}
+    {%- if r == '' -%}{%- continue -%}{%- endif -%}
+    {%- assign key = r | split: '|' | last | strip -%}
+    {%- assign mf  = resource.metafields.custom[key] -%}
 
-{% if any %}
+    {%- if mf != blank -%}
+      {%- assign has_any = true -%}
+      {%- break -%}
+    {%- endif -%}
+  {%- endfor -%}
+{%- endif -%}
+
+{% if resource and has_any %}
 <section class="section section--rating-cards" aria-labelledby="rating-cards-heading-{{ section.id }}">
   <div class="container layout-constrained">
     {% if heading != blank %}
@@ -32,16 +67,16 @@ Chip Control|chip_control
     {% endif %}
 
     <div class="rc-grid" role="list">
-      {%- for row in rows -%}
-        {%- assign row = row | strip -%}
-        {%- if row == '' -%}{%- continue -%}{%- endif -%}
-        {%- assign parts = row | split: '|' -%}
+      {%- for r in pairs -%}
+        {%- assign r = r | strip -%}
+        {%- if r == '' -%}{%- continue -%}{%- endif -%}
+        {%- assign parts = r | split: '|' -%}
         {%- assign label = parts[0] | strip -%}
         {%- assign key   = parts[1] | strip -%}
-        {%- assign raw   = page.metafields.custom[key] -%}
+        {%- assign raw   = resource.metafields.custom[key] -%}
         {%- if raw == blank -%}{%- continue -%}{%- endif -%}
 
-        {%- comment -%} coerce to 0–5 number (handles integer/decimal/text) {%- endcomment -%}
+        {%- comment -%} Coerce to a 0–5 number; accept integer/decimal/rich text {%- endcomment -%}
         {%- assign rating_str = raw.value | default: raw | append: '' | strip -%}
         {%- assign rating_num = rating_str | replace: ',', '.' | plus: 0 -%}
         {%- if rating_num > 5 -%}{%- assign rating_num = 5 -%}{%- endif -%}
@@ -49,26 +84,29 @@ Chip Control|chip_control
 
         <article class="rc-card card" role="listitem" aria-label="{{ label }} rating {{ rating_num }}/5">
           <div class="rc-label text-p1">{{ label }}</div>
-          <div class="rating rating--sm" aria-hidden="true">
-            <div class="rating__stars">
+
+          <div class="rating rating--sm">
+            <div class="rating__stars" role="img" aria-label="{{ rating_num }} out of 5 stars">
               {%- for s in (1..5) -%}
                 {%- assign value = rating_num | minus: forloop.index | plus: 1 -%}
                 {%- if value >= 1 -%}{%- assign pct = 100 -%}
                 {%- elsif value <= 0 -%}{%- assign pct = 0 -%}
                 {%- else -%}{%- assign pct = value | times: 100 -%}{%- endif -%}
                 <span class="rating__star">
+                  <!-- empty star -->
                   <span class="is-bg">
                     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                       <path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.62L12 2 9.19 8.62 2 9.24l5.46 4.73L5.82 21z"/>
                     </svg>
                   </span>
-                  {%- if pct > 0 -%}
+                  {% if pct > 0 %}
+                    <!-- filled portion -->
                     <span class="is-fill" style="width:{{ pct }}%">
                       <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                         <path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.62L12 2 9.19 8.62 2 9.24l5.46 4.73L5.82 21z"/>
                       </svg>
                     </span>
-                  {%- endif -%}
+                  {% endif %}
                 </span>
               {%- endfor -%}
             </div>
