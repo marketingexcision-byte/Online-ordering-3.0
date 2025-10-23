@@ -304,7 +304,7 @@
     padding: var(--space-5) !important;
   }
 
-  section.section.section--feature-points {
+  .section.section--feature-points {
     margin-bottom: var(--space-9);
   }
 
