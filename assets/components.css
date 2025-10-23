@@ -347,13 +347,13 @@
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   }
   .ap-card{
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 35px; height: 35px;
-    border-radius: var(--radius-pill);
-    background: var(--color-surface, #fff);
-    margin-bottom: var(--space-2) !important;
+    display:grid;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    border-radius: var(--radius-lg);
+    background:#fff;
+    border: var(--border-width) solid var(--color-secondary-grey-light) !important;
+    box-shadow: var(--shadow-sm);
   }
   .ap-card__icon{
     display:inline-flex;
