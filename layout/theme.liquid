@@ -1,80 +1,77 @@
 <!doctype html>
 <html class="no-touch no-js" lang="en" dir="ltr">
   <head>
-{% liquid
-  assign robots_directive = ''
-  assign googlebot_directive = ''
+    {% liquid
+      assign robots_directive = ''
+      assign googlebot_directive = ''
 
-  assign request_path  = request.path         | default: '' | downcase
-  assign request_query = request.query_string | default: '' | downcase
+      assign request_path = request.path | default: '' | downcase
+      assign request_query = request.query_string | default: '' | downcase
 
-  assign has_collection_filters = false
+      assign has_collection_filters = false
 
-  # === Detect filtered collection variants ===
-  if request.page_type == 'collection' or template contains 'collection'
-    if current_tags != blank
-      assign has_collection_filters = true
-    endif
-    if has_collection_filters == false
-      if request_query contains 'filter.' or request_query contains 'filter%5b'
-        assign has_collection_filters = true
-      elsif request_query contains 'pf_'
-        assign has_collection_filters = true
-      elsif request_query contains 'constraint='
-        assign has_collection_filters = true
-      elsif request_query contains 'options%5b'
-        assign has_collection_filters = true
-      else
-        assign after_collections = request_path | split: '/collections/' | last
-        assign segments = after_collections | split: '/'
-        if segments.size > 1
-          assign tag_segment = segments[1]
-          if tag_segment contains '+'
+      # === Detect filtered collection variants ===
+      if request.page_type == 'collection' or template contains 'collection'
+        if current_tags != blank
+          assign has_collection_filters = true
+        endif
+        if has_collection_filters == false
+          if request_query contains 'filter.' or request_query contains 'filter%5b'
             assign has_collection_filters = true
+          elsif request_query contains 'pf_'
+            assign has_collection_filters = true
+          elsif request_query contains 'constraint='
+            assign has_collection_filters = true
+          elsif request_query contains 'options%5b'
+            assign has_collection_filters = true
+          else
+            assign after_collections = request_path | split: '/collections/' | last
+            assign segments = after_collections | split: '/'
+            if segments.size > 1
+              assign tag_segment = segments[1]
+              if tag_segment contains '+'
+                assign has_collection_filters = true
+              endif
+            endif
           endif
         endif
       endif
-    endif
-  endif
 
-  # === Robots logic ===
-  if has_collection_filters or request.page_type == 'search' or request_path contains '/search' or request_path contains '/compare'
-    assign robots_directive = 'noindex, follow'
-  endif
-  if robots_directive != '' and googlebot_directive == ''
-    assign googlebot_directive = robots_directive
-  endif
+      # === Robots logic ===
+      if has_collection_filters or request.page_type == 'search' or request_path contains '/search' or request_path contains '/compare'
+        assign robots_directive = 'noindex, follow'
+      endif
+      if robots_directive != '' and googlebot_directive == ''
+        assign googlebot_directive = robots_directive
+      endif
 
-  # === Canonical logic (single tag everywhere) ===
-  assign canonical_href = canonical_url
+      # === Canonical logic (single tag everywhere) ===
+      assign canonical_href = canonical_url
 
-  # Filtered collections canonical back to base collection
-  if request.page_type == 'collection' and collection and has_collection_filters
-    assign canonical_href = collection.url
-  endif
+      # Filtered collections canonical back to base collection
+      if request.page_type == 'collection' and collection and has_collection_filters
+        assign canonical_href = collection.url
+      endif
 
-  # Product override for service products
-  if template contains 'product' and product
-    assign is_service = product.tags contains 'Custom Length Service' or product.tags contains 'Service Product' or product.title contains ' · svc'
-    if is_service
-      assign robots_directive = 'noindex, nofollow'
-      assign googlebot_directive = 'noindex, nofollow'
-      assign canonical_href = routes.collections_url | append: '/all'
-    endif
-  endif
-%}
+      # Product override for service products
+      if template contains 'product' and product
+        assign is_service = product.tags contains 'Custom Length Service' or product.tags contains 'Service Product' or product.title contains ' · svc'
+        if is_service
+          assign robots_directive = 'noindex, nofollow'
+          assign googlebot_directive = 'noindex, nofollow'
+          assign canonical_href = routes.collections_url | append: '/all'
+        endif
+      endif
+    %}
 
-{%- if robots_directive != '' -%}
-  <meta name="robots" content="{{ robots_directive }}">
-{%- endif -%}
-{%- if googlebot_directive != '' -%}
-  <meta name="googlebot" content="{{ googlebot_directive }}">
-{%- endif -%}
+    {%- if robots_directive != '' -%}
+      <meta name="robots" content="{{ robots_directive }}">
+    {%- endif -%}
+    {%- if googlebot_directive != '' -%}
+      <meta name="googlebot" content="{{ googlebot_directive }}">
+    {%- endif -%}
 
-<link rel="canonical" href="{{ canonical_href }}">
-
-
-
+    <link rel="canonical" href="{{ canonical_href }}">
 
     <link href="{{ 'select2.min.css' | asset_url }}" rel="stylesheet">
     <script src="{{ 'select2.min.js' | asset_url }}"></script>
@@ -83,13 +80,15 @@
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.4.2/dist/js/tom-select.complete.min.js"></script>
 
     {%- render 'ecom_header' -%}
-    <meta name="google-site-verification" content="EIKmIQXH2zL9-cCyS0Kfv4x85vRR6EMM0q9lD18Fz6E" />
-    {% if template contains 'blogs' or template contains 'blog' %}
+    <meta name="google-site-verification" content="EIKmIQXH2zL9-cCyS0Kfv4x85vRR6EMM0q9lD18Fz6E">
+    {% if (template contains 'blogs' or template contains 'blog') and robots_directive == '' %}
       <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
     {% endif %}
 
     {% if template contains 'product' and product %}
-      {% assign is_service = product.tags contains 'Custom Length Service' or product.tags contains 'Service Product' or product.title contains ' · svc' %}
+      {% assign is_service = product.tags contains 'Custom Length Service'
+        or product.tags contains 'Service Product'
+        or product.title contains ' · svc' %}
       {% if is_service %}
         {% assign robots_directive = 'noindex, nofollow' %}
         {% assign googlebot_directive = 'noindex, nofollow' %}
@@ -100,16 +99,10 @@
       {% endif %}
     {% endif %}
 
-    {% if robots_directive != '' %}
-      <meta name="robots" content="{{ robots_directive }}">
-    {% endif %}
-    {% if googlebot_directive != '' %}
-      <meta name="googlebot" content="{{ googlebot_directive }}">
-    {% endif %}
-
-
     <script>
-      (function(H){H.className=H.className.replace(/\bno-js\b/,'js')})(document.documentElement)
+      (function (H) {
+        H.className = H.className.replace(/\bno-js\b/, 'js');
+      })(document.documentElement);
     </script>
     <!-- Basic page needs ================================================== -->
     <meta charset="utf-8">
@@ -135,13 +128,12 @@
     <!-- Product meta ================================================== -->
     {%- include 'social-meta-tags' -%}
     <!-- Helpers ================================================== -->
-    <link rel="canonical" href="{{ canonical_url }}" async="async">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <!-- CSS ================================================== -->
     {%- comment -%} New CSS layers {%- endcomment -%}
-{{ 'tokens.css' | asset_url | stylesheet_tag }}
-{{ 'typography.css' | asset_url | stylesheet_tag }}
-{{ 'components.css' | asset_url | stylesheet_tag }}
+    {{ 'tokens.css' | asset_url | stylesheet_tag }}
+    {{ 'typography.css' | asset_url | stylesheet_tag }}
+    {{ 'components.css' | asset_url | stylesheet_tag }}
     {{ 'custom.css' | asset_url | stylesheet_tag }}
     {% comment %} {{ 'theme.scss.css' | asset_url | stylesheet_tag }}  {% endcomment %}
     <link rel="stylesheet" href="{{ 'theme.scss.css' | asset_url }}" media="print" as="style" onload="this.media='all'">
@@ -182,17 +174,22 @@
     >
 
     <script type="text/javascript">
-      jQuery(document).ready(function(){
-      	$('.advanced-filter[data-group=Price]').closest(".grid-item").hide();
+      jQuery(document).ready(function () {
+        $('.advanced-filter[data-group=Price]').closest('.grid-item').hide();
       });
     </script>
     <!-- Google Tag Manager -->
     <script>
-      (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-      new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-      j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-      'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-      })(window,document,'script','dataLayer','GTM-PR6WTQFC');
+      (function (w, d, s, l, i) {
+        w[l] = w[l] || [];
+        w[l].push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+        var f = d.getElementsByTagName(s)[0],
+          j = d.createElement(s),
+          dl = l != 'dataLayer' ? '&l=' + l : '';
+        j.async = true;
+        j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl;
+        f.parentNode.insertBefore(j, f);
+      })(window, document, 'script', 'dataLayer', 'GTM-PR6WTQFC');
     </script>
     <!-- End Google Tag Manager -->
 
@@ -356,7 +353,8 @@
             "telephone": "+61 035 551 4555",
             "contactType": "customer service",
             "areaServed": ["AU"]
-          },  "address": {
+          },
+          "address": {
             "@type": "PostalAddress",
             "streetAddress": "35 Peck Street",
             "addressLocality": "Hamilton",
@@ -371,10 +369,7 @@
             "https://www.facebook.com/people/Excision-Pty-Ltd/100090557419325",
             "https://www.linkedin.com/company/4987236/"
           ],
-          "additionalType": [
-            "http://schema.org/Manufacturer",
-            "http://schema.org/IndustrialCompany"
-          ]
+          "additionalType": ["http://schema.org/Manufacturer", "http://schema.org/IndustrialCompany"]
         }
       </script>
 
@@ -463,14 +458,14 @@
     class="{% if customer %}customer-logged-in {% endif %} template-{{ request.page_type | handle }} {% if product.tags contains 'Ecom_Ebox_Product_Section' %}collection-Ebox{% endif %}"
     onload="checkCookie()"
   >
-<div id="preloader">
-  <div class="loader-bar-wrapper">
-    <div class="loader-bar">
-      <div class="loader-loaded"></div>
-      <div class="loader-unloaded"></div>
+    <div id="preloader">
+      <div class="loader-bar-wrapper">
+        <div class="loader-bar">
+          <div class="loader-loaded"></div>
+          <div class="loader-unloaded"></div>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
     {%- section 'header' -%}
     <!-- Google Tag Manager (noscript) -->
     <noscript
@@ -553,164 +548,167 @@
       <!-- WPD End -->
     {%- endcomment -%}
     <script>
-       $(document).ready(function(){
-         $('a.dust-and-fume-control__nav-link').attr('target', '_blank');
-         //Product page specifications tab
-         $("<h5>Specifications</h5>").insertBefore(".pdp.product- 'variant-matrix.description table:first-of-type");
-       });
+      $(document).ready(function () {
+        $('a.dust-and-fume-control__nav-link').attr('target', '_blank');
+        //Product page specifications tab
+        $('<h5>Specifications</h5>').insertBefore(".pdp.product- 'variant-matrix.description table:first-of-type");
+      });
 
-      $(window).scroll(function() {
-      if ($(this).scrollTop() > 50) {
-          $('#mobileNavBar').addClass("NavBarsticky");
+      $(window).scroll(function () {
+        if ($(this).scrollTop() > 50) {
+          $('#mobileNavBar').addClass('NavBarsticky');
         } else {
-          $('#mobileNavBar').removeClass("NavBarsticky");
+          $('#mobileNavBar').removeClass('NavBarsticky');
         }
       });
     </script>
     {%- render 'ecom_footer' -%}
 
     {{ 'variant-matrix.css' | asset_url | stylesheet_tag }}
-<script src="{{ 'variant-matrix.js' | asset_url }}" defer></script>
+    <script src="{{ 'variant-matrix.js' | asset_url }}" defer></script>
 
+    <script>
+      const loadedEl = document.querySelector('.loader-loaded');
+      const unloadedEl = document.querySelector('.loader-unloaded');
+      const preloader = document.getElementById('preloader');
 
-<script>
-  const loadedEl = document.querySelector('.loader-loaded');
-  const unloadedEl = document.querySelector('.loader-unloaded');
-  const preloader = document.getElementById('preloader');
+      let progress = 0;
+      let animationFrame;
 
-  let progress = 0;
-  let animationFrame;
-
-  function updateBar(value) {
-    const clamped = Math.min(value, 100);
-    loadedEl.style.width = `${clamped}%`;
-    unloadedEl.style.width = `${100 - clamped}%`;
-  }
-
-  function animateProgress() {
-    if (progress < 90) {
-      progress += Math.random() * 1.5; // simulate progressive load
-      updateBar(progress);
-      animationFrame = requestAnimationFrame(animateProgress);
-    }
-  }
-
-  // Start simulating progress
-  requestAnimationFrame(animateProgress);
-
-  // Use PerformanceObserver to detect First Contentful Paint
-  const po = new PerformanceObserver((entryList, observer) => {
-    for (const entry of entryList.getEntries()) {
-      if (entry.name === 'first-contentful-paint') {
-        // Finish progress bar
-        cancelAnimationFrame(animationFrame);
-        updateBar(100);
-        setTimeout(() => {
-          preloader.style.opacity = '0';
-          setTimeout(() => preloader.style.display = 'none', 300);
-        }, 200); // small delay to show 100%
-        observer.disconnect();
+      function updateBar(value) {
+        const clamped = Math.min(value, 100);
+        loadedEl.style.width = `${clamped}%`;
+        unloadedEl.style.width = `${100 - clamped}%`;
       }
-    }
-  });
 
-  try {
-    po.observe({ type: 'paint', buffered: true });
-  } catch (e) {
-    // Fallback if unsupported
-    window.addEventListener('DOMContentLoaded', () => {
-      updateBar(100);
-      setTimeout(() => {
-        preloader.style.opacity = '0';
-        setTimeout(() => preloader.style.display = 'none', 300);
-      }, 200);
-    });
-  }
-</script>
-
-<!-- HubSpot Embed Code -->
-<script id="hs-script-loader" async defer src="//js.hs-scripts.com/2595431.js"></script>
-
-<!-- Quote Modal -->
-<div id="ex-quote-modal" class="ex-modal" hidden aria-hidden="true" role="dialog" aria-modal="true">
-  <div class="ex-modal__backdrop" data-ex-quote-close></div>
-  <div class="ex-modal__dialog" role="document">
-    <button class="ex-modal__close" type="button" data-ex-quote-close aria-label="Close">×</button>
-    <div id="ex-quote-form"></div>
-  </div>
-</div>
-
-<style>
-  .ex-modal[hidden]{display:none}
-  .ex-modal{position:fixed;inset:0;z-index:9999}
-  .ex-modal__backdrop{position:absolute;inset:0;background:rgba(0,0,0,.45)}
-  .ex-modal__dialog{position:relative;margin:6vh auto;max-width:720px;background:#fff;border-radius:12px;padding:24px}
-  .ex-modal__close{position:absolute;top:8px;right:8px;background:none;border:0;font-size:24px;line-height:1;cursor:pointer}
-</style>
-
-<script>
-  // Lightweight global to open the HS form modal and inject product context
-  window.exQuote = (function(){
-    var hsLoaded = false;
-    function loadHS(cb){
-      if (hsLoaded) return cb();
-      var s = document.createElement('script');
-      s.src = "//js-ap1.hsforms.net/forms/embed/v2.js";
-      s.async = true;
-      s.onload = function(){ hsLoaded = true; cb(); };
-      document.head.appendChild(s);
-    }
-    function fillHiddenFields(formEl, ctx){
-      if (!formEl) return;
-      function setHidden(name, val){
-        var input = formEl.querySelector('input[name="'+name+'"]');
-        if (!input) {
-          input = document.createElement('input');
-          input.type = 'hidden';
-          input.name = name;
-          formEl.appendChild(input);
+      function animateProgress() {
+        if (progress < 90) {
+          progress += Math.random() * 1.5; // simulate progressive load
+          updateBar(progress);
+          animationFrame = requestAnimationFrame(animateProgress);
         }
-        input.value = val || '';
       }
-      setHidden('product_name', ctx.name);
-      setHidden('product_url',  ctx.url);
-      setHidden('variant_title', ctx.variantTitle || '');
-      setHidden('variant_sku',   ctx.variantSku || '');
-    }
-    function open(ctx){
-      var m = document.getElementById('ex-quote-modal');
-      if (!m) return;
-      m.hidden = false; m.setAttribute('aria-hidden','false');
 
-      // (Re)render the form fresh each time so we can set hidden fields
-      var tgt = document.getElementById('ex-quote-form');
-      tgt.innerHTML = '';
+      // Start simulating progress
+      requestAnimationFrame(animateProgress);
 
-      loadHS(function(){
-        if (!window.hbspt || !hbspt.forms || !hbspt.forms.create) return;
-        hbspt.forms.create({
-          portalId: "2595431",
-          formId:   "40149631-403b-45b0-897c-3c1d08fa1a32",
-          region:   "ap1",
-          target:   "#ex-quote-form",
-          onFormReady: function($form){
-            var formEl = document.querySelector('#ex-quote-form form');
-            fillHiddenFields(formEl, ctx || {});
+      // Use PerformanceObserver to detect First Contentful Paint
+      const po = new PerformanceObserver((entryList, observer) => {
+        for (const entry of entryList.getEntries()) {
+          if (entry.name === 'first-contentful-paint') {
+            // Finish progress bar
+            cancelAnimationFrame(animationFrame);
+            updateBar(100);
+            setTimeout(() => {
+              preloader.style.opacity = '0';
+              setTimeout(() => (preloader.style.display = 'none'), 300);
+            }, 200); // small delay to show 100%
+            observer.disconnect();
           }
-        });
+        }
       });
-    }
-    function close(){
-      var m = document.getElementById('ex-quote-modal');
-      if (!m) return;
-      m.hidden = true; m.setAttribute('aria-hidden','true');
-    }
-    document.addEventListener('click', function(e){
-      if (e.target.closest('[data-ex-quote-close]')) close();
-    });
-    return { open: open, close: close };
-  })();
-</script>
 
+      try {
+        po.observe({ type: 'paint', buffered: true });
+      } catch (e) {
+        // Fallback if unsupported
+        window.addEventListener('DOMContentLoaded', () => {
+          updateBar(100);
+          setTimeout(() => {
+            preloader.style.opacity = '0';
+            setTimeout(() => (preloader.style.display = 'none'), 300);
+          }, 200);
+        });
+      }
+    </script>
+
+    <!-- HubSpot Embed Code -->
+    <script id="hs-script-loader" async defer src="//js.hs-scripts.com/2595431.js"></script>
+
+    <!-- Quote Modal -->
+    <div id="ex-quote-modal" class="ex-modal" hidden aria-hidden="true" role="dialog" aria-modal="true">
+      <div class="ex-modal__backdrop" data-ex-quote-close></div>
+      <div class="ex-modal__dialog" role="document">
+        <button class="ex-modal__close" type="button" data-ex-quote-close aria-label="Close">×</button>
+        <div id="ex-quote-form"></div>
+      </div>
+    </div>
+
+    <style>
+      .ex-modal[hidden]{display:none}
+      .ex-modal{position:fixed;inset:0;z-index:9999}
+      .ex-modal__backdrop{position:absolute;inset:0;background:rgba(0,0,0,.45)}
+      .ex-modal__dialog{position:relative;margin:6vh auto;max-width:720px;background:#fff;border-radius:12px;padding:24px}
+      .ex-modal__close{position:absolute;top:8px;right:8px;background:none;border:0;font-size:24px;line-height:1;cursor:pointer}
+    </style>
+
+    <script>
+      // Lightweight global to open the HS form modal and inject product context
+      window.exQuote = (function () {
+        var hsLoaded = false;
+        function loadHS(cb) {
+          if (hsLoaded) return cb();
+          var s = document.createElement('script');
+          s.src = '//js-ap1.hsforms.net/forms/embed/v2.js';
+          s.async = true;
+          s.onload = function () {
+            hsLoaded = true;
+            cb();
+          };
+          document.head.appendChild(s);
+        }
+        function fillHiddenFields(formEl, ctx) {
+          if (!formEl) return;
+          function setHidden(name, val) {
+            var input = formEl.querySelector('input[name="' + name + '"]');
+            if (!input) {
+              input = document.createElement('input');
+              input.type = 'hidden';
+              input.name = name;
+              formEl.appendChild(input);
+            }
+            input.value = val || '';
+          }
+          setHidden('product_name', ctx.name);
+          setHidden('product_url', ctx.url);
+          setHidden('variant_title', ctx.variantTitle || '');
+          setHidden('variant_sku', ctx.variantSku || '');
+        }
+        function open(ctx) {
+          var m = document.getElementById('ex-quote-modal');
+          if (!m) return;
+          m.hidden = false;
+          m.setAttribute('aria-hidden', 'false');
+
+          // (Re)render the form fresh each time so we can set hidden fields
+          var tgt = document.getElementById('ex-quote-form');
+          tgt.innerHTML = '';
+
+          loadHS(function () {
+            if (!window.hbspt || !hbspt.forms || !hbspt.forms.create) return;
+            hbspt.forms.create({
+              portalId: '2595431',
+              formId: '40149631-403b-45b0-897c-3c1d08fa1a32',
+              region: 'ap1',
+              target: '#ex-quote-form',
+              onFormReady: function ($form) {
+                var formEl = document.querySelector('#ex-quote-form form');
+                fillHiddenFields(formEl, ctx || {});
+              },
+            });
+          });
+        }
+        function close() {
+          var m = document.getElementById('ex-quote-modal');
+          if (!m) return;
+          m.hidden = true;
+          m.setAttribute('aria-hidden', 'true');
+        }
+        document.addEventListener('click', function (e) {
+          if (e.target.closest('[data-ex-quote-close]')) close();
+        });
+        return { open: open, close: close };
+      })();
+    </script>
   </body>
 </html>
