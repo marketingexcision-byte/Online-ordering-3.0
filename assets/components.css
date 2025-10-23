@@ -339,4 +339,42 @@
 
   .fp-empty{ color: var(--color-secondary-iron); text-align: center; }
 
+  @layer components {
+  /* ===== Advantages (blue tick) ===== */
+  .section--advantage-points .ap-grid{
+    display:grid;
+    gap: var(--space-6) var(--space-6);
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  }
+  .ap-card{
+    display:grid;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    border-radius: var(--radius-lg);
+    background:#fff;
+    border: var(--border-width-thin) solid var(--color-secondary-grey-light);
+    box-shadow: var(--shadow-sm);
+  }
+  .ap-card__icon{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:64px;height:64px;
+    border-radius: var(--radius-pill);
+    background: var(--color-surface, #fff);
+  }
+  .ap-card__img{ width:48px;height:48px;object-fit:contain;display:block; }
+
+  /* Fallback icon: Steel Blue (#3995e6) with white tick */
+  .ap-card__svg{ width:48px;height:48px;display:block; }
+  .ap-card__svg .ap--steel{ fill: var(--color-secondary-steel, #3995e6); }
+  .ap-card__svg .ap--tick{ stroke:#fff; stroke-width:3; stroke-linecap:round; fill:none; }
+
+  .ap-card__title{ margin:0; }
+  .ap-card__body{ margin:0; color: var(--color-secondary-iron); }
+
+  /* We already have .fp-* rules from your Features section; no change needed there. */
+}
+
+
 }
