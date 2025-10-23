@@ -1,120 +1,77 @@
 {%- comment -%}
 Usage:
-  {% render 'rating-cards', resource: page %}  <!-- or product/collection/article -->
+  {% render 'rating-cards', resource: page %}
+  (You can also pass product/collection/article; defaults to page if omitted.)
 
-Reads from namespace "custom".
-- Ratings (1–5): metal_removal_rates, material_versatility, cutting_resistance,
-  surface_finish, high_accuracy_machining, square_shoulder_milling, copy_milling, chip_control
-- Text (optional): diameter_range_mm (shows the text value instead of stars)
+Reads these Page metafields (namespace: custom), all type = Rating (1–5):
+- metal_removal_rates
+- material_versatility
+- cutting_resistance
+- surface_finish
+- high_accuracy_machining
+- square_shoulder_milling
+- copy_milling
+- chip_control
+
+Optional text card (plain text): diameter_range_mm
 {%- endcomment -%}
 
 {%- liquid
   assign res = resource
   if res == blank
-    if page       assign res = page
-    elsif product assign res = product
-    elsif collection assign res = collection
-    elsif article assign res = article
-    endif
+    assign res = page
   endif
 -%}
-{% if res and res.metafields %}
+{% if res and res.metafields and res.metafields.custom %}
 
-  {%- capture text_rows -%}
-  Diameter Range (mm)|diameter_range_mm
-  {%- endcapture -%}
-
-  {%- capture rating_rows -%}
-  Metal Removal Rates|metal_removal_rates
-  Material Versatility|material_versatility
-  Cutting Resistance|cutting_resistance
-  Surface Finish|surface_finish
-  High Accuracy Machining|high_accuracy_machining
-  Square Shoulder Milling|square_shoulder_milling
-  Copy Milling|copy_milling
-  Chip Control|chip_control
-  {%- endcapture -%}
-
-  {%- assign t_pairs = text_rows   | split: '\n' -%}
-  {%- assign r_pairs = rating_rows | split: '\n' -%}
-
-  {%- assign any = false -%}
-  {%- for row in t_pairs -%}
-    {%- assign row = row | strip -%}
-    {%- if row == '' -%}{%- continue -%}{%- endif -%}
-    {%- assign key = row | split:'|' | last | strip -%}
-    {%- if res.metafields['custom'][key] != blank -%}{%- assign any = true -%}{%- break -%}{%- endif -%}
-  {%- endfor -%}
-  {%- if any == false -%}
-    {%- for row in r_pairs -%}
-      {%- assign row = row | strip -%}
-      {%- if row == '' -%}{%- continue -%}{%- endif -%}
-      {%- assign key = row | split:'|' | last | strip -%}
-      {%- if res.metafields['custom'][key] != blank -%}{%- assign any = true -%}{%- break -%}{%- endif -%}
-    {%- endfor -%}
-  {%- endif -%}
-
-  {% if any %}
   <div class="rc-row" role="list">
-    {%- comment -%} Text-only cards (e.g., Diameter Range) {%- endcomment -%}
-    {%- for row in t_pairs -%}
-      {%- assign row = row | strip -%}
-      {%- if row == '' -%}{%- continue -%}{%- endif -%}
-      {%- assign parts = row | split:'|' -%}
-      {%- assign label = parts[0] | strip -%}
-      {%- assign key   = parts[1] | strip -%}
-      {%- assign raw   = res.metafields['custom'][key] -%}
-      {%- if raw == blank -%}{%- continue -%}{%- endif -%}
+    {%- assign txt = res.metafields.custom.diameter_range_mm -%}
+    {% if txt != blank %}
       <div class="rc-item" role="listitem">
-        <div class="rc-item__label text-p1"><strong>{{ label }}</strong></div>
+        <div class="rc-item__label text-p1"><strong>Diameter Range (mm)</strong></div>
         <div class="rc-item__rule" aria-hidden="true"></div>
-        <div class="rc-item__text text-p1">{{ raw.value | default: raw }}</div>
+        <div class="rc-item__text text-p1">{{ txt.value | default: txt }}</div>
       </div>
-    {%- endfor -%}
+    {% endif %}
 
-    {%- comment -%} Star rating cards (1–5) {%- endcomment -%}
-    {%- for row in r_pairs -%}
-      {%- assign row = row | strip -%}
-      {%- if row == '' -%}{%- continue -%}{%- endif -%}
-      {%- assign parts = row | split:'|' -%}
-      {%- assign label = parts[0] | strip -%}
-      {%- assign key   = parts[1] | strip -%}
-      {%- assign raw   = res.metafields['custom'][key] -%}
-      {%- if raw == blank -%}{%- continue -%}{%- endif -%}
+    {%- assign _val = res.metafields.custom.metal_removal_rates -%}
+    {% if _val != blank %}
+      {% render 'rating-card-item', label: 'Metal Removal Rates', value: _val %}
+    {% endif %}
 
-      {%- assign rating = raw.value | default: raw | replace: ',', '.' | plus: 0 -%}
-      {%- if rating > 5 -%}{%- assign rating = 5 -%}{%- endif -%}
-      {%- if rating < 0 -%}{%- assign rating = 0 -%}{%- endif -%}
+    {%- assign _val = res.metafields.custom.material_versatility -%}
+    {% if _val != blank %}
+      {% render 'rating-card-item', label: 'Material Versatility', value: _val %}
+    {% endif %}
 
-      <div class="rc-item" role="listitem" aria-label="{{ label }} {{ rating }}/5">
-        <div class="rc-item__label text-p1"><strong>{{ label }}</strong></div>
-        <div class="rc-item__rule" aria-hidden="true"></div>
-        <div class="rating rating--sm">
-          <div class="rating__stars" role="img" aria-label="{{ rating }} out of 5 stars">
-            {%- for s in (1..5) -%}
-              {%- assign value = rating | minus: forloop.index | plus: 1 -%}
-              {%- if value >= 1 -%}{%- assign pct = 100 -%}
-              {%- elsif value <= 0 -%}{%- assign pct = 0 -%}
-              {%- else -%}{%- assign pct = value | times: 100 -%}{%- endif -%}
-              <span class="rating__star">
-                <span class="is-bg">
-                  <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.62L12 2 9.19 8.62 2 9.24l5.46 4.73L5.82 21z"/>
-                  </svg>
-                </span>
-                {%- if pct > 0 -%}
-                  <span class="is-fill" style="width:{{ pct }}%">
-                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                      <path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.62L12 2 9.19 8.62 2 9.24l5.46 4.73L5.82 21z"/>
-                    </svg>
-                  </span>
-                {%- endif -%}
-              </span>
-            {%- endfor -%}
-          </div>
-        </div>
-      </div>
-    {%- endfor -%}
+    {%- assign _val = res.metafields.custom.cutting_resistance -%}
+    {% if _val != blank %}
+      {% render 'rating-card-item', label: 'Cutting Resistance', value: _val %}
+    {% endif %}
+
+    {%- assign _val = res.metafields.custom.surface_finish -%}
+    {% if _val != blank %}
+      {% render 'rating-card-item', label: 'Surface Finish', value: _val %}
+    {% endif %}
+
+    {%- assign _val = res.metafields.custom.high_accuracy_machining -%}
+    {% if _val != blank %}
+      {% render 'rating-card-item', label: 'High Accuracy Machining', value: _val %}
+    {% endif %}
+
+    {%- assign _val = res.metafields.custom.square_shoulder_milling -%}
+    {% if _val != blank %}
+      {% render 'rating-card-item', label: 'Square Shoulder Milling', value: _val %}
+    {% endif %}
+
+    {%- assign _val = res.metafields.custom.copy_milling -%}
+    {% if _val != blank %}
+      {% render 'rating-card-item', label: 'Copy Milling', value: _val %}
+    {% endif %}
+
+    {%- assign _val = res.metafields.custom.chip_control -%}
+    {% if _val != blank %}
+      {% render 'rating-card-item', label: 'Chip Control', value: _val %}
+    {% endif %}
   </div>
-  {% endif %}
 {% endif %}
