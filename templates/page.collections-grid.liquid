@@ -102,6 +102,18 @@
   endif
 %}
 
+{%- if page.metafields.custom.header_image != blank -%}
+  <style>
+    .template-collection .breadcrumb {
+      background: url({{ page.metafields.custom.header_image | file_url }});
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: cover;
+      position: relative;
+    }
+  </style>
+{%- endif -%}
+
 
 <nav class="breadcrumb simple-lazyload" role="navigation" aria-label="breadcrumbs">
   {%- if page.metafields.custom.header_image.value != blank -%}
