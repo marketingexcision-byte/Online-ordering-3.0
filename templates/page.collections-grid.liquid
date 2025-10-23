@@ -156,7 +156,7 @@
             {%- if r > 5 -%}{%- assign r = 5 -%}{%- endif -%}
             {%- if r < 0 -%}{%- assign r = 0 -%}{%- endif -%}
             <div class="rating" aria-label="Performance rating: {{ r }} out of 5" style="margin-top:12px">
-              <div class="rating__stars" role="img" aria-hidden="true" style="display:flex;gap:4px;position:relative">
+              <div class="rating__stars" role="img"  style="display:flex;gap:4px;position:relative">
                 {%- for s in (1..5) -%}
                   {%- assign value = r | minus: forloop.index | plus: 1 -%}
                   {%- if value >= 1 -%}
