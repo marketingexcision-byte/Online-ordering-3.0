@@ -194,7 +194,7 @@
       </header>
     {% endif %}
 
-          {% render 'rating-cards' %}
+          {% render 'rating-cards', resource: page %}
 
     {%- comment -%} === GRID #1 === {%- endcomment -%}
     {% if have_items or have_handles %}
