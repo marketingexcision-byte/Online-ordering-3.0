@@ -496,13 +496,13 @@
             {% endif %}
           {% endfor %}
         {% endif %}
-        <div class="collection-grid" role="list">
+      </div>
+      <div class="collection-grid" role="list">
         {%- if view_all_url -%}
           <article class="collection-card collection-card--view-all" role="listitem">
             <a class="collection-card__media view-all" href="{{ view_all_url }}"><span>View All</span></a>
           </article>
         {%- endif -%}
-      </div>
     {% else %}
       <div class="collection-grid__empty text-p1">No collections have been assigned to this page yet.</div>
     {% endif %}
