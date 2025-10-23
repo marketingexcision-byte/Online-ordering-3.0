@@ -128,6 +128,9 @@
         {% if heading != blank %}
           <h1 id="collection-grid-heading" class="section__title text-h2">{{ heading | escape }}</h1>
         {% endif %}
+        {% if page.metafields.custom.short_description != blank %}
+          <h2 id="collection-grid-heading" class="section__title text-h2">{{ page.metafields.custom.short_description }}</h2>
+        {% endif %}
         {% if intro != blank %}
           <div class="section__intro text-p1">{{ intro }}</div>
         {% endif %}
