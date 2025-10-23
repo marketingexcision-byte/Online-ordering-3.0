@@ -295,6 +295,15 @@
   }
   .rc-item__label{ line-height:1.2; }
 
+  .rc-item{
+    display: grid;
+    padding: var(--space-3);
+    border-radius: var(--radius-lg);
+    background: #fff;
+    border: var(--border-width) solid var(--color-secondary-grey-light) !important;
+    padding: var(--space-5) !important;
+  }
+
   .rc-item__text{ color: var(--color-secondary-iron); }
   .rating--sm .rating__star{ width:16px; height:16px; }
 
