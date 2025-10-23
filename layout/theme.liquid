@@ -1,7 +1,7 @@
 <!doctype html>
 <html class="no-touch no-js" lang="en" dir="ltr">
   <head>
-    {% liquid
+{% liquid
   assign robots_directive = ''
   assign googlebot_directive = ''
 
@@ -10,25 +10,21 @@
 
   assign has_collection_filters = false
 
-  # Detect collection context
+  # === Detect filtered collection variants ===
   if request.page_type == 'collection' or template contains 'collection'
-    # 1) Tag-based filters like /collections/handle/tag1+tag2
     if current_tags != blank
       assign has_collection_filters = true
     endif
-
-    # 2) If we haven't found tags yet, check URL params & path patterns
     if has_collection_filters == false
-      if request_query contains 'filter.' or request_query contains 'filter%5b'  # OS 2.0 filters
+      if request_query contains 'filter.' or request_query contains 'filter%5b'
         assign has_collection_filters = true
-      elsif request_query contains 'pf_'                                        # some filter apps
+      elsif request_query contains 'pf_'
         assign has_collection_filters = true
-      elsif request_query contains 'constraint='                                 # legacy constraints
+      elsif request_query contains 'constraint='
         assign has_collection_filters = true
-      elsif request_query contains 'options%5b'                                  # options[]
+      elsif request_query contains 'options%5b'
         assign has_collection_filters = true
       else
-        # 3) Look for "+" in the tag segment of /collections/<handle>/<tags>
         assign after_collections = request_path | split: '/collections/' | last
         assign segments = after_collections | split: '/'
         if segments.size > 1
@@ -41,22 +37,42 @@
     endif
   endif
 
-  # Pages we always want noindexed
+  # === Robots logic ===
   if has_collection_filters or request.page_type == 'search' or request_path contains '/search' or request_path contains '/compare'
     assign robots_directive = 'noindex, follow'
   endif
-
-  # Mirror to googlebot unless explicitly set elsewhere
   if robots_directive != '' and googlebot_directive == ''
     assign googlebot_directive = robots_directive
   endif
+
+  # === Canonical logic (single tag everywhere) ===
+  assign canonical_href = canonical_url
+
+  # Filtered collections canonical back to base collection
+  if request.page_type == 'collection' and collection and has_collection_filters
+    assign canonical_href = collection.url
+  endif
+
+  # Product override for service products
+  if template contains 'product' and product
+    assign is_service = product.tags contains 'Custom Length Service' or product.tags contains 'Service Product' or product.title contains ' · svc'
+    if is_service
+      assign robots_directive = 'noindex, nofollow'
+      assign googlebot_directive = 'noindex, nofollow'
+      assign canonical_href = routes.collections_url | append: '/all'
+    endif
+  endif
 %}
 
-{% if request.page_type == 'collection' and collection and has_collection_filters %}
-  <link rel="canonical" href="{{ collection.url }}">
-{% else %}
-  <link rel="canonical" href="{{ canonical_url }}">
-{% endif %}
+{%- if robots_directive != '' -%}
+  <meta name="robots" content="{{ robots_directive }}">
+{%- endif -%}
+{%- if googlebot_directive != '' -%}
+  <meta name="googlebot" content="{{ googlebot_directive }}">
+{%- endif -%}
+
+<link rel="canonical" href="{{ canonical_href }}">
+
 
 
 
