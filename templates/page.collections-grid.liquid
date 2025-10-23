@@ -114,7 +114,7 @@
   </style>
 {%- endif -%}
 
-{%- if collection.handle != 'ebox' -%}
+
 <nav class="breadcrumb simple-lazyload" role="navigation" aria-label="breadcrumbs">
   {%- if collection.metafields.custom.header_banner.value != blank -%}
     <div class="header-overlay" style="position:absolute;top:0;left:0;width:100%;height:100%;background-color:rgba(30,29,34,0.4);"></div>
@@ -122,9 +122,9 @@
   <div class="breadcrumbs container dt-prl-30">
     <div class="row" style="display:flex;align-items:flex-start;">
       <div class="col-md-7 lazyload-element">
-        {%- if collection.metafields.custom.parent_collection.value != blank -%}
+        {%- if page.metafields.custom.parent_page.value != blank -%}
           <div class="w-btn-wrapper lazyload-element">
-            <a class="w-btn icon_atleft" href="{{ collection.metafields.custom.parent_collection }}" data-url="{{ collection.metafields.custom.parent_collection }}">
+            <a class="w-btn icon_atleft" href="{{ page.metafields.custom.parent_page }}" data-url="{{ page.metafields.custom.parent_page }}">
               <span class="w-btn-label font-bold"><em>←</em> Back</span>
             </a>
           </div>
@@ -134,19 +134,10 @@
         <h1 id="collection-grid-heading" class="section__title text-h2">{{ collection.title | escape }}</h1>
 
         <!-- Optional short description (maps from page.short_description) -->
-        {%- if collection.metafields.custom.short_description != blank -%}
+        {%- if page.metafields.custom.short_description != blank -%}
           <h2 class="section__title text-h2">{{ collection.metafields.custom.short_description }}</h2>
         {%- endif -%}
 
-        <!-- Collection info (existing) -->
-        {%- if collection.metafields.custom.collection_info.value != blank -%}
-          <div class="rte collection-banner__description">{{ collection.metafields.custom.collection_info.value }}</div>
-        {%- endif -%}
-
-        <!-- Optional intro (maps from page 'intro' var) -->
-        {%- if collection.metafields.custom.intro != blank -%}
-          <div class="section__intro text-p1">{{ collection.metafields.custom.intro }}</div>
-        {%- endif -%}
 
         <!-- Rich content section (maps from page.content → use collection.description) -->
         {%- if collection.description != blank -%}
@@ -231,7 +222,7 @@
     </div>
   </div>
 </nav>
-{%- endif -%}
+
 
 
           {% render 'rating-cards', resource: page %}
