@@ -297,11 +297,10 @@
 
   .rc-item{
     display: grid;
-    padding: var(--space-2);
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
     background: #fff;
     border: var(--border-width) solid var(--color-secondary-grey-light) !important;
-    padding: var(--space-5) !important;
+    padding: var(--space-4) !important;
   }
 
   .rc-item__text{ color: var(--color-secondary-iron); }
