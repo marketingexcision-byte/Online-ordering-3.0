@@ -290,7 +290,7 @@
   .rc-row{
     display:grid;
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: var(--space-6);
+    gap: var(--space-5);
     align-items:start;
   }
   .rc-item__label{ line-height:1.2; }
@@ -301,6 +301,7 @@
     background: #fff;
     border: var(--border-width) solid var(--color-secondary-grey-light) !important;
     padding: var(--space-4) !important;
+    height: 100%;
   }
 
   .rc-item__text{ color: var(--color-secondary-iron); }
