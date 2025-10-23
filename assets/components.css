@@ -312,7 +312,7 @@
     padding: var(--space-5) var(--space-5) var(--space-8) !important;
   }
   
-  .section--feature-points .container.layout-constrained .h2{
+  h2#feature-points-heading- {
     color: white;
   }
 
