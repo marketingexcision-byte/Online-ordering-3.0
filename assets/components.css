@@ -287,12 +287,11 @@
     color: var(--color-secondary-iron);
   }
 
-  /* Force stars to actually paint even if the theme resets SVG fill */
-.rating__star svg {
-  fill: currentColor !important;   /* critical */
+.rating__star svg,
+.rating__star svg path {
+  fill: currentColor !important;
 }
 
-/* Optional: make sure our colors win if other rules compete */
 .rating__star .is-bg svg   { color: var(--color-secondary-grey) !important; }
 .rating__star .is-fill svg { color: var(--color-primary-orange) !important; }
 
