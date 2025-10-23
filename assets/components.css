@@ -309,7 +309,8 @@
   }
 
   .section--feature-points .container.layout-constrained {
-    padding: var(--space-5) var(--space-5) var(--space-8) !important;
+    padding-top: var(--space-5) !important;
+    padding-bottom: var(--space-8) !important;
   }
   
   h2#feature-points-heading- {
