@@ -301,7 +301,7 @@
     border-radius: var(--radius-lg);
     background: #fff;
     border: var(--border-width-thin) solid var(--color-secondary-grey-light);
-    box-shadow: var(--shadow-sm);
+    padding: 20px;
   }
 
   .fp-card__icon{
@@ -311,6 +311,7 @@
     width: 64px; height: 64px;
     border-radius: var(--radius-pill);
     background: var(--color-surface, #fff);
+    margin-bottom: var(--space-2) !important;
   }
   .fp-card__img{
     width: 48px; height: 48px; object-fit: contain; display: block;
