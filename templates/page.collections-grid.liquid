@@ -457,7 +457,7 @@
                     {%- endif -%}
 
                     {%- comment -%} Performance rating → stars (self-contained) {%- endcomment -%}
-                    {%- assign rating_str = collection.metafields.custom.performance_ratingtafields | metafield_text | strip -%}
+                    {%- assign rating_str = collection.metafields.custom.performance_rating | metafield_text | strip -%}
                     {%- if rating_str != blank -%}
                       {%- assign rating = rating_str | replace: ',', '.' | plus: 0 -%}
                       {%- if rating > 0 -%}
@@ -626,7 +626,7 @@
                     {%- endif -%}
 
                     {%- comment -%} Performance rating → stars (self-contained) {%- endcomment -%}
-                    {%- assign rating_str = collection.metafields.custom.performance_ratingtafields | metafield_text | strip -%}
+                    {%- assign rating_str = collection.metafields.custom.performance_rating | metafield_text | strip -%}
                     {%- if rating_str != blank -%}
                       {%- assign rating = rating_str | replace: ',', '.' | plus: 0 -%}
                       {%- if rating > 0 -%}
@@ -777,7 +777,7 @@
                       {%- endif -%}
 
                       {%- comment -%} Performance rating → stars (self-contained) {%- endcomment -%}
-                      {%- assign rating_str = collection.metafields.custom.performance_ratingtafields
+                      {%- assign rating_str = collection.metafields.custom.performance_rating
                         | metafield_text
                         | strip
                       -%}
