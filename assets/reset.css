@@ -81,10 +81,7 @@ textarea,
 ul {
     margin-bottom: 0.8rem;
 }
-*,
-body {
-    padding: 0;
-}
+
 ::after,
 ::before,
 td,
