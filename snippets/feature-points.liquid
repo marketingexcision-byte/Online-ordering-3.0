@@ -14,7 +14,6 @@
       endif
     endif
   endif
-  assign have_items = fp_items and fp_items != blank and fp_items.size > 0
 
   # ----- ADVANTAGES (new) -----
   assign ap_items = blank
@@ -28,25 +27,38 @@
       endif
     endif
   endif
-  assign have_ap_items = ap_items and ap_items != blank and ap_items.size > 0
+
+  # ----- Count items robustly -----
+  assign fp_count = 0
+  if fp_items and fp_items != blank
+    assign fp_count = fp_items.size | default: 0
+  endif
+
+  assign ap_count = 0
+  if ap_items and ap_items != blank
+    assign ap_count = ap_items.size | default: 0
+  endif
 
   # ----- IDs & aria-labelledby -----
   assign sid = section.id | default: block.id | default: template.name | default: 'page'
   capture aria_for_section
-    if have_ap_items and have_items == false
+    if ap_count > 0 and fp_count == 0
       echo 'advantages-heading-' | append: sid
-    elsif have_items
+    elsif fp_count > 0 and ap_count == 0
       echo 'features-heading-' | append: sid
+    elsif ap_count > 0 and fp_count > 0
+      # Multiple IDs space-separated is valid for aria-labelledby
+      echo 'advantages-heading-' | append: sid | append: ' features-heading-' | append: sid
     endif
   endcapture
 %}
 
-{% if have_ap_items or have_items %}
+{% if ap_count > 0 or fp_count > 0 %}
 <section class="section section--feature-points"
   {% if aria_for_section != blank %}aria-labelledby="{{ aria_for_section }}"{% endif %}>
   <div class="container layout-constrained">
 
-    {% if have_ap_items %}
+    {% if ap_count > 0 %}
       <header class="section__header">
         <h2 id="advantages-heading-{{ sid }}" class="section__title text-h3">Advantages</h2>
       </header>
@@ -90,7 +102,7 @@
       </div>
     {% endif %}
 
-    {% if have_items %}
+    {% if fp_count > 0 %}
       <header class="section__header">
         <h2 id="features-heading-{{ sid }}" class="section__title text-h3">Features</h2>
       </header>
