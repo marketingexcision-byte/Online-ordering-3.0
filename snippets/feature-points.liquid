@@ -1,74 +1,83 @@
 {% liquid
-  # ----- SOURCE DATA -----
-  assign fp_items = blank
-  if page and page.metafields and page.metafields.custom
-    assign fp_meta = page.metafields.custom.feature_points
-    if fp_meta
-      if fp_meta.value and fp_meta.value != blank
-        assign fp_items = fp_meta.value
-      elsif fp_meta.references and fp_meta.references != blank
-        assign fp_items = fp_meta.references | map: 'value'
-      endif
-    endif
+  # ---------- Pick the owner that actually has metafields ----------
+  assign owner = nil
+  if page
+    assign owner = page
+  elsif product
+    assign owner = product
+  elsif collection
+    assign owner = collection
+  elsif article
+    assign owner = article
   endif
 
-  assign ap_items = blank
-  if page and page.metafields and page.metafields.custom
-    assign ap_meta = page.metafields.custom.advantage_points
-    if ap_meta
-      if ap_meta.value and ap_meta.value != blank
-        assign ap_items = ap_meta.value
-      elsif ap_meta.references and ap_meta.references != blank
-        assign ap_items = ap_meta.references | map: 'value'
-      endif
-    endif
+  # Small helper: an empty array
+  assign EMPTY = '' | split: ','
+
+  # ---------- Get raw metafields ----------
+  assign fp_meta = nil
+  assign ap_meta = nil
+  if owner and owner.metafields and owner.metafields.custom
+    assign fp_meta = owner.metafields.custom.feature_points
+    assign ap_meta = owner.metafields.custom.advantage_points
   endif
 
-  # Normalize into arrays
-  assign fp_items = fp_items | default: '' | compact
-  assign ap_items = ap_items | default: '' | compact
+  # ---------- Coerce to arrays ----------
+  assign fp_items = EMPTY
+  if fp_meta
+    assign fp_items = fp_meta.value | default: (fp_meta.references | map: 'value') | default: EMPTY
+  endif
 
-  # ----- COUNT ONLY RENDERABLE ITEMS -----
-  assign fp_render_count = 0
+  assign ap_items = EMPTY
+  if ap_meta
+    assign ap_items = ap_meta.value | default: (ap_meta.references | map: 'value') | default: EMPTY
+  endif
+
+  # ---------- Decide if there is anything worth rendering ----------
+  assign show_fp = false
   for obj in fp_items
     assign icon  = obj.feature_point_icon | default: obj.icon | default: obj.image | default: obj.media | default: obj.file
     assign title = obj.feature_point_title | default: obj.title | default: obj.name | default: obj.heading
-    assign body  = obj.feature_point_text | default: obj.text  | default: obj.copy | default: obj.content | default: obj.description
+    assign body  = obj.feature_point_text  | default: obj.text  | default: obj.copy | default: obj.content | default: obj.description
     assign body_rte = body.value | default: body
     if (icon and icon != blank) or (title and title != blank) or (body_rte and body_rte != blank)
-      assign fp_render_count = fp_render_count | plus: 1
+      assign show_fp = true
+      break
     endif
   endfor
 
-  assign ap_render_count = 0
+  assign show_ap = false
   for obj in ap_items
     assign icon  = obj.advantage_point_icon | default: obj.icon | default: obj.image | default: obj.media | default: obj.file
     assign title = obj.advantage_point_title | default: obj.title | default: obj.name | default: obj.heading
-    assign body  = obj.advantage_point_text | default: obj.text  | default: obj.copy | default: obj.content | default: obj.description
+    assign body  = obj.advantage_point_text  | default: obj.text  | default: obj.copy | default: obj.content | default: obj.description
     assign body_rte = body.value | default: body
     if (icon and icon != blank) or (title and title != blank) or (body_rte and body_rte != blank)
-      assign ap_render_count = ap_render_count | plus: 1
+      assign show_ap = true
+      break
     endif
   endfor
 
-  # ----- IDS / ARIA -----
+  assign show_any = show_ap or show_fp
+
+  # ---------- IDs / aria ----------
   assign sid = section.id | default: template.name | default: 'page'
   capture labelledby
-    if ap_render_count > 0 and fp_render_count == 0
+    if show_ap and show_fp == false
       echo 'advantages-heading-' | append: sid
-    elsif fp_render_count > 0 and ap_render_count == 0
+    elsif show_fp and show_ap == false
       echo 'features-heading-' | append: sid
-    elsif ap_render_count > 0 and fp_render_count > 0
+    elsif show_ap and show_fp
       echo 'advantages-heading-' | append: sid | append: ' features-heading-' | append: sid
     endif
   endcapture
 %}
 
-{% if ap_render_count > 0 or fp_render_count > 0 %}
+{% if show_any %}
 <section class="section section--feature-points" {% if labelledby != blank %}aria-labelledby="{{ labelledby }}"{% endif %}>
   <div class="container layout-constrained">
 
-    {% if ap_render_count > 0 %}
+    {% if show_ap %}
       <header class="section__header">
         <h2 id="advantages-heading-{{ sid }}" class="section__title text-h3">Advantages</h2>
       </header>
@@ -77,7 +86,7 @@
           {% liquid
             assign icon  = obj.advantage_point_icon | default: obj.icon | default: obj.image | default: obj.media | default: obj.file
             assign title = obj.advantage_point_title | default: obj.title | default: obj.name | default: obj.heading
-            assign body  = obj.advantage_point_text | default: obj.text  | default: obj.copy | default: obj.content | default: obj.description
+            assign body  = obj.advantage_point_text  | default: obj.text  | default: obj.copy | default: obj.content | default: obj.description
             assign body_rte = body.value | default: body
           %}
           {% if (icon and icon != blank) or (title and title != blank) or (body_rte and body_rte != blank) %}
@@ -102,7 +111,7 @@
       </div>
     {% endif %}
 
-    {% if fp_render_count > 0 %}
+    {% if show_fp %}
       <header class="section__header">
         <h2 id="features-heading-{{ sid }}" class="section__title text-h3">Features</h2>
       </header>
@@ -111,7 +120,7 @@
           {% liquid
             assign icon  = obj.feature_point_icon | default: obj.icon | default: obj.image | default: obj.media | default: obj.file
             assign title = obj.feature_point_title | default: obj.title | default: obj.name | default: obj.heading
-            assign body  = obj.feature_point_text | default: obj.text  | default: obj.copy | default: obj.content | default: obj.description
+            assign body  = obj.feature_point_text  | default: obj.text  | default: obj.copy | default: obj.content | default: obj.description
             assign body_rte = body.value | default: body
           %}
           {% if (icon and icon != blank) or (title and title != blank) or (body_rte and body_rte != blank) %}
