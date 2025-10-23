@@ -294,10 +294,7 @@
     align-items:start;
   }
   .rc-item__label{ line-height:1.2; }
-  .rc-item__rule{
-    height:2px; margin: var(--space-2) auto var(--space-2);
-    background: var(--color-secondary-grey);
-  }
+
   .rc-item__text{ color: var(--color-secondary-iron); }
   .rating--sm .rating__star{ width:16px; height:16px; }
 
