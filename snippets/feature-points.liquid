@@ -1,7 +1,4 @@
 {% liquid
-  assign heading = section.settings.heading
-  assign intro   = section.settings.intro
-
   # ----- FEATURES (existing) -----
   assign fp_items = blank
   if page and page.metafields and page.metafields.custom
@@ -28,34 +25,27 @@
     endif
   endif
 
-  # ----- Count items robustly -----
-  assign fp_count = 0
-  if fp_items and fp_items != blank
-    assign fp_count = fp_items.size | default: 0
-  endif
-
-  assign ap_count = 0
-  if ap_items and ap_items != blank
-    assign ap_count = ap_items.size | default: 0
-  endif
+  # ----- Normalize & count -----
+  assign fp_items = fp_items | default: '' | compact
+  assign ap_items = ap_items | default: '' | compact
+  assign fp_count = fp_items | size
+  assign ap_count = ap_items | size
 
   # ----- IDs & aria-labelledby -----
-  assign sid = section.id | default: block.id | default: template.name | default: 'page'
-  capture aria_for_section
+  assign sid = section.id | default: template.name | default: 'page'
+  capture labelledby
     if ap_count > 0 and fp_count == 0
       echo 'advantages-heading-' | append: sid
     elsif fp_count > 0 and ap_count == 0
       echo 'features-heading-' | append: sid
     elsif ap_count > 0 and fp_count > 0
-      # Multiple IDs space-separated is valid for aria-labelledby
       echo 'advantages-heading-' | append: sid | append: ' features-heading-' | append: sid
     endif
   endcapture
 %}
 
 {% if ap_count > 0 or fp_count > 0 %}
-<section class="section section--feature-points"
-  {% if aria_for_section != blank %}aria-labelledby="{{ aria_for_section }}"{% endif %}>
+<section class="section section--feature-points" {% if labelledby != blank %}aria-labelledby="{{ labelledby }}"{% endif %}>
   <div class="container layout-constrained">
 
     {% if ap_count > 0 %}
@@ -76,17 +66,11 @@
               {% if icon and icon != blank %}
                 {%- assign alt = title | default: 'Advantage icon' -%}
                 {%- capture sizes -%}(min-width: 1024px) 80px, 64px{%- endcapture -%}
-                {{-
-                  icon
+                {{- icon
                   | image_url: width: 160
                   | image_tag:
-                    class: 'ap-card__img',
-                    loading: 'lazy',
-                    decoding: 'async',
-                    widths: '64,80,120,160',
-                    sizes: sizes,
-                    alt: alt
-                -}}
+                    class: 'ap-card__img', loading: 'lazy', decoding: 'async',
+                    widths: '64,80,120,160', sizes: sizes, alt: alt -}}
               {% else %}
                 <svg class="ap-card__svg" viewBox="0 0 40 40" focusable="false" aria-hidden="true">
                   <circle cx="20" cy="20" r="19" class="ap--steel" />
@@ -112,7 +96,7 @@
           {% liquid
             assign icon  = obj.feature_point_icon | default: obj.icon | default: obj.image | default: obj.media | default: obj.file
             assign title = obj.feature_point_title | default: obj.title | default: obj.name | default: obj.heading
-            assign body  = obj.feature_point_text | default: obj.text | default: obj.copy | default: obj.content | default: obj.description
+            assign body  = obj.feature_point_text | default: obj.text  | default: obj.copy | default: obj.content | default: obj.description
             assign body_rte = body.value | default: body
           %}
           <article class="fp-card card" role="listitem">
@@ -120,17 +104,11 @@
               {% if icon and icon != blank %}
                 {%- assign alt = title | default: 'Feature icon' -%}
                 {%- capture sizes -%}(min-width: 1024px) 80px, 64px{%- endcapture -%}
-                {{-
-                  icon
+                {{- icon
                   | image_url: width: 160
                   | image_tag:
-                    class: 'fp-card__img',
-                    loading: 'lazy',
-                    decoding: 'async',
-                    widths: '64,80,120,160',
-                    sizes: sizes,
-                    alt: alt
-                -}}
+                    class: 'fp-card__img', loading: 'lazy', decoding: 'async',
+                    widths: '64,80,120,160', sizes: sizes, alt: alt -}}
               {% else %}
                 <svg class="fp-card__svg" viewBox="0 0 40 40" focusable="false" aria-hidden="true">
                   <circle cx="20" cy="20" r="19" class="fp--bronze" />
