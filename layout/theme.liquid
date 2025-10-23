@@ -2,58 +2,63 @@
 <html class="no-touch no-js" lang="en" dir="ltr">
   <head>
     {% liquid
-      assign robots_directive = ''
-      assign googlebot_directive = ''
-      assign request_path = request.path | default: '' | downcase
-      assign request_query = request.query_string | default: '' | downcase
-      assign has_collection_filters = false
+  assign robots_directive = ''
+  assign googlebot_directive = ''
 
-      if request.page_type == 'collection' or template contains 'collection'
-        if current_tags != blank
-          assign has_collection_filters = true
-        endif
+  assign request_path  = request.path         | default: '' | downcase
+  assign request_query = request.query_string | default: '' | downcase
 
-        if has_collection_filters == false
-          if request_query contains 'filter.' or request_query contains 'filter%5b'
+  assign has_collection_filters = false
+
+  # Detect collection context
+  if request.page_type == 'collection' or template contains 'collection'
+    # 1) Tag-based filters like /collections/handle/tag1+tag2
+    if current_tags != blank
+      assign has_collection_filters = true
+    endif
+
+    # 2) If we haven't found tags yet, check URL params & path patterns
+    if has_collection_filters == false
+      if request_query contains 'filter.' or request_query contains 'filter%5b'  # OS 2.0 filters
+        assign has_collection_filters = true
+      elsif request_query contains 'pf_'                                        # some filter apps
+        assign has_collection_filters = true
+      elsif request_query contains 'constraint='                                 # legacy constraints
+        assign has_collection_filters = true
+      elsif request_query contains 'options%5b'                                  # options[]
+        assign has_collection_filters = true
+      else
+        # 3) Look for "+" in the tag segment of /collections/<handle>/<tags>
+        assign after_collections = request_path | split: '/collections/' | last
+        assign segments = after_collections | split: '/'
+        if segments.size > 1
+          assign tag_segment = segments[1]
+          if tag_segment contains '+'
             assign has_collection_filters = true
-          elsif request_query contains 'pf_'
-            assign has_collection_filters = true
-          elsif request_query contains 'constraint='
-            assign has_collection_filters = true
-          elsif request_query contains 'options%5b'
-            assign has_collection_filters = true
-          else
-            assign collection_path_parts = request_path | split: '/collections/'
-            if collection_path_parts.size > 1
-              assign collection_path_tail = collection_path_parts[1]
-              assign collection_segments = collection_path_tail | split: '/'
-              if collection_segments.size > 1
-                assign collection_filter_segment = collection_segments[1]
-                if collection_filter_segment contains '+'
-                  assign has_collection_filters = true
-                endif
-              endif
-            endif
           endif
         endif
       endif
+    endif
+  endif
 
-      if has_collection_filters
-        assign robots_directive = 'noindex, follow'
-      endif
+  # Pages we always want noindexed
+  if has_collection_filters or request.page_type == 'search' or request_path contains '/search' or request_path contains '/compare'
+    assign robots_directive = 'noindex, follow'
+  endif
 
-      if request_path contains 'compare'
-        assign robots_directive = 'noindex, follow'
-      endif
+  # Mirror to googlebot unless explicitly set elsewhere
+  if robots_directive != '' and googlebot_directive == ''
+    assign googlebot_directive = robots_directive
+  endif
+%}
 
-      if request_path contains 'search'
-        assign robots_directive = 'noindex, follow'
-      endif
+{% if request.page_type == 'collection' and collection and has_collection_filters %}
+  <link rel="canonical" href="{{ collection.url }}">
+{% else %}
+  <link rel="canonical" href="{{ canonical_url }}">
+{% endif %}
 
-      if robots_directive != '' and googlebot_directive == ''
-        assign googlebot_directive = robots_directive
-      endif
-    %}
+
 
     <link href="{{ 'select2.min.css' | asset_url }}" rel="stylesheet">
     <script src="{{ 'select2.min.js' | asset_url }}"></script>
