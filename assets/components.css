@@ -313,7 +313,7 @@
   }
   
   h2#feature-points-heading- {
-    color: white;
+    color: white !important;
   }
 
   .fp-card__icon{
