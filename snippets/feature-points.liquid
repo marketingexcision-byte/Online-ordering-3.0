@@ -1,5 +1,5 @@
 {% liquid
-  # ----- FEATURES (existing) -----
+  # ----- SOURCE DATA -----
   assign fp_items = blank
   if page and page.metafields and page.metafields.custom
     assign fp_meta = page.metafields.custom.feature_points
@@ -12,7 +12,6 @@
     endif
   endif
 
-  # ----- ADVANTAGES (new) -----
   assign ap_items = blank
   if page and page.metafields and page.metafields.custom
     assign ap_meta = page.metafields.custom.advantage_points
@@ -25,72 +24,88 @@
     endif
   endif
 
-  # ----- Normalize & count -----
+  # Normalize into arrays
   assign fp_items = fp_items | default: '' | compact
   assign ap_items = ap_items | default: '' | compact
-  assign fp_count = fp_items | size
-  assign ap_count = ap_items | size
 
-  # ----- IDs & aria-labelledby -----
+  # ----- COUNT ONLY RENDERABLE ITEMS -----
+  assign fp_render_count = 0
+  for obj in fp_items
+    assign icon  = obj.feature_point_icon | default: obj.icon | default: obj.image | default: obj.media | default: obj.file
+    assign title = obj.feature_point_title | default: obj.title | default: obj.name | default: obj.heading
+    assign body  = obj.feature_point_text | default: obj.text  | default: obj.copy | default: obj.content | default: obj.description
+    assign body_rte = body.value | default: body
+    if (icon and icon != blank) or (title and title != blank) or (body_rte and body_rte != blank)
+      assign fp_render_count = fp_render_count | plus: 1
+    endif
+  endfor
+
+  assign ap_render_count = 0
+  for obj in ap_items
+    assign icon  = obj.advantage_point_icon | default: obj.icon | default: obj.image | default: obj.media | default: obj.file
+    assign title = obj.advantage_point_title | default: obj.title | default: obj.name | default: obj.heading
+    assign body  = obj.advantage_point_text | default: obj.text  | default: obj.copy | default: obj.content | default: obj.description
+    assign body_rte = body.value | default: body
+    if (icon and icon != blank) or (title and title != blank) or (body_rte and body_rte != blank)
+      assign ap_render_count = ap_render_count | plus: 1
+    endif
+  endfor
+
+  # ----- IDS / ARIA -----
   assign sid = section.id | default: template.name | default: 'page'
   capture labelledby
-    if ap_count > 0 and fp_count == 0
+    if ap_render_count > 0 and fp_render_count == 0
       echo 'advantages-heading-' | append: sid
-    elsif fp_count > 0 and ap_count == 0
+    elsif fp_render_count > 0 and ap_render_count == 0
       echo 'features-heading-' | append: sid
-    elsif ap_count > 0 and fp_count > 0
+    elsif ap_render_count > 0 and fp_render_count > 0
       echo 'advantages-heading-' | append: sid | append: ' features-heading-' | append: sid
     endif
   endcapture
 %}
 
-{% if ap_count > 0 or fp_count > 0 %}
+{% if ap_render_count > 0 or fp_render_count > 0 %}
 <section class="section section--feature-points" {% if labelledby != blank %}aria-labelledby="{{ labelledby }}"{% endif %}>
   <div class="container layout-constrained">
 
-    {% if ap_count > 0 %}
+    {% if ap_render_count > 0 %}
       <header class="section__header">
         <h2 id="advantages-heading-{{ sid }}" class="section__title text-h3">Advantages</h2>
       </header>
-
       <div class="ap-grid" role="list">
         {% for obj in ap_items %}
           {% liquid
-            assign icon  = obj.advantage_point_icon  | default: obj.icon | default: obj.image | default: obj.media | default: obj.file
+            assign icon  = obj.advantage_point_icon | default: obj.icon | default: obj.image | default: obj.media | default: obj.file
             assign title = obj.advantage_point_title | default: obj.title | default: obj.name | default: obj.heading
-            assign body  = obj.advantage_point_text  | default: obj.text  | default: obj.copy | default: obj.content | default: obj.description
+            assign body  = obj.advantage_point_text | default: obj.text  | default: obj.copy | default: obj.content | default: obj.description
             assign body_rte = body.value | default: body
           %}
-          <article class="ap-card card" role="listitem">
-            <div class="ap-card__icon" aria-hidden="true">
-              {% if icon and icon != blank %}
-                {%- assign alt = title | default: 'Advantage icon' -%}
-                {%- capture sizes -%}(min-width: 1024px) 80px, 64px{%- endcapture -%}
-                {{- icon
-                  | image_url: width: 160
-                  | image_tag:
-                    class: 'ap-card__img', loading: 'lazy', decoding: 'async',
-                    widths: '64,80,120,160', sizes: sizes, alt: alt -}}
-              {% else %}
-                <svg class="ap-card__svg" viewBox="0 0 40 40" focusable="false" aria-hidden="true">
-                  <circle cx="20" cy="20" r="19" class="ap--steel" />
-                  <path d="M12 20l5 5 11-11" class="ap--tick" />
-                </svg>
-              {% endif %}
-            </div>
-
-            {% if title %}<h3 class="ap-card__title text-h4">{{ title }}</h3>{% endif %}
-            {% if body_rte %}<div class="ap-card__body text-p1 rte">{{ body_rte }}</div>{% endif %}
-          </article>
+          {% if (icon and icon != blank) or (title and title != blank) or (body_rte and body_rte != blank) %}
+            <article class="ap-card card" role="listitem">
+              <div class="ap-card__icon" aria-hidden="true">
+                {% if icon and icon != blank %}
+                  {%- assign alt = title | default: 'Advantage icon' -%}
+                  {%- capture sizes -%}(min-width: 1024px) 80px, 64px{%- endcapture -%}
+                  {{- icon | image_url: width: 160 | image_tag: class: 'ap-card__img', loading: 'lazy', decoding: 'async', widths: '64,80,120,160', sizes: sizes, alt: alt -}}
+                {% else %}
+                  <svg class="ap-card__svg" viewBox="0 0 40 40" focusable="false" aria-hidden="true">
+                    <circle cx="20" cy="20" r="19" class="ap--steel" />
+                    <path d="M12 20l5 5 11-11" class="ap--tick" />
+                  </svg>
+                {% endif %}
+              </div>
+              {% if title %}<h3 class="ap-card__title text-h4">{{ title }}</h3>{% endif %}
+              {% if body_rte %}<div class="ap-card__body text-p1 rte">{{ body_rte }}</div>{% endif %}
+            </article>
+          {% endif %}
         {% endfor %}
       </div>
     {% endif %}
 
-    {% if fp_count > 0 %}
+    {% if fp_render_count > 0 %}
       <header class="section__header">
         <h2 id="features-heading-{{ sid }}" class="section__title text-h3">Features</h2>
       </header>
-
       <div class="fp-grid" role="list">
         {% for obj in fp_items %}
           {% liquid
@@ -99,27 +114,24 @@
             assign body  = obj.feature_point_text | default: obj.text  | default: obj.copy | default: obj.content | default: obj.description
             assign body_rte = body.value | default: body
           %}
-          <article class="fp-card card" role="listitem">
-            <div class="fp-card__icon" aria-hidden="true">
-              {% if icon and icon != blank %}
-                {%- assign alt = title | default: 'Feature icon' -%}
-                {%- capture sizes -%}(min-width: 1024px) 80px, 64px{%- endcapture -%}
-                {{- icon
-                  | image_url: width: 160
-                  | image_tag:
-                    class: 'fp-card__img', loading: 'lazy', decoding: 'async',
-                    widths: '64,80,120,160', sizes: sizes, alt: alt -}}
-              {% else %}
-                <svg class="fp-card__svg" viewBox="0 0 40 40" focusable="false" aria-hidden="true">
-                  <circle cx="20" cy="20" r="19" class="fp--bronze" />
-                  <path d="M20 10v20M10 20h20" class="fp--plus" />
-                </svg>
-              {% endif %}
-            </div>
-
-            {% if title %}<h3 class="fp-card__title text-h4">{{ title }}</h3>{% endif %}
-            {% if body_rte %}<div class="fp-card__body text-p1 rte">{{ body_rte }}</div>{% endif %}
-          </article>
+          {% if (icon and icon != blank) or (title and title != blank) or (body_rte and body_rte != blank) %}
+            <article class="fp-card card" role="listitem">
+              <div class="fp-card__icon" aria-hidden="true">
+                {% if icon and icon != blank %}
+                  {%- assign alt = title | default: 'Feature icon' -%}
+                  {%- capture sizes -%}(min-width: 1024px) 80px, 64px{%- endcapture -%}
+                  {{- icon | image_url: width: 160 | image_tag: class: 'fp-card__img', loading: 'lazy', decoding: 'async', widths: '64,80,120,160', sizes: sizes, alt: alt -}}
+                {% else %}
+                  <svg class="fp-card__svg" viewBox="0 0 40 40" focusable="false" aria-hidden="true">
+                    <circle cx="20" cy="20" r="19" class="fp--bronze" />
+                    <path d="M20 10v20M10 20h20" class="fp--plus" />
+                  </svg>
+                {% endif %}
+              </div>
+              {% if title %}<h3 class="fp-card__title text-h4">{{ title }}</h3>{% endif %}
+              {% if body_rte %}<div class="fp-card__body text-p1 rte">{{ body_rte }}</div>{% endif %}
+            </article>
+          {% endif %}
         {% endfor %}
       </div>
     {% endif %}
