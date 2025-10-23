@@ -305,7 +305,11 @@
   }
 
   .section.section--feature-points {
-    margin-bottom: var(--space-9) !important;
+    background: #0069a7;
+  }
+
+  .section--feature-points .container .layout-constrained {
+    padding: var(--space-5) var(--space-5) var(--space-8) !important;
   }
 
   .fp-card__icon{
