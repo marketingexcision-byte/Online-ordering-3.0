@@ -319,7 +319,7 @@
   /* Fallback icon (bronze +) */
   .fp-card__svg{ width: 48px; height: 48px; display: block; }
   .fp-card__svg .fp--bronze{ fill: var(--color-secondary-bronze, #f88d2b); }
-  .fp-card__svg .fp--plus{ stroke: #fff; stroke-width: 3; stroke-linecap: round; }
+  .fp-card__svg .fp--plus{ stroke: #fff; stroke-width: 3; }
 
   .fp-card__title{ margin: 0; }
   .fp-card__body{ margin: 0; color: var(--color-secondary-iron); }
