@@ -37,9 +37,11 @@
 <section class="section section--feature-points" aria-labelledby="feature-points-heading-{{ section.id }}">
     {% if have_ap_items %}
   <div class="container layout-constrained">
+    <header class="section__header">
     <h2 id="feature-points-heading-{{ section.id }}" class="section__title text-h3">
             Advantages
           </h2>
+        </header>
 
     <div class="ap-grid" role="list">
       {% for obj in ap_items %}
