@@ -578,13 +578,13 @@
                     {% endif %}
 
                     {%- comment -%} Work material chips (normalized + no parentheses) {%- endcomment -%}
-                    {%- assign work_material_array = page.metafields.custom.work_material.value
-                      | default: page.metafields.custom.work_material
+                    {%- assign work_material_array = collection.metafields.custom.work_material.value
+                      | default: collection.metafields.custom.work_material
                     -%}
 
                     {%- if work_material_array == blank -%}
                       {%- comment -%} Fallback for legacy JSON strings {%- endcomment -%}
-                      {%- assign work_material_array = page.metafields.custom.work_material
+                      {%- assign work_material_array = collection.metafields.custom.work_material
                         | remove: '['
                         | remove: ']'
                         | remove: '"'
@@ -729,13 +729,13 @@
                       {% endif %}
 
                       {%- comment -%} Work material chips (normalized + no parentheses) {%- endcomment -%}
-                      {%- assign work_material_array = page.metafields.custom.work_material.value
-                        | default: page.metafields.custom.work_material
+                      {%- assign work_material_array = collection.metafields.custom.work_material.value
+                        | default: collection.metafields.custom.work_material
                       -%}
 
                       {%- if work_material_array == blank -%}
                         {%- comment -%} Fallback for legacy JSON strings {%- endcomment -%}
-                        {%- assign work_material_array = page.metafields.custom.work_material
+                        {%- assign work_material_array = collection.metafields.custom.work_material
                           | remove: '['
                           | remove: ']'
                           | remove: '"'
