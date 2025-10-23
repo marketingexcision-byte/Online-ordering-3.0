@@ -105,7 +105,7 @@
 {%- if page.metafields.custom.header_banner.value != blank -%}
   <style>
     .template-collection .breadcrumb {
-      background: url({{ page.metafields.custom.header_banner | file_url }});
+      background: url({{ page.metafields.custom.header_image | file_url }});
       background-repeat: no-repeat;
       background-position: center;
       background-size: cover;
