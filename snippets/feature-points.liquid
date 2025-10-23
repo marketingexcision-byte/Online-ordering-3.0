@@ -31,12 +31,15 @@
   assign have_ap_items = ap_items and ap_items != blank and ap_items.size > 0
 %}
 
-{% if have_ap_items %}
-<section class="section section--advantage-points" aria-labelledby="advantage-points-heading-{{ section.id }}">
+
+
+
+<section class="section section--feature-points" aria-labelledby="feature-points-heading-{{ section.id }}">
+    {% if have_ap_items %}
   <div class="container layout-constrained">
-    <header class="section__header">
-      <h2 id="advantage-points-heading-{{ section.id }}" class="section__title text-h3">Advantages</h2>
-    </header>
+    <h2 id="feature-points-heading-{{ section.id }}" class="section__title text-h3">
+            Advantages
+          </h2>
 
     <div class="ap-grid" role="list">
       {% for obj in ap_items %}
@@ -83,11 +86,8 @@
       {% endfor %}
     </div>
   </div>
-</section>
 {% endif %}
 
-
-<section class="section section--feature-points" aria-labelledby="feature-points-heading-{{ section.id }}">
   <div class="container layout-constrained">
       <header class="section__header">
           <h2 id="feature-points-heading-{{ section.id }}" class="section__title text-h3">
