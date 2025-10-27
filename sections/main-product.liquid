@@ -474,10 +474,6 @@
   {% endfor %}
 </select>
 
-
-{% else %}
-  <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
-
 <script>
 document.addEventListener('DOMContentLoaded', function () {
   (function () {
@@ -526,6 +522,9 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 
 
+
+{% else %}
+  <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
 {% endunless %}
 
 {% unless product == empty %}
