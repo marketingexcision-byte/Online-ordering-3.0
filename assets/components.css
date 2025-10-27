@@ -412,5 +412,14 @@
   /* We already have .fp-* rules from your Features section; no change needed there. */
 }
 
-
+/* -- Tiny pill chips inline before the text (uses your work-mat colors) -- */
+.vmx .wm-chip-group { display:inline-flex; gap:6px; margin-right:8px; vertical-align:middle; }
+.vmx .wm-chip {
+  width:auto; height:22px; min-width:0; padding:2px 8px;
+  border-radius: var(--radius-pill, 999px);
+  font-family: var(--font-bold, inherit); font-size:12px; line-height:1; color:#fff;
+}
+/* ensure the cell doesn't wrap weirdly */
+.vmx td.has-wm-chips { white-space:nowrap; }
+/* override the square-size from the card chips, keep your colors from [data-m] */
 }
