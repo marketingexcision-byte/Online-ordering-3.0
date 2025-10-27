@@ -5248,7 +5248,7 @@ button[name="checkout"][disabled]{
   }
 }
 
-button.ex-opt-btn.is-selected.has-wm-chips {
+button.ex-opt-btn.has-wm-chips {
     display: flex;
     align-items: center;
     gap: 5px;
