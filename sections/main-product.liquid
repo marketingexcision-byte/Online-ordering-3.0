@@ -884,11 +884,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Only decorate the option group whose legend text is exactly "Text"
     function targetFieldsets() {
-      return Array.from(root.querySelectorAll('.ex-opt')).filter(fs => {
-        const name = (fs.querySelector('legend')?.textContent || '').trim().toLowerCase();
-        return name === 'text';
-      });
-    }
+  const keys = new Set(Object.keys(WM_MAP));
+  return Array.from(root.querySelectorAll('.ex-opt')).filter(fs =>
+    Array.from(fs.querySelectorAll('.ex-opt-btn'))
+      .some(b => keys.has((b.textContent || '').trim()))
+  );
+}
+
 
     function decorateButton(btn) {
       if (btn.dataset.wmDecorated === '1') return;
