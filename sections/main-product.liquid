@@ -474,54 +474,6 @@
   {% endfor %}
 </select>
 
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-  (function () {
-    // Map of "Text" => array of material codes to show (e.g., "P05", "K10")
-    const WM_MAP = {
-      "YG1001": ["P05","K10"],
-      "YG3010": ["P10","K20"],
-      "YG3020": ["P20"],
-      "YG3030": ["P30","M20"],
-      "YG801":  ["P20"],
-      "YG100":  ["N20"],
-      "YG10":   ["N20"],
-      "YG211":  ["M15","S10"],
-      "YG213":  ["M30","S20"],
-      "YG214":  ["M40","S30"]
-    };
-
-    // Enhance any body cell whose text matches a key above
-    document.querySelectorAll('.vmx__table tbody td:not(.vmx__sticky-r)').forEach(td => {
-      const raw = (td.textContent || '').trim();
-      if (!WM_MAP.hasOwnProperty(raw)) return;
-
-      const group = document.createElement('span');
-      group.className = 'wm-chip-group';
-
-      // Build chips. We reuse your color rules via the first letter in data-m (P/M/K/N/S)
-      for (const code of WM_MAP[raw]) {
-        const chip = document.createElement('span');
-        chip.className = 'work-mat__chip wm-chip';
-        chip.dataset.m = code.charAt(0).toUpperCase(); // gives P/M/K/N/S -> your CSS sets the color
-        chip.textContent = code;                        // shows e.g. "P05"
-        group.appendChild(chip);
-      }
-
-      const label = document.createElement('span');
-      label.className = 'wm-chip-text';
-      label.textContent = ' ' + raw;
-
-      td.textContent = '';
-      td.appendChild(group);
-      td.appendChild(label);
-      td.classList.add('has-wm-chips');
-    });
-  })();
-});
-</script>
-
-
 
 {% else %}
   <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
@@ -909,6 +861,80 @@ if (i === 0) {
     render();
   })();
   </script>
+
+  <script>
+document.addEventListener('DOMContentLoaded', function () {
+  (function () {
+    // Map "Text" value -> array of chip codes
+    const WM_MAP = {
+      "YG1001": ["P05","K10"],
+      "YG3010": ["P10","K20"],
+      "YG3020": ["P20"],
+      "YG3030": ["P30","M20"],
+      "YG801":  ["P20"],
+      "YG100":  ["N20"],
+      "YG10":   ["N20"],
+      "YG211":  ["M15","S10"],
+      "YG213":  ["M30","S20"],
+      "YG214":  ["M40","S30"]
+    };
+
+    const root = document.getElementById('ex-variant-pickers-{{ section.id }}');
+    if (!root) return;
+
+    // Only decorate the option group whose legend text is exactly "Text"
+    function targetFieldsets() {
+      return Array.from(root.querySelectorAll('.ex-opt')).filter(fs => {
+        const name = (fs.querySelector('legend')?.textContent || '').trim().toLowerCase();
+        return name === 'text';
+      });
+    }
+
+    function decorateButton(btn) {
+      if (btn.dataset.wmDecorated === '1') return;
+      const label = (btn.textContent || '').trim();
+      const mats = WM_MAP[label];
+      if (!mats || !mats.length) return;
+
+      // Build chips
+      const group = document.createElement('span');
+      group.className = 'wm-chip-group';
+      for (const code of mats) {
+        const chip = document.createElement('span');
+        chip.className = 'work-mat__chip wm-chip';
+        chip.dataset.m = code.charAt(0).toUpperCase(); // P/M/K/N/S controls color
+        chip.textContent = code;                        // show "P05", etc.
+        group.appendChild(chip);
+      }
+
+      // Replace button label content with [chips] + label
+      btn.dataset.wmDecorated = '1';
+      const textSpan = document.createElement('span');
+      textSpan.className = 'wm-chip-text';
+      textSpan.textContent = ' ' + label;
+
+      btn.textContent = ''; // keep attributes intact
+      btn.appendChild(group);
+      btn.appendChild(textSpan);
+      btn.classList.add('has-wm-chips');
+    }
+
+    function scan(container) {
+      container.querySelectorAll('.ex-opt-btn').forEach(decorateButton);
+    }
+
+    // Initial pass for the "Text" fieldset(s)
+    targetFieldsets().forEach(scan);
+
+    // Guard for any dynamic re-renders (themes sometimes re-hydrate buttons)
+    const mo = new MutationObserver(() => {
+      targetFieldsets().forEach(scan);
+    });
+    mo.observe(root, { childList: true, subtree: true });
+  })();
+});
+</script>
+
 
 
 <script>
