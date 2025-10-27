@@ -5247,3 +5247,9 @@ button[name="checkout"][disabled]{
     transition: none;
   }
 }
+
+button.ex-opt-btn.is-selected.has-wm-chips {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
