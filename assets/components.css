@@ -413,8 +413,8 @@
 }
 
 /* -- Tiny pill chips inline before the text (uses your work-mat colors) -- */
-.vmx .wm-chip-group { display:inline-flex; gap:6px; margin-right:8px; vertical-align:middle; }
-.vmx .wm-chip {
+.wm-chip-group { display:inline-flex; gap:6px; margin-right:8px; vertical-align:middle; }
+.wm-chip {
   width:auto; height:20px; min-width:0; padding:2px 5px !important;
   border-radius: var(--radius-pill, 999px);
   font-family: var(--font-bold, inherit); font-size:12px; line-height:1; color:#fff;
