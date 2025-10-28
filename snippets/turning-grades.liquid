@@ -437,21 +437,8 @@ or product.tags contains 'Turning Grade_YG10'
   </article>
   {% endif %}
 </div>
+
 <div>
-
-{%- comment -%}
-  Turning grade overlap charts
-  Shows a chart only if the product has at least one tag in that material group.
-
-  Tags expected (examples):
-    Turning Grade_YG1001, Turning Grade_YG3010, Turning Grade_YG3020, Turning Grade_YG3030, Turning Grade_YG801,
-    Turning Grade_YG211, Turning Grade_YG213, Turning Grade_YG214,
-    Turning Grade_YG10, Turning Grade_YG100,
-    Turning Grade_YG401
-
-  Usage:
-    {% render 'turning-grade-charts', product: product %}
-{%- endcomment -%}
 
 {%- assign ptags = product.tags | join: '|' -%}
 
@@ -489,7 +476,7 @@ or product.tags contains 'Turning Grade_YG10'
         <div class="collection-card__body">
           <h3 class="collection-card__title">Steels (P)</h3>
           <div class="collection-card__media grade-chart">
-            <svg viewBox="0 0 110 90" role="img" aria-label="Steels cutting speed vs feed for grades YG1001, YG3010, YG3020, YG3030, YG801">
+            <svg viewBox="0 0 380 220" role="img" aria-label="Steels cutting speed vs feed for grades YG1001, YG3010, YG3020, YG3030, YG801">
               <!-- Axes -->
               <path d="M10 80 V20 M10 80 H100" stroke="#0069a7" stroke-width="3" fill="none"/>
               <text class="axis-label" x="6" y="22" transform="rotate(-90 6,22)">Cutting Speed</text>
@@ -595,7 +582,7 @@ or product.tags contains 'Turning Grade_YG10'
         <div class="collection-card__body">
           <h3 class="collection-card__title">Non-Ferrous Materials (N)</h3>
           <div class="collection-card__media grade-chart">
-            <svg viewBox="0 0 110 90" role="img" aria-label="Non-ferrous cutting speed vs feed for grades YG10 and YG100">
+            <svg viewBox="0 0 380 220" role="img" aria-label="Non-ferrous cutting speed vs feed for grades YG10 and YG100">
               <path d="M10 80 V20 M10 80 H100" stroke="#109954" stroke-width="3" fill="none"/>
               <text class="axis-label" x="6" y="22" transform="rotate(-90 6,22)">Cutting Speed</text>
               <text class="axis-label" x="100" y="87" text-anchor="end">Feed</text>
@@ -623,7 +610,7 @@ or product.tags contains 'Turning Grade_YG10'
         <div class="collection-card__body">
           <h3 class="collection-card__title">Superalloys (S)</h3>
           <div class="collection-card__media grade-chart">
-            <svg viewBox="0 0 110 90" role="img" aria-label="Superalloys cutting speed vs feed for grades YG401 and YG214">
+            <svg viewBox="0 0 380 220" role="img" aria-label="Superalloys cutting speed vs feed for grades YG401 and YG214">
               <path d="M10 80 V20 M10 80 H100" stroke="#f88d2b" stroke-width="3" fill="none"/>
               <text class="axis-label" x="6" y="22" transform="rotate(-90 6,22)">Cutting Speed</text>
               <text class="axis-label" x="100" y="87" text-anchor="end">Feed</text>
@@ -646,8 +633,6 @@ or product.tags contains 'Turning Grade_YG10'
       {%- endif -%}
     </div>
 {%- endif -%}
-
-
 
 </div>
 

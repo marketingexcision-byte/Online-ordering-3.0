@@ -5255,3 +5255,20 @@ button.ex-opt-btn.has-wm-chips {
     gap: 5px;
 }
 
+.grade-chart svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.axis-label {
+  font-size: 10px; /* visual 10px at 380x220 design */
+  font-weight: 600;
+  fill: #111;
+}
+
+.label--p   { font-size: 8px; font-weight: 700; fill: #0b3b66; }
+.label--m   { font-size: 8px; font-weight: 700; fill: #6f5200; }
+.label--k   { font-size: 8px; font-weight: 700; fill: #6b2c18; }
+.label--n   { font-size: 8px; font-weight: 700; fill: #0a5b31; }
+.label--s   { font-size: 8px; font-weight: 700; fill: #7a3f16; }
