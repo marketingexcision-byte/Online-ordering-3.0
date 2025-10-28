@@ -347,7 +347,7 @@
   }
 
   .container.layout-constrained {
-    margin-top: var(--space-8);
+    margin-top: var(--space-8) !important;
   }
   
   h2#feature-points-heading- {
