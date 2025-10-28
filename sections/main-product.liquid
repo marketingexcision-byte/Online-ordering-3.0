@@ -1418,7 +1418,7 @@ function paint(){
       } else if (v.incoming && v.next_incoming_date) {
         setBadge(`Restocking ${new Date(v.next_incoming_date).toLocaleDateString()}`,'blue');
       } else if (v.available && v.inventory_policy === 'continue') {
-        setBadge('Order in','red');
+        setBadge('5 Days','yellow');
       } else {
         setBadge('Out of stock','red');
       }
