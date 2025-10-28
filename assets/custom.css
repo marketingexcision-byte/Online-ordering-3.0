@@ -5209,6 +5209,7 @@ button[name="checkout"][disabled]{
         .ex-card-badge[data-status="green"]::before{background:#109954}
         .ex-card-badge[data-status="orange"]::before{background:#f88d2b}
         .ex-card-badge[data-status="red"]::before{background:#d52e30}
+        .ex-card-badge[data-status="yellow"]::before{background:#f6b519}
         .ex-card-badge[data-status="blue"]::before{background:#3995e6}
         .ex-card-badge[data-status="grey"]::before{background:#666}
         .ex-card-badge[data-status="mto"]::before{background:#3995e6}
