@@ -1,5 +1,26 @@
-<div class="container layout-constrained">
+{% if product.tags contains 'Turning Grade_YG1010'
+or product.tags contains 'Turning Grade_YG1001'
+or product.tags contains 'Turning Grade_YG1020'
+or product.tags contains 'Turning Grade_YG3010'
+or product.tags contains 'Turning Grade_YG3015'
+or product.tags contains 'Turning Grade_YG3115'
+or product.tags contains 'Turning Grade_YG3125'
+or product.tags contains 'Turning Grade_YG3020'
+or product.tags contains 'Turning Grade_YG3030'
+or product.tags contains 'Turning Grade_YG801'
+or product.tags contains 'Turning Grade_YG2025'
+or product.tags contains 'Turning Grade_YG2035'
+or product.tags contains 'Turning Grade_YG211'
+or product.tags contains 'Turning Grade_YG213'
+or product.tags contains 'Turning Grade_YG214'
+or product.tags contains 'Turning Grade_YG401'
+or product.tags contains 'Turning Grade_YT100'
+or product.tags contains 'Turning Grade_YT100G'
+or product.tags contains 'Turning Grade_YG100'
+or product.tags contains 'Turning Grade_YG10'
+  %}
 
+<div class="container layout-constrained">
 <h2>Turning Grades</h2>
 
   {%- comment -%} YG1010 {%- endcomment -%}
@@ -465,3 +486,4 @@
   </article>
   {% endif %}
 </div>
+{% endif %}
