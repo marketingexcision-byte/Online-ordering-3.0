@@ -117,7 +117,13 @@
       {%- elsif inv >= 1 -%}
         {%- assign ex_stock_status = 'orange' -%}Low stock
       {%- else -%}
-        {%- assign ex_stock_status = 'red' -%}No stock
+        {%- if item.variant.incoming and item.variant.next_incoming_date -%}
+          {%- assign ex_stock_status = 'blue' -%}Restocking
+        {%- elsif item.variant.inventory_policy == 'continue' -%}
+          {%- assign ex_stock_status = 'yellow' -%}5 days
+        {%- else -%}
+          {%- assign ex_stock_status = 'red' -%}No stock
+        {%- endif -%}
       {%- endif -%}
     {%- else -%}
       {%- if inv > 10 -%}
@@ -138,6 +144,7 @@
     {%- assign ex_stock_status = 'grey' -%}Quantity unavailable
   {%- endif -%}
 {%- endcapture -%}
+
 
 
 <div class="ex-card-badge ex-card-badge--cart"
