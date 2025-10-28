@@ -437,5 +437,74 @@ or product.tags contains 'Turning Grade_YG10'
   </article>
   {% endif %}
 </div>
+<div>
+
+  
+<!-- Superalloy Overlap Chart - paste anywhere in your page -->
+<div class="superalloy-chart" role="img" aria-label="Superalloy cutting speed vs feed with overlapping ranges for YG401 and YG214">
+  <style>
+    .superalloy-chart svg { width: 100%; height: auto; display: block; }
+    .sa-axis { stroke: #e86f00; stroke-width: 4; fill: none; }
+    .sa-tick { stroke: #e86f00; stroke-width: 2; }
+    .sa-title { font: 700 28px/1.2 system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, sans-serif; fill: #e86f00; text-anchor: middle; }
+    .sa-label { font: 600 14px/1.2 system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, sans-serif; fill: #000; }
+    .sa-ellipse { fill: #f39a56; fill-opacity: 0.75; }
+    .sa-ellipse--2 { fill: #f39a56; fill-opacity: 0.85; }
+    .sa-chip { font: 700 14px/1.2 system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, sans-serif; fill: #fff; }
+    .sa-chip-bg { fill: #cc6a22; }
+  </style>
+
+  <!--
+    ViewBox coordinate system: 0..100 on both axes for easy positioning.
+    Adjust ellipse centers/radii below to change sizes/positions.
+  -->
+  <svg viewBox="0 0 110 90" role="presentation">
+    <!-- Title -->
+    <text x="55" y="10" class="sa-title">Superalloy</text>
+
+    <!-- Axes -->
+    <path class="sa-axis" d="M10 80 V20 M10 80 H100" />
+    <!-- Axis labels -->
+    <text x="5" y="22" transform="rotate(-90 5,22)" class="sa-label">Cutting Speed</text>
+    <text x="100" y="87" class="sa-label" text-anchor="end">Feed</text>
+
+    <!-- Optional small ticks (purely visual, no scale implied) -->
+    <g class="sa-ticks" stroke-linecap="round">
+      <line class="sa-tick" x1="25" y1="80" x2="25" y2="78"/>
+      <line class="sa-tick" x1="40" y1="80" x2="40" y2="78"/>
+      <line class="sa-tick" x1="55" y1="80" x2="55" y2="78"/>
+      <line class="sa-tick" x1="70" y1="80" x2="70" y2="78"/>
+      <line class="sa-tick" x1="85" y1="80" x2="85" y2="78"/>
+
+      <line class="sa-tick" x1="10" y1="70" x2="12" y2="70"/>
+      <line class="sa-tick" x1="10" y1="60" x2="12" y2="60"/>
+      <line class="sa-tick" x1="10" y1="50" x2="12" y2="50"/>
+      <line class="sa-tick" x1="10" y1="40" x2="12" y2="40"/>
+      <line class="sa-tick" x1="10" y1="30" x2="12" y2="30"/>
+    </g>
+
+    <!-- Ellipses (overlapping areas). Tweak cx, cy, rx, ry to reposition/resize -->
+    <!-- YG401 -->
+    <ellipse class="sa-ellipse" cx="54" cy="44" rx="28" ry="16" />
+    <!-- YG214 -->
+    <ellipse class="sa-ellipse--2" cx="64" cy="56" rx="14" ry="10" />
+
+    <!-- Chips (labels) -->
+    <g>
+      <!-- YG401 chip -->
+      <rect class="sa-chip-bg" x="49" y="41" rx="2.5" ry="2.5" width="14" height="6.5"/>
+      <text class="sa-chip" x="56" y="46" text-anchor="middle">YG401</text>
+
+      <!-- YG214 chip -->
+      <rect class="sa-chip-bg" x="60" y="54" rx="2.5" ry="2.5" width="12" height="6.5"/>
+      <text class="sa-chip" x="66" y="58.7" text-anchor="middle">YG214</text>
+    </g>
+  </svg>
+</div>
+
+
+
+</div>
+
 </div>
 {% endif %}
