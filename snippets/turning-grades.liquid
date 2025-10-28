@@ -439,67 +439,223 @@ or product.tags contains 'Turning Grade_YG10'
 </div>
 <div>
 
-<!-- Superalloy Overlap Chart - paste anywhere in your page -->
-<div class="superalloy-chart" role="img" aria-label="Superalloy cutting speed vs feed with overlapping ranges for YG401 and YG214">
-  <style>
-    .superalloy-chart svg { width: 100%; height: auto; display: block; }
-    .sa-axis { stroke: #e86f00; stroke-width: 4; fill: none; }
-    .sa-tick { stroke: #e86f00; stroke-width: 2; }
-    .sa-title { font: 700 28px/1.2 system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, sans-serif; fill: #e86f00; text-anchor: middle; }
-    .sa-label { font: 600 14px/1.2 system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, sans-serif; fill: #000; }
-    .sa-ellipse { fill: #f39a56; fill-opacity: 0.75; }
-    .sa-ellipse--2 { fill: #f39a56; fill-opacity: 0.85; }
-    .sa-chip { font: 700 14px/1.2 system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, sans-serif; fill: #fff; }
-    .sa-chip-bg { fill: #cc6a22; }
-  </style>
+{%- comment -%}
+  Turning grade overlap charts
+  Shows a chart only if the product has at least one tag in that material group.
 
-  <!--
-    ViewBox coordinate system: 0..100 on both axes for easy positioning.
-    Adjust ellipse centers/radii below to change sizes/positions.
-  -->
-  <svg viewBox="0 0 110 90" role="presentation">
-    <!-- Title -->
-    <text x="55" y="10" class="sa-title">Superalloy</text>
+  Tags expected (examples):
+    Turning Grade_YG1001, Turning Grade_YG3010, Turning Grade_YG3020, Turning Grade_YG3030, Turning Grade_YG801,
+    Turning Grade_YG211, Turning Grade_YG213, Turning Grade_YG214,
+    Turning Grade_YG10, Turning Grade_YG100,
+    Turning Grade_YG401
 
-    <!-- Axes -->
-    <path class="sa-axis" d="M10 80 V20 M10 80 H100" />
-    <!-- Axis labels -->
-    <text x="5" y="22" transform="rotate(-90 5,22)" class="sa-label">Cutting Speed</text>
-    <text x="100" y="87" class="sa-label" text-anchor="end">Feed</text>
+  Usage:
+    {% render 'turning-grade-charts', product: product %}
+{%- endcomment -%}
 
-    <!-- Optional small ticks (purely visual, no scale implied) -->
-    <g class="sa-ticks" stroke-linecap="round">
-      <line class="sa-tick" x1="25" y1="80" x2="25" y2="78"/>
-      <line class="sa-tick" x1="40" y1="80" x2="40" y2="78"/>
-      <line class="sa-tick" x1="55" y1="80" x2="55" y2="78"/>
-      <line class="sa-tick" x1="70" y1="80" x2="70" y2="78"/>
-      <line class="sa-tick" x1="85" y1="80" x2="85" y2="78"/>
+{%- assign ptags = product.tags | join: '|' -%}
 
-      <line class="sa-tick" x1="10" y1="70" x2="12" y2="70"/>
-      <line class="sa-tick" x1="10" y1="60" x2="12" y2="60"/>
-      <line class="sa-tick" x1="10" y1="50" x2="12" y2="50"/>
-      <line class="sa-tick" x1="10" y1="40" x2="12" y2="40"/>
-      <line class="sa-tick" x1="10" y1="30" x2="12" y2="30"/>
-    </g>
+{%- assign has_P = false -%}
+{%- if ptags contains 'Turning Grade_YG1001' or ptags contains 'Turning Grade_YG3010' or ptags contains 'Turning Grade_YG3020' or ptags contains 'Turning Grade_YG3030' or ptags contains 'Turning Grade_YG801' -%}
+  {%- assign has_P = true -%}
+{%- endif -%}
 
-    <!-- Ellipses (overlapping areas). Tweak cx, cy, rx, ry to reposition/resize -->
-    <!-- YG401 -->
-    <ellipse class="sa-ellipse" cx="54" cy="44" rx="28" ry="16" />
-    <!-- YG214 -->
-    <ellipse class="sa-ellipse--2" cx="64" cy="56" rx="14" ry="10" />
+{%- assign has_M = false -%}
+{%- if ptags contains 'Turning Grade_YG211' or ptags contains 'Turning Grade_YG213' or ptags contains 'Turning Grade_YG214' or ptags contains 'Turning Grade_YG3030' -%}
+  {%- assign has_M = true -%}
+{%- endif -%}
 
-    <!-- Chips (labels) -->
-    <g>
-      <!-- YG401 chip -->
-      <rect class="sa-chip-bg" x="49" y="41" rx="2.5" ry="2.5" width="14" height="6.5"/>
-      <text class="sa-chip" x="56" y="46" text-anchor="middle">YG401</text>
+{%- assign has_K = false -%}
+{%- if ptags contains 'Turning Grade_YG1001' or ptags contains 'Turning Grade_YG3010' -%}
+  {%- assign has_K = true -%}
+{%- endif -%}
 
-      <!-- YG214 chip -->
-      <rect class="sa-chip-bg" x="60" y="54" rx="2.5" ry="2.5" width="12" height="6.5"/>
-      <text class="sa-chip" x="66" y="58.7" text-anchor="middle">YG214</text>
-    </g>
-  </svg>
-</div>
+{%- assign has_N = false -%}
+{%- if ptags contains 'Turning Grade_YG10' or ptags contains 'Turning Grade_YG100' -%}
+  {%- assign has_N = true -%}
+{%- endif -%}
+
+{%- assign has_S = false -%}
+{%- if ptags contains 'Turning Grade_YG214' or ptags contains 'Turning Grade_YG401' -%}
+  {%- assign has_S = true -%}
+{%- endif -%}
+
+{%- if has_P or has_M or has_K or has_N or has_S -%}
+<section class="section">
+  <div class="container layout-constrained">
+    <div class="section__header">
+      <h2 class="section__title">Recommended Cutting Ranges</h2>
+      <p class="section__intro">Ranges are indicative; actual performance depends on setup and application.</p>
+    </div>
+
+    <div class="collection-grid">
+      {%- comment -%} ====== STEELS (P) ====== {%- endcomment -%}
+      {%- if has_P -%}
+      <article class="card collection-card">
+        <div class="collection-card__body">
+          <h3 class="collection-card__title">Steels (P)</h3>
+          <div class="collection-card__media">
+            <svg viewBox="0 0 110 90" role="img" aria-label="Steels cutting speed vs feed for grades YG1001, YG3010, YG3020, YG3030, YG801">
+              <!-- Axes -->
+              <path d="M10 80 V20 M10 80 H100" stroke="#0069a7" stroke-width="3" fill="none"/>
+              <text x="6" y="22" transform="rotate(-90 6,22)" font-size="8" fill="#1a1a1a">Cutting Speed</text>
+              <text x="100" y="87" font-size="8" fill="#1a1a1a" text-anchor="end">Feed</text>
+
+              <!-- Ellipses (roughly matching your image layout) -->
+              <g fill="#3995e6" fill-opacity="0.45">
+                <!-- YG1001 -->
+                <ellipse cx="30" cy="55" rx="15" ry="10"/>
+                <!-- YG3010 -->
+                <ellipse cx="45" cy="50" rx="16" ry="12"/>
+                <!-- YG3020 -->
+                <ellipse cx="58" cy="46" rx="15" ry="11"/>
+                <!-- YG3030 -->
+                <ellipse cx="70" cy="42" rx="14" ry="12"/>
+                <!-- YG801 -->
+                <ellipse cx="82" cy="40" rx="12" ry="10"/>
+              </g>
+
+              <!-- Labels -->
+              <g font-size="8" font-weight="700" fill="#0b3b66">
+                <text x="30" y="56" text-anchor="middle">YG1001</text>
+                <text x="45" y="51" text-anchor="middle">YG3010</text>
+                <text x="58" y="47" text-anchor="middle">YG3020</text>
+                <text x="70" y="43" text-anchor="middle">YG3030</text>
+                <text x="82" y="41" text-anchor="middle">YG801</text>
+              </g>
+            </svg>
+          </div>
+          <div class="work-mat">
+            <span class="work-mat__chip" data-m="P">P</span>
+          </div>
+        </div>
+      </article>
+      {%- endif -%}
+
+      {%- comment -%} ====== STAINLESS STEELS (M) ====== {%- endcomment -%}
+      {%- if has_M -%}
+      <article class="card collection-card">
+        <div class="collection-card__body">
+          <h3 class="collection-card__title">Stainless Steels (M)</h3>
+          <div class="collection-card__media">
+            <svg viewBox="0 0 110 90" role="img" aria-label="Stainless steels cutting speed vs feed for grades YG211, YG213, YG214, YG3030">
+              <path d="M10 80 V20 M10 80 H100" stroke="#f6b519" stroke-width="3" fill="none"/>
+              <text x="6" y="22" transform="rotate(-90 6,22)" font-size="8" fill="#1a1a1a">Cutting Speed</text>
+              <text x="100" y="87" font-size="8" fill="#1a1a1a" text-anchor="end">Feed</text>
+
+              <g fill="#f6b519" fill-opacity="0.45">
+                <!-- YG211 (left) -->
+                <ellipse cx="35" cy="56" rx="16" ry="12"/>
+                <!-- YG3030 (center-left) -->
+                <ellipse cx="50" cy="52" rx="16" ry="12"/>
+                <!-- YG213 (center-right) -->
+                <ellipse cx="65" cy="48" rx="16" ry="12"/>
+                <!-- YG214 (right) -->
+                <ellipse cx="80" cy="44" rx="14" ry="12"/>
+              </g>
+
+              <g font-size="8" font-weight="700" fill="#6f5200">
+                <text x="35" y="57" text-anchor="middle">YG211</text>
+                <text x="50" y="53" text-anchor="middle">YG3030</text>
+                <text x="65" y="49" text-anchor="middle">YG213</text>
+                <text x="80" y="45" text-anchor="middle">YG214</text>
+              </g>
+            </svg>
+          </div>
+          <div class="work-mat">
+            <span class="work-mat__chip" data-m="M">M</span>
+          </div>
+        </div>
+      </article>
+      {%- endif -%}
+
+      {%- comment -%} ====== CAST IRON (K) ====== {%- endcomment -%}
+      {%- if has_K -%}
+      <article class="card collection-card">
+        <div class="collection-card__body">
+          <h3 class="collection-card__title">Cast Iron (K)</h3>
+          <div class="collection-card__media">
+            <svg viewBox="0 0 110 90" role="img" aria-label="Cast iron cutting speed vs feed for grades YG1001 and YG3010">
+              <path d="M10 80 V20 M10 80 H100" stroke="#e0592a" stroke-width="3" fill="none"/>
+              <text x="6" y="22" transform="rotate(-90 6,22)" font-size="8" fill="#1a1a1a">Cutting Speed</text>
+              <text x="100" y="87" font-size="8" fill="#1a1a1a" text-anchor="end">Feed</text>
+
+              <g fill="#e0592a" fill-opacity="0.45">
+                <ellipse cx="42" cy="55" rx="18" ry="13"/><!-- YG1001 -->
+                <ellipse cx="62" cy="50" rx="18" ry="13"/><!-- YG3010 -->
+              </g>
+              <g font-size="8" font-weight="700" fill="#6b2c18">
+                <text x="42" y="56" text-anchor="middle">YG1001</text>
+                <text x="62" y="51" text-anchor="middle">YG3010</text>
+              </g>
+            </svg>
+          </div>
+          <div class="work-mat">
+            <span class="work-mat__chip" data-m="K">K</span>
+          </div>
+        </div>
+      </article>
+      {%- endif -%}
+
+      {%- comment -%} ====== NON-FERROUS (N) ====== {%- endcomment -%}
+      {%- if has_N -%}
+      <article class="card collection-card">
+        <div class="collection-card__body">
+          <h3 class="collection-card__title">Non-Ferrous Materials (N)</h3>
+          <div class="collection-card__media">
+            <svg viewBox="0 0 110 90" role="img" aria-label="Non-ferrous cutting speed vs feed for grades YG10 and YG100">
+              <path d="M10 80 V20 M10 80 H100" stroke="#109954" stroke-width="3" fill="none"/>
+              <text x="6" y="22" transform="rotate(-90 6,22)" font-size="8" fill="#1a1a1a">Cutting Speed</text>
+              <text x="100" y="87" font-size="8" fill="#1a1a1a" text-anchor="end">Feed</text>
+
+              <g fill="#109954" fill-opacity="0.45">
+                <ellipse cx="48" cy="52" rx="18" ry="13"/><!-- YG100 -->
+                <ellipse cx="66" cy="54" rx="16" ry="12"/><!-- YG10 -->
+              </g>
+              <g font-size="8" font-weight="700" fill="#0a5b31">
+                <text x="48" y="53" text-anchor="middle">YG100</text>
+                <text x="66" y="55" text-anchor="middle">YG10</text>
+              </g>
+            </svg>
+          </div>
+          <div class="work-mat">
+            <span class="work-mat__chip" data-m="N">N</span>
+          </div>
+        </div>
+      </article>
+      {%- endif -%}
+
+      {%- comment -%} ====== SUPERALLOYS (S) ====== {%- endcomment -%}
+      {%- if has_S -%}
+      <article class="card collection-card">
+        <div class="collection-card__body">
+          <h3 class="collection-card__title">Superalloys (S)</h3>
+          <div class="collection-card__media">
+            <svg viewBox="0 0 110 90" role="img" aria-label="Superalloys cutting speed vs feed for grades YG401 and YG214">
+              <path d="M10 80 V20 M10 80 H100" stroke="#f88d2b" stroke-width="3" fill="none"/>
+              <text x="6" y="22" transform="rotate(-90 6,22)" font-size="8" fill="#1a1a1a">Cutting Speed</text>
+              <text x="100" y="87" font-size="8" fill="#1a1a1a" text-anchor="end">Feed</text>
+
+              <g fill="#f88d2b" fill-opacity="0.45">
+                <ellipse cx="56" cy="48" rx="26" ry="16"/><!-- YG401 -->
+                <ellipse cx="78" cy="50" rx="12" ry="10"/><!-- YG214 -->
+              </g>
+              <g font-size="8" font-weight="700" fill="#7a3f16">
+                <text x="56" y="49" text-anchor="middle">YG401</text>
+                <text x="78" y="51" text-anchor="middle">YG214</text>
+              </g>
+            </svg>
+          </div>
+          <div class="work-mat">
+            <span class="work-mat__chip" data-m="S">S</span>
+          </div>
+        </div>
+      </article>
+      {%- endif -%}
+    </div>
+  </div>
+</section>
+{%- endif -%}
 
 
 
