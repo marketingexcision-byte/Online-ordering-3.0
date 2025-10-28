@@ -434,11 +434,11 @@
   /* shrink all chart text and keep it responsive */
   .collection-card__media svg text { 
     font-family: var(--font-bold);
-    font-size: clamp(9px, 0.85vw, 12px);
+    font-size: clamp(9px, 0.85vw, 12px) !important;
   }
   /* slightly smaller for axis labels */
   .collection-card__media svg .axis-label {
-    font-size: clamp(8px, 0.75vw, 11px);
+    font-size: clamp(8px, 0.75vw, 11px) !important;
     font-weight: 600;
     fill: #1a1a1a;
   }
