@@ -379,28 +379,34 @@
       <span class="shopify-product-reviews-badge" data-id="{{ product.id }}"></span>
     {% endif %}
 
-    {% assign total_qty = 0 %}
-    {% assign any_managed = false %}
-    {% assign any_available = false %}
-    {% assign any_continue = false %}
-    {% assign any_incoming = false %}
-    {% assign next_date = blank %}
+{% assign total_qty = 0 %}
+{% assign any_managed = false %}
+{% assign any_available = false %}
+{% assign any_continue = false %}
+{% assign any_incoming = false %}
+{% assign next_date = blank %}
 
-    {% for v in product.variants %}
-      {% if v.inventory_management %}
-        {% assign any_managed = true %}
-        {% assign total_qty = total_qty | plus: v.inventory_quantity %}
-      {% endif %}
-      {% if v.available %}{% assign any_available = true %}{% endif %}
-      {% if v.inventory_policy == 'continue' %}{% assign any_continue = true %}{% endif %}
-      {% if v.incoming and v.next_incoming_date %}
-        {% assign any_incoming = true %}
-        {% assign next_date = v.next_incoming_date %}
-      {% endif %}
-    {% endfor %}
+/* YG-1 tag flag */
+{% assign is_yg1 = false %}
+{% if product and product.tags and product.tags contains 'YG-1' %}
+  {% assign is_yg1 = true %}
+{% endif %}
 
-    {% assign status = '' %}
-    {% capture status_text %}
+{% for v in product.variants %}
+  {% if v.inventory_management %}
+    {% assign any_managed = true %}
+    {% assign total_qty = total_qty | plus: v.inventory_quantity %}
+  {% endif %}
+  {% if v.available %}{% assign any_available = true %}{% endif %}
+  {% if v.inventory_policy == 'continue' %}{% assign any_continue = true %}{% endif %}
+  {% if v.incoming and v.next_incoming_date %}
+    {% assign any_incoming = true %}
+    {% assign next_date = v.next_incoming_date %}
+  {% endif %}
+{% endfor %}
+
+{% assign status = '' %}
+{% capture status_text %}
   {% if any_managed %}
     {% if total_qty > 10 %}
       {% assign status = 'green' %}In stock
@@ -409,8 +415,15 @@
     {% else %}
       {% if any_incoming and next_date %}
         {% assign status = 'blue' %}Restocking
+        {# If you want the due date, swap the line above for:
+           {% assign status = 'blue' %}Restocking · Due {{ next_date | date: "%-d %b %Y" }}
+        #}
       {% elsif any_continue %}
-        {% assign status = 'red' %}Order in
+        {% if is_yg1 %}
+          {% assign status = 'yellow' %}5 days
+        {% else %}
+          {% assign status = 'red' %}Order in
+        {% endif %}
       {% else %}
         {% assign status = 'red' %}No stock
       {% endif %}
@@ -419,6 +432,7 @@
     {% assign status = 'grey' %}Quantity unavailable
   {% endif %}
 {% endcapture %}
+
 
     <div class="ex-card-badge" data-status="{{ status | strip }}">
       {{ status_text | strip }}
