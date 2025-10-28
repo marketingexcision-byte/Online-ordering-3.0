@@ -118,7 +118,6 @@ custom|thickness_mm:Thickness (mm),
   {%- assign continue_selling = true -%}
 {%- endif -%}
 
-/* NEW: flag if product has YG-1 tag */
 {%- assign is_yg1 = false -%}
 {%- if product and product.tags and product.tags contains 'YG-1' -%}
   {%- assign is_yg1 = true -%}
