@@ -168,9 +168,44 @@ custom|thickness_mm:Thickness (mm),
             {%- if is_zero_price -%}-{% else %}{{ v.price | money }}{%- endif -%}
           </td>
 
-          <td class="vmx__td vmx__sticky-r rr2">
-            <input type="number" value="1" min="1" class="vmx__qty" data-variant-id="{{ v.id }}">
-          </td>
+          {%- comment -%} Per-variant MOQ / Pack from metaobject {%- endcomment -%}
+{%- assign oq_ref = v.metafields.custom.order_quantity -%}
+{%- if oq_ref == blank -%}
+  {%- assign oq_ref = product.metafields.custom.order_quantity -%}
+{%- endif -%}
+
+{%- assign _min  = 0 -%}
+{%- assign _pack = 0 -%}
+{%- if oq_ref and oq_ref.value -%}
+  {%- assign _min  = oq_ref.value.min_order_qty | default: 0 | plus: 0 -%}   {# change handle if needed #}
+  {%- assign _pack = oq_ref.value.pack_qty      | default: 0 | plus: 0 -%}   {# change handle if needed #}
+{%- endif -%}
+
+{%- assign moq = 1 -%}
+{%- assign step = 1 -%}
+{%- if _pack > 0 and _min > 0 -%}
+  {%- assign moq = _min -%}{%- assign step = _pack -%}
+{%- elsif _pack > 0 -%}
+  {%- assign moq = _pack -%}{%- assign step = _pack -%}
+{%- elsif _min > 0 -%}
+  {%- assign moq = _min -%}{%- assign step = 1 -%}
+{%- endif -%}
+
+{%- assign rendered_qty = 1 | at_least: moq -%}
+
+<td class="vmx__td vmx__sticky-r rr2">
+  <input
+    type="number"
+    value="{{ rendered_qty }}"
+    min="{{ moq }}"
+    step="{{ step }}"
+    class="vmx__qty"
+    data-variant-id="{{ v.id }}"
+    inputmode="numeric"
+    pattern="[0-9]*"
+  >
+</td>
+
 
           {%- comment -%} Build a clean variant options string (skips blank / “Default Title”) {%- endcomment -%}
           {%- assign opts_buf = '' -%}
@@ -761,6 +796,30 @@ document.addEventListener('DOMContentLoaded', function () {
       td.classList.add('has-wm-chips');
     });
   })();
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  function i(v,d){ v=parseInt(v,10); return isNaN(v)?d:v; }
+  function snap(val, min, step){
+    val = Math.max(i(val, min), min);
+    step = Math.max(i(step, 1), 1);
+    if (step === 1) return val;
+    const k = Math.ceil((val - min) / step);
+    return min + k * step;
+  }
+  document.querySelectorAll('.vmx__qty').forEach(function(input){
+    const fix = () => {
+      const min  = i(input.min || '1', 1);
+      const step = i(input.step || '1', 1);
+      input.value = snap(input.value, min, step);
+    };
+    input.addEventListener('change', fix);
+    input.addEventListener('blur', fix);
+    // init pass
+    fix();
+  });
 });
 </script>
 
