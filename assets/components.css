@@ -345,6 +345,10 @@
     padding-top: var(--space-5) !important;
     padding-bottom: var(--space-8) !important;
   }
+
+  .container.layout-constrained {
+    margin-top: var(--space-8);
+  }
   
   h2#feature-points-heading- {
     color: white !important;
