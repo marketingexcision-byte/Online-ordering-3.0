@@ -103,44 +103,53 @@ custom|thickness_mm:Thickness (mm),
             <td class="vmx__td">{% if mf != blank %}{{ mf.value }}{% else %}-{% endif %}</td>
           {%- endfor -%}
 
-          {%- comment -%} Stock/status logic {%- endcomment -%}
-          {%- assign low_threshold = 3 -%}
-          {%- assign managed = v.inventory_management -%}
-          {%- assign qty = v.inventory_quantity | default: 0 | plus: 0 -%}
+{%- comment -%} Stock/status logic {%- endcomment -%}
+{%- assign low_threshold = 3 -%}
+{%- assign managed = v.inventory_management -%}
+{%- assign qty = v.inventory_quantity | default: 0 | plus: 0 -%}
 
-          {%- assign has_incoming = false -%}
-          {%- if v.incoming and v.next_incoming_date -%}
-            {%- assign has_incoming = true -%}
-          {%- endif -%}
+{%- assign has_incoming = false -%}
+{%- if v.incoming and v.next_incoming_date -%}
+  {%- assign has_incoming = true -%}
+{%- endif -%}
 
-          {%- assign continue_selling = false -%}
-          {%- if v.inventory_policy == 'continue' -%}
-            {%- assign continue_selling = true -%}
-          {%- endif -%}
+{%- assign continue_selling = false -%}
+{%- if v.inventory_policy == 'continue' -%}
+  {%- assign continue_selling = true -%}
+{%- endif -%}
 
-          {%- assign status = 'grey' -%}
-          {%- capture status_text -%}Quantity unavailable{%- endcapture -%}
+/* NEW: flag if product has YG-1 tag */
+{%- assign is_yg1 = product and product.tags contains 'YG-1' -%}
 
-          {%- if managed -%}
-            {%- if qty > low_threshold -%}
-              {%- assign status = 'green' -%}
-              {%- capture status_text -%}In stock{%- endcapture -%}
-            {%- elsif qty > 0 -%}
-              {%- assign status = 'orange' -%}
-              {%- capture status_text -%}Low stock{%- endcapture -%}
-            {%- else -%}
-              {%- if has_incoming -%}
-                {%- assign status = 'blue' -%}
-                {%- capture status_text -%}Restocking · Due {{ v.next_incoming_date | date: "%-d %b %Y" }}{%- endcapture -%}
-              {%- elsif continue_selling -%}
-                {%- assign status = 'red' -%}
-                {%- capture status_text -%}Order in{%- endcapture -%}
-              {%- else -%}
-                {%- assign status = 'red' -%}
-                {%- capture status_text -%}No stock{%- endcapture -%}
-              {%- endif -%}
-            {%- endif -%}
-          {%- endif -%}
+{%- assign status = 'grey' -%}
+{%- capture status_text -%}Quantity unavailable{%- endcapture -%}
+
+{%- if managed -%}
+  {%- if qty > low_threshold -%}
+    {%- assign status = 'green' -%}
+    {%- capture status_text -%}In stock{%- endcapture -%}
+  {%- elsif qty > 0 -%}
+    {%- assign status = 'orange' -%}
+    {%- capture status_text -%}Low stock{%- endcapture -%}
+  {%- else -%}
+    {%- if has_incoming -%}
+      {%- assign status = 'blue' -%}
+      {%- capture status_text -%}Restocking · Due {{ v.next_incoming_date | date: "%-d %b %Y" }}{%- endcapture -%}
+    {%- elsif continue_selling -%}
+      {%- if is_yg1 -%}
+        {%- assign status = 'yellow' -%}
+        {%- capture status_text -%}5 days{%- endcapture -%}
+      {%- else -%}
+        {%- assign status = 'red' -%}
+        {%- capture status_text -%}Order in{%- endcapture -%}
+      {%- endif -%}
+    {%- else -%}
+      {%- assign status = 'red' -%}
+      {%- capture status_text -%}No stock{%- endcapture -%}
+    {%- endif -%}
+  {%- endif -%}
+{%- endif -%}
+
 
           <td class="vmx__td vmx__sticky-r rr4">
             <span class="ex-card-badge" data-status="{{ status | strip }}" title="Qty: {{ qty }}">
