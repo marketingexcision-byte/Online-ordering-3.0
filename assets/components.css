@@ -443,6 +443,18 @@
     fill: #1a1a1a;
   }
 
+    /* cap the rendered size of the SVG so text never explodes */
+  .grade-chart svg { width: 100%; height: auto; max-height: 240px; }
 
+  /* predictable, non-vw text sizes inside charts */
+  .grade-chart svg .axis-label  { font-size: 10px !important; font-weight: 600; fill: #1a1a1a; }
+  .grade-chart svg .bubble-label{ font-size: 12px !important; font-weight: 700; }
+
+  /* optional: on huge screens, keep things tidy */
+  @media (min-width: 1200px) {
+    .grade-chart svg { max-height: 220px; }
+    .grade-chart svg .axis-label  { font-size: 9px !important; }
+    .grade-chart svg .bubble-label{ font-size: 11px !important; }
+  }
 
 }
