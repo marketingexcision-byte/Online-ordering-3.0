@@ -414,9 +414,9 @@
     {% else %}
       {% if any_incoming and next_date %}
         {% assign status = 'blue' %}Restocking
-        {# If you want the due date, swap the line above for:
+        {% comment %} If you want the due date, swap the line above for:
            {% assign status = 'blue' %}Restocking · Due {{ next_date | date: "%-d %b %Y" }}
-        #}
+        {% endcomment %}
       {% elsif any_continue %}
         {% if is_yg1 %}
           {% assign status = 'yellow' %}5 days
