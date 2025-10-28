@@ -431,30 +431,24 @@
 .vmx td.has-wm-chips { white-space:nowrap; }
 /* override the square-size from the card chips, keep your colors from [data-m] */
 
-  /* shrink all chart text and keep it responsive */
-  .collection-card__media svg text { 
-    font-family: var(--font-bold);
-    font-size: clamp(9px, 0.85vw, 12px) !important;
+   /* —— Charts: stop the auto 1:1 square, cap size, and lock text —— */
+  .collection-card__media.grade-chart { 
+    aspect-ratio: unset !important;           /* don't force a big square */
+    width: 100%;
+    max-width: 380px;                          /* tweak to taste */
   }
-  /* slightly smaller for axis labels */
-  .collection-card__media svg .axis-label {
-    font-size: clamp(8px, 0.75vw, 11px) !important;
-    font-weight: 600;
-    fill: #1a1a1a;
+  .collection-card__media.grade-chart > svg {
+    width: 100%;
+    height: auto;
+    max-height: 220px;                         /* caps label growth */
+    display: block;
   }
 
-    /* cap the rendered size of the SVG so text never explodes */
-  .grade-chart svg { width: 100%; height: auto; max-height: 240px; }
-
-  /* predictable, non-vw text sizes inside charts */
-  .grade-chart svg .axis-label  { font-size: 10px !important; font-weight: 600; fill: #1a1a1a; }
+  /* Text inside charts: fixed, predictable */
+  .grade-chart svg .axis-label  { font-size: 10px !important; font-weight: 600; fill:#1a1a1a; }
   .grade-chart svg .bubble-label{ font-size: 12px !important; font-weight: 700; }
 
-  /* optional: on huge screens, keep things tidy */
-  @media (min-width: 1200px) {
-    .grade-chart svg { max-height: 220px; }
-    .grade-chart svg .axis-label  { font-size: 9px !important; }
-    .grade-chart svg .bubble-label{ font-size: 11px !important; }
-  }
+  /* Keep axis stroke steady even if someone changes the svg size */
+  .grade-chart svg .axis { vector-effect: non-scaling-stroke; stroke-width: 2.5; }
 
 }
