@@ -1016,11 +1016,47 @@ document.addEventListener('DOMContentLoaded', function () {
 }
 </style>
   
+{%- assign is_custom_len = false -%}
+{%- if product and product.tags and product.tags contains 'Custom Length' -%}
+  {%- assign is_custom_len = true -%}
+{%- endif -%}
+
+{%- assign cv = product.selected_or_first_available_variant -%}
+{%- assign oq_ref = cv.metafields.custom.order_quantity -%}
+{%- if oq_ref == blank -%}{%- assign oq_ref = product.metafields.custom.order_quantity -%}{%- endif -%}
+
+{%- assign _min = 0 -%}{%- assign _pack = 0 -%}
+{%- if oq_ref and oq_ref.value -%}
+  {%- assign _min  = oq_ref.value.min_order_qty | default: 0 | plus: 0 -%}   {# change handle if needed #}
+  {%- assign _pack = oq_ref.value.pack_qty      | default: 0 | plus: 0 -%}   {# change handle if needed #}
+{%- endif -%}
+
+{%- assign moq = 1 -%}{%- assign step = 1 -%}
+{%- if is_custom_len -%}
+  {%- assign moq = 1 -%}{%- assign step = 1 -%} {# BYPASS for Custom Length #}
+{%- else -%}
+  {%- if _pack > 0 and _min > 0 -%}
+    {%- assign moq = _min -%}{%- assign step = _pack -%}
+  {%- elsif _pack > 0 -%}
+    {%- assign moq = _pack -%}{%- assign step = _pack -%}
+  {%- elsif _min > 0 -%}
+    {%- assign moq = _min -%}{%- assign step = 1 -%}
+  {%- endif -%}
+{%- endif -%}
 
 
-  <div class="quantity_wrapper qty-wrap">
-    <label for="quantity" class="quantity-selector quantity-selector-{{ section.id }}">{{ 'products.product.quantity' | t }}</label>
-    <input type="number" id="quantity" name="quantity" value="1" min="1" class="quantity-selector">
+<div class="quantity_wrapper qty-wrap"
+     data-bypass-moq="{% if is_custom_len %}true{% else %}false{% endif %}">
+  <label for="quantity" class="quantity-selector quantity-selector-{{ section.id }}">{{ 'products.product.quantity' | t }}</label>
+  <input type="number"
+         id="quantity"
+         name="quantity"
+         value="{{ moq }}"
+         min="{{ moq }}"
+         step="{{ step }}"
+         class="quantity-selector"
+         inputmode="numeric"
+         pattern="[0-9]*">
     
     {% if product.tags contains 'Custom Length' %}
       {% unless product.tags contains 'No Bulk Discounts' %}
@@ -1059,7 +1095,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  // Scope to the product form quantity area
   const wrap   = document.querySelector('.quantity_wrapper');
   if (!wrap) return;
 
@@ -1068,15 +1103,28 @@ document.addEventListener('DOMContentLoaded', () => {
   const labels   = radios.map(r => wrap.querySelector('label[for="' + r.id + '"]')).filter(Boolean);
   const badge    = wrap.querySelector('#TierBadge-{{ section.id }}');
 
-  if (!qtyInput || radios.length === 0) return;
+  if (!qtyInput) return;
 
-  const setActive = (id) => {
-    labels.forEach(l => l.classList.toggle('is-active', l.getAttribute('for') === id));
-  };
-
+  const setActive = (id) => labels.forEach(l => l.classList.toggle('is-active', l.getAttribute('for') === id));
   const sanitizeQty = (val) => {
     const n = parseInt(String(val).replace(/[^\d]/g,''),10);
     return Number.isFinite(n) && n >= 1 ? n : 1;
+  };
+
+  // >>> BYPASS: if Custom Length, force normal behaviour (min=1, step=1)
+  const getRules = () => {
+    const bypass = wrap.getAttribute('data-bypass-moq') === 'true';
+    if (bypass) return { min: 1, step: 1 };
+    let min  = parseInt(qtyInput.getAttribute('min') || '1', 10);
+    let step = parseInt(qtyInput.getAttribute('step') || '1', 10);
+    return { min: Math.max(min,1), step: Math.max(step,1) };
+  };
+
+  const snap = (val, min, step) => {
+    val = Math.max(val, min);
+    if (step <= 1) return val;
+    const k = Math.ceil((val - min) / step);
+    return min + k * step;
   };
 
   const tierFor = (q) => {
@@ -1086,7 +1134,8 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const syncFromQty = () => {
-    const q = sanitizeQty(qtyInput.value);
+    const {min, step} = getRules();
+    const q = snap(sanitizeQty(qtyInput.value), min, step);
     qtyInput.value = q;
     const t = tierFor(q);
     radios.forEach(r => r.checked = (r.id === t.id));
@@ -1095,18 +1144,18 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const setQty = (q) => {
-    qtyInput.value = sanitizeQty(q);
+    const {min, step} = getRules();
+    qtyInput.value = snap(sanitizeQty(q), min, step);
     qtyInput.dispatchEvent(new Event('input', { bubbles: true }));
     qtyInput.dispatchEvent(new Event('change', { bubbles: true }));
     syncFromQty();
   };
 
-  // Manual type / +/- buttons from theme
   qtyInput.addEventListener('input',  syncFromQty);
   qtyInput.addEventListener('change', syncFromQty);
   qtyInput.addEventListener('blur',   syncFromQty);
 
-  // Clicking a tier sets minimum quantity for that tier
+  // Tier clicks set target qtys of 1/5/10, and we only snap if not Custom Length
   radios.forEach(r => {
     r.addEventListener('change', (e) => {
       if (!e.target.checked) return;
@@ -1121,6 +1170,7 @@ document.addEventListener('DOMContentLoaded', () => {
   syncFromQty();
 });
 </script>
+
 
 
 {% endif %}
