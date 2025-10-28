@@ -177,8 +177,8 @@ custom|thickness_mm:Thickness (mm),
 {%- assign _min  = 0 -%}
 {%- assign _pack = 0 -%}
 {%- if oq_ref and oq_ref.value -%}
-  {%- assign _min  = oq_ref.value.min_order_qty | default: 0 | plus: 0 -%}   {# change handle if needed #}
-  {%- assign _pack = oq_ref.value.pack_qty      | default: 0 | plus: 0 -%}   {# change handle if needed #}
+  {%- assign _min  = oq_ref.value.min_order_qty | default: 0 | plus: 0 -%}  
+  {%- assign _pack = oq_ref.value.pack_qty      | default: 0 | plus: 0 -%}  
 {%- endif -%}
 
 {%- assign moq = 1 -%}
