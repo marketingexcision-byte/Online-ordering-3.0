@@ -445,7 +445,7 @@
   }
 
   /* Text inside charts: fixed, predictable */
-  .grade-chart svg .axis-label  { font-size: 10px !important; font-weight: 600; fill:#1a1a1a; }
+  .grade-chart svg .axis-label  { font-size: 14px !important; font-weight: 600; fill:#1a1a1a; }
   .grade-chart svg .bubble-label{ font-size: 12px !important; font-weight: 700; }
 
   /* Keep axis stroke steady even if someone changes the svg size */
