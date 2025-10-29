@@ -134,7 +134,11 @@
       grid-template-columns: unset !important;
     }
 
-    
+    div.turning-grade {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0px 40px;
+    }
 
   }
 
