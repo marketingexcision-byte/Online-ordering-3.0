@@ -1296,7 +1296,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const lengthInput = document.getElementById('customLength') || document.getElementById('length');
 
   const byId = id => db.find(v => String(v.id) === String(id));
-  const curVarId = () => document.querySelector('form[action="/cart/add"] [name="id"]')?.value;
+  const curVarId = () => document.querySelector('#{{ form_id }} [name="id"]')?.value;
   const setBadge = (txt,status)=>{ badgeEl.textContent = txt; badgeEl.setAttribute('data-status', status); };
 
   /* ---------- Coolants: litres pool (OPEN + decant sources) ---------- */
@@ -1403,7 +1403,7 @@ function isFlaggedVariant(v){
       });
       fallback && fallback.click();
     }
-    const idInput = document.querySelector('form[action="/cart/add"] [name="id"]');
+    const idInput = document.querySelector('#{{ form_id }} [name="id"]');
     if (idInput) {
       const cur = byId(idInput.value);
       if (cur && isFlaggedVariant(cur)) {
@@ -3764,8 +3764,8 @@ document.addEventListener('DOMContentLoaded', function () {
 {% unless product.tags contains 'Custom Length' %}
 <script>
 (function(){
-  var form = document.querySelector('form[action="/cart/add"], form.product-form, form[id^="product-form"]');
-  var btn  = document.getElementById('addToCartButton');
+  var form = document.getElementById('{{ form_id }}'); // addToCartForm-{{ section.id }}
+var btn  = document.getElementById('addToCartButton');
   if (!form || !btn) return;
 
   // tiny busy helper (doesn't touch your custom-length styling)
@@ -3782,20 +3782,39 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   // Build payload (id, quantity, properties)
-  function payloadFromForm(f){
-    var idField = f.querySelector('[name="id"]');
-    var qtyEl   = f.querySelector('#quantity, [name="quantity"], [id^="Quantity-"]');
-    var qty     = Math.max(1, parseInt(qtyEl && qtyEl.value, 10) || 1);
-    var props   = {};
-    f.querySelectorAll('[name^="properties["]').forEach(function(inp){
-      var m = inp.name.match(/^properties\[(.+)\]$/);
-      if (!m) return;
-      var key = m[1];
-      var val = (inp.type === 'checkbox') ? (inp.checked ? 'Yes' : '') : (inp.value || '');
-      if (val !== '') props[key] = val;
-    });
-    return { id: Number(idField && idField.value), quantity: qty, properties: props };
-  }
+function getVariantIdFromForm(f){
+  // Prefer the hidden select we own
+  var sel = f.querySelector('#productSelect-{{ section.id }}');
+  if (sel && sel.value) return sel.value;
+
+  // Else a checked radio (some themes/apps render radios)
+  var chk = f.querySelector('input[name="id"]:checked');
+  if (chk && chk.value) return chk.value;
+
+  // Else a hidden id field
+  var hid = f.querySelector('input[type="hidden"][name="id"]');
+  if (hid && hid.value) return hid.value;
+
+  // Last resort: any name="id" inside this form
+  var any = f.querySelector('[name="id"]');
+  return any ? any.value : '';
+}
+
+function payloadFromForm(f){
+  var vid  = getVariantIdFromForm(f);
+  var qtyEl = f.querySelector('#quantity, [name="quantity"], [id^="Quantity-"]');
+  var qty   = Math.max(1, parseInt(qtyEl && qtyEl.value, 10) || 1);
+  var props = {};
+  f.querySelectorAll('[name^="properties["]').forEach(function(inp){
+    var m = inp.name.match(/^properties\[(.+)\]$/);
+    if (!m) return;
+    var key = m[1];
+    var val = (inp.type === 'checkbox') ? (inp.checked ? 'Yes' : '') : (inp.value || '');
+    if (val !== '') props[key] = val;
+  });
+  return { id: Number(vid), quantity: qty, properties: props };
+}
+
 
 async function addAjax(e){
   const isQuote = btn.classList.contains('is-quote');
