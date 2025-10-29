@@ -1368,7 +1368,7 @@ function fmtAU(d){
   /* ---------- Hide flagged variants and option pills ---------- */
 function isFlaggedVariant(v){
   const sku = String(v?.sku || '').toUpperCase();
-  return v?.is_hidden || v?.is_open || v?.is_decant_source || v?.is_blank_source || v?.is_coil
+  return v?.is_hidden || v?.is_open  || v?.is_blank_source || v?.is_coil
          || /\.(SVC)$/.test(sku)                  // NEW: hide *.SVC SKUs
          || /-(OPEN|BLAH|BLAC|COIL)$/.test(sku);
 }
