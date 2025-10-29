@@ -3782,20 +3782,32 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   // Build payload (id, quantity, properties)
-  function payloadFromForm(f){
-    var idField = f.querySelector('[name="id"]');
-    var qtyEl   = f.querySelector('#quantity, [name="quantity"], [id^="Quantity-"]');
-    var qty     = Math.max(1, parseInt(qtyEl && qtyEl.value, 10) || 1);
-    var props   = {};
-    f.querySelectorAll('[name^="properties["]').forEach(function(inp){
-      var m = inp.name.match(/^properties\[(.+)\]$/);
-      if (!m) return;
-      var key = m[1];
-      var val = (inp.type === 'checkbox') ? (inp.checked ? 'Yes' : '') : (inp.value || '');
-      if (val !== '') props[key] = val;
-    });
-    return { id: Number(idField && idField.value), quantity: qty, properties: props };
-  }
+const btn  = document.getElementById('addToCartButton');
+// Use the form that actually contains THIS button
+const form = btn?.closest('form');
+
+function getVariantIdFrom(form) {
+  // Prefer the select you control; fall back defensively
+  const el = form?.querySelector('#productSelect-{{ section.id }}')
+        || form?.querySelector('select[name="id"]')
+        || form?.querySelector('input[name="id"]:checked')
+        || form?.querySelector('input[name="id"]');
+  return el?.value ? String(el.value) : null;
+}
+
+function payloadFromForm(f){
+  const id   = getVariantIdFrom(f);      // ← always from your select
+  const qtyEl= f.querySelector('#quantity, [name="quantity"], [id^="Quantity-"]');
+  const qty  = Math.max(1, parseInt(qtyEl?.value, 10) || 1);
+  const props= {};
+  f.querySelectorAll('[name^="properties["]').forEach(inp => {
+    const m = inp.name.match(/^properties\[(.+)\]$/); if (!m) return;
+    const val = inp.type === 'checkbox' ? (inp.checked ? 'Yes' : '') : (inp.value || '');
+    if (val !== '') props[m[1]] = val;
+  });
+  return { id, quantity: qty, properties: props }; // keep id as string (no Number())
+}
+
 
 async function addAjax(e){
   const isQuote = btn.classList.contains('is-quote');
