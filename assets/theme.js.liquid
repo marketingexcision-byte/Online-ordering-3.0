@@ -3200,3 +3200,92 @@ $(document).ready(function () {
       alert('Sorry, something went wrong. Please try again.');
     }
   });
+
+  /* ---------- FIX: always submit the currently selected variant ---------- */
+(() => {
+  function closestProductSection(node) {
+    return (node && node.closest && node.closest('[data-section-id]')) || document;
+  }
+
+  function readProductJSON(scope) {
+    // This theme stores product JSON in a <script id="ProductJson-...">
+    const el = scope.querySelector('script[id^="ProductJson-"]');
+    if (!el) return null;
+    try { return JSON.parse(el.textContent); } catch { return null; }
+  }
+
+  function readSelectedOptions(scope) {
+    // This theme uses .single-option-selector selects
+    const opts = Array.from(scope.querySelectorAll('.single-option-selector'))
+      .map(s => s.value)
+      .filter(Boolean);
+    return opts.length ? opts : null;
+  }
+
+  function findVariant(product, opts) {
+    if (!product || !Array.isArray(product.variants) || !opts) return null;
+    return product.variants.find(v => v.options.every((o, i) => o === opts[i])) || null;
+  }
+
+  function ensureHiddenId(form, id) {
+    let input = form.querySelector('input[name="id"]');
+    if (!input) {
+      input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'id';
+      form.appendChild(input);
+    }
+    input.value = id ? String(id) : input.value || '';
+  }
+
+  function stamp(form) {
+    const section = closestProductSection(form);
+    const product = readProductJSON(section);
+    // Prefer single-option-selector values; fall back to select[name="id"]
+    const selected = readSelectedOptions(section);
+    const match = findVariant(product, selected);
+    if (match && match.id) {
+      // If the theme still has a select[name="id"], sync it too
+      const idSelect = form.querySelector('select[name="id"]');
+      if (idSelect) idSelect.value = String(match.id);
+      ensureHiddenId(form, match.id);
+    } else {
+      // Last resort: if there’s already a select[name="id"], mirror it into a hidden input
+      const idSelect = form.querySelector('select[name="id"]');
+      if (idSelect && idSelect.value) ensureHiddenId(form, idSelect.value);
+    }
+  }
+
+  function bindForm(form) {
+    if (form.dataset.variantStampBound) return;
+    form.dataset.variantStampBound = '1';
+
+    // Keep id in sync when any option changes
+    const section = closestProductSection(form);
+    section.addEventListener('change', (ev) => {
+      const t = ev.target;
+      if (!t) return;
+      const name = (t.name || '').toLowerCase();
+      if (t.classList.contains('single-option-selector') || name.startsWith('options[')) {
+        stamp(form);
+      }
+    });
+
+    // On submit (capture) — fix id BEFORE theme’s AJAX handler runs
+    form.addEventListener('submit', (e) => {
+      stamp(form);
+      // do not preventDefault — let your existing AJAX flow run
+    }, { capture: true });
+
+    // Initial stamp on load
+    stamp(form);
+  }
+
+  function initAll() {
+    document.querySelectorAll('form[action*="/cart/add"]').forEach(bindForm);
+  }
+
+  document.addEventListener('DOMContentLoaded', initAll);
+  document.addEventListener('shopify:section:load', initAll);
+  document.addEventListener('shopify:section:reorder', initAll);
+})();
