@@ -5282,3 +5282,7 @@ article.card.turning-grade {
   align-items:start;
   margin-bottom:var(--space-6);
 }
+
+article.card.turning-grade:only-child {
+  flex-basis: 100%;
+}
