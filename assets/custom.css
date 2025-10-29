@@ -5273,7 +5273,7 @@ button.ex-opt-btn.has-wm-chips {
 .label--n   { font-size: 14px; font-weight: 700; fill: #0a5b31; }
 .label--s   { font-size: 14px; font-weight: 700; fill: #7a3f16; }
 
-card.turning-grade {
+article.card.turning-grade {
   display:grid;
   flex: 0 0 50%;
   max-width:640px;
