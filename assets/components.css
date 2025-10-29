@@ -129,6 +129,11 @@
     .layout-constrained {
       padding-inline: var(--space-4);
     }
+
+    article.card.turning-grade {
+      grid-template-columns: unset;
+    }
+
   }
 
   .collection-grid {
