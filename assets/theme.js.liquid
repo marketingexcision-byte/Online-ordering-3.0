@@ -3130,7 +3130,7 @@ $( document ).ready(function() {
   document.addEventListener('click', async (e) => {
     const btn = e.target.closest('.add-to-cart-btn');
     if (!btn) return;
-    + if (btn.closest('form[action*="/cart/add"]')) return; // let the product form handle it
+    if (btn.closest('form[action*="/cart/add"]')) return; // let the product form handle it
 
 
     e.preventDefault();
