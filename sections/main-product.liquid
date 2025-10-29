@@ -1033,7 +1033,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 {%- assign moq = 1 -%}{%- assign step = 1 -%}
 {%- if is_custom_len -%}
-  {%- assign moq = 1 -%}{%- assign step = 1 -%} {# BYPASS for Custom Length #}
+  {%- assign moq = 1 -%}{%- assign step = 1 -%}
 {%- else -%}
   {%- if _pack > 0 and _min > 0 -%}
     {%- assign moq = _min -%}{%- assign step = _pack -%}
