@@ -23,7 +23,11 @@ or product.tags contains 'Turning Grade_YG10'
 <div class="container layout-constrained">
   <h2>Turning Grades</h2>
 
-  <div>
+  <div style="
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0px 40px;
+    ">
   {%- comment -%} YG1010 {%- endcomment -%}
   {% if product.tags contains 'Turning Grade_YG1010' %}
   <article class="card" style="display:grid;flex: 0 0 50%;max-width:640px;grid-template-columns:minmax(140px,180px) 1fr;gap:var(--space-5);align-items:start;margin-bottom:var(--space-6);">
