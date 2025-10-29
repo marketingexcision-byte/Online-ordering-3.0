@@ -629,13 +629,13 @@ function updatePriceUI(v){
 }
 
 
-  const priceWrap = document.getElementById('ex-price-wrap-{{ section.id }}');
-  const priceEl   = document.getElementById('productPrice-{{ section.id }}');
-  const requestEl = document.getElementById('ex-price-request-{{ section.id }}');
-  const bubble    = document.getElementById('ex-gst-{{ section.id }}');
+  
 
   const priceEls   = document.querySelectorAll('[id="productPrice-{{ section.id }}"]');
   const compareEls = document.querySelectorAll('[id="comparePrice-{{ section.id }}"]');
+  const priceWrap = document.getElementById('ex-price-wrap-{{ section.id }}');
+  const requestEl = document.getElementById('ex-price-request-{{ section.id }}');
+  const bubble    = document.getElementById('ex-gst-{{ section.id }}');
 
   // *** use WCP price cents ***
   const priceCents = getEffectivePriceCents(v);
@@ -695,7 +695,7 @@ if (bubble) {
     else        priceWrap.removeAttribute('data-ex-init-zero');
   }
 
-  if (priceEl)   priceEl.style.display   = isZero ? 'none'   : '';
+  priceEls.forEach(el => { el.style.display = isZero ? 'none' : ''; });
   if (requestEl) requestEl.style.display = isZero ? 'inline' : 'none';
 
   if (bubble) {
