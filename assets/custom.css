@@ -5267,8 +5267,8 @@ button.ex-opt-btn.has-wm-chips {
   fill: #111;
 }
 
-.label--p   { font-size: 12px; font-weight: 700; fill: #0b3b66; }
-.label--m   { font-size: 12px; font-weight: 700; fill: #6f5200; }
-.label--k   { font-size: 12px; font-weight: 700; fill: #6b2c18; }
-.label--n   { font-size: 12px; font-weight: 700; fill: #0a5b31; }
-.label--s   { font-size: 12px; font-weight: 700; fill: #7a3f16; }
+.label--p   { font-size: 14px; font-weight: 700; fill: #0b3b66; }
+.label--m   { font-size: 14px; font-weight: 700; fill: #6f5200; }
+.label--k   { font-size: 14px; font-weight: 700; fill: #6b2c18; }
+.label--n   { font-size: 14px; font-weight: 700; fill: #0a5b31; }
+.label--s   { font-size: 14px; font-weight: 700; fill: #7a3f16; }

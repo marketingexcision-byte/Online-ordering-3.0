@@ -445,8 +445,8 @@
   }
 
   /* Text inside charts: fixed, predictable */
-  .grade-chart svg .axis-label  { font-size: 14px !important; font-family:'Humanist777BT-Bold'; fill:#1a1a1a; }
-  .grade-chart svg .bubble-label{ font-size: 12px !important; font-family:'Humanist777BT-Bold'; }
+  .grade-chart svg .axis-label  { font-size: 18px !important; font-family:'Humanist777BT-Bold'; fill:#1a1a1a; }
+  .grade-chart svg .bubble-label{ font-size: 18px !important; font-family:'Humanist777BT-Bold'; }
 
   /* Keep axis stroke steady even if someone changes the svg size */
   .grade-chart svg .axis { vector-effect: non-scaling-stroke; stroke-width: 2.5; }
