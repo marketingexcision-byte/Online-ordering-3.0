@@ -5286,3 +5286,9 @@ article.card.turning-grade {
 article.card.turning-grade:only-child {
   flex-basis: 100%;
 }
+
+div.turning-grade {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0px 40px;
+    }
