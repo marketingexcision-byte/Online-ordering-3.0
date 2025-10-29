@@ -1262,6 +1262,8 @@ document.addEventListener('DOMContentLoaded', () => {
   <div id="ex-delivery-ui" class="ex-delivery"></div>
 {%- endunless -%}
 
+{% if product.tags contains 'Coolants' %}
+
 <div class="ex-eta" style="
     --stripe-color: #e0592a;
     display: flex;
@@ -1278,6 +1280,7 @@ document.addEventListener('DOMContentLoaded', () => {
     /* margin-top: 13px; */
 "></div>
 </div>
+{% endif %}
 
 
 <script type="application/json" id="ex-variant-fulfilment">
