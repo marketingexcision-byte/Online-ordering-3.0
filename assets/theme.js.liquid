@@ -3173,28 +3173,57 @@ $( document ).ready(function() {
     try { return JSON.parse(el.textContent); } catch { return null; }
   }
   function getSelectedOptions(scope) {
-    // Dawn-style radios + selects
-    const fields = [
-      ...scope.querySelectorAll('input[type="radio"][name^="options["]:checked'),
-      ...scope.querySelectorAll('select[name^="options["]')
-    ];
-    if (fields.length) return fields.map(el => el.value);
+    const out = [];
 
-    // Timber/older themes: .single-option-selector selects
-    const sel = scope.querySelectorAll('.single-option-selector');
-    if (sel.length) return Array.from(sel).map(s => s.value);
+    // 0) Chip UIs with explicit option position/value
+    const chips = scope.querySelectorAll(
+      '[aria-pressed="true"][data-option-position],' +
+      '.is-active[data-option-position],' +
+      '.is-selected[data-option-position]'
+    );
+    if (chips.length) {
+      chips.forEach(el => {
+        const pos = Number(el.getAttribute('data-option-position')) - 1;
+        const val = el.getAttribute('data-option-value') || el.dataset.value || el.textContent.trim();
+        if (pos >= 0) out[pos] = val;
+      });
+      if (out.length) return out;
+    }
 
-    // Fallback: data-index="option1|2|3"
+    // 1) Dawn/OS2.0 style
+    const radios = scope.querySelectorAll('input[type="radio"][name^="options["]:checked');
+    const selects = scope.querySelectorAll('select[name^="options["]');
+    if (radios.length || selects.length) {
+      const vals = [];
+      selects.forEach(s => vals.push(s.value));
+      radios.forEach(r => vals.push(r.value));
+      if (vals.length) return vals;
+    }
+
+    // 2) Timber/older themes: .single-option-selector with data-index="option#"
+    const sos = scope.querySelectorAll('.single-option-selector[data-index^="option"]');
+    if (sos.length) return Array.from(sos).map(s => s.value);
+
+    // 3) Themes using radio names option-0/1/2
+    const r2 = scope.querySelectorAll('input[type="radio"][name^="option-"]:checked');
+    if (r2.length) {
+      r2.forEach(el => {
+        const idx = parseInt(el.name.replace('option-',''), 10);
+        out[idx] = el.value;
+      });
+      return out;
+    }
+
+    // 4) Last fallback: any element with data-index="option#"
     const dataEls = scope.querySelectorAll('[data-index^="option"]');
     if (dataEls.length) {
-      const vals = [];
       dataEls.forEach(el => {
-        const idxMatch = /option(\d+)/i.exec(el.getAttribute('data-index') || '');
-        const idx = idxMatch ? (+idxMatch[1] - 1) : vals.length;
+        const m = /option(\d+)/i.exec(el.getAttribute('data-index') || '');
+        const idx = m ? (+m[1] - 1) : out.length;
         if (el.matches('input[type="radio"]') && !el.checked) return;
-        if (el.value) vals[idx] = el.value;
+        if (el.value) out[idx] = el.value;
       });
-      return vals.filter(v => v != null);
+      return out.filter(Boolean);
     }
     return null;
   }
@@ -3214,6 +3243,15 @@ $( document ).ready(function() {
   }
   function stamp(form) {
     const scope = container(form);
+
+    // If your chip directly carries a variant id, prefer that
+    const chipWithVid = scope.querySelector('[data-variant-id].is-active,[data-variant-id][aria-pressed="true"]');
+    if (chipWithVid && chipWithVid.dataset.variantId) {
+      ensureId(form, chipWithVid.dataset.variantId);
+      return;
+    }
+
+    // Otherwise map option values -> variant id
     const product = getProductJSON(scope);
     const opts = getSelectedOptions(scope);
     const match = findVariant(product, opts);
@@ -3223,6 +3261,7 @@ $( document ).ready(function() {
       if (idSelect) idSelect.value = String(match.id);
       ensureId(form, match.id);
     } else {
+      // Fallback: keep whatever the theme already has
       const idSelect = form.querySelector('select[name="id"]');
       if (idSelect && idSelect.value) ensureId(form, idSelect.value);
     }
@@ -3233,6 +3272,7 @@ $( document ).ready(function() {
 
     const scope = container(form);
 
+    // Re-stamp on any option change or chip click
     scope.addEventListener('change', (ev) => {
       const t = ev.target;
       if (!t) return;
@@ -3240,13 +3280,20 @@ $( document ).ready(function() {
       if (
         t.classList.contains('single-option-selector') ||
         name.startsWith('options[') ||
+        name.startsWith('option-') ||
         (t.hasAttribute('data-index') && /option\d+/i.test(t.getAttribute('data-index')))
       ) {
         stamp(form);
       }
     });
+    scope.addEventListener('click', (ev) => {
+      if (ev.target.closest('[data-variant-id],[data-option-position]')) stamp(form);
+    });
 
+    // Stamp right before submit
     form.addEventListener('submit', () => { stamp(form); }, { capture: true });
+
+    // Initial stamp
     stamp(form);
   }
   function init() {
