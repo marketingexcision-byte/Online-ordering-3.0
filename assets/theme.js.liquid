@@ -3044,49 +3044,8 @@ $( document ).ready(function() {
   }
 });
 
-$(document).ready(function () {
-  // Apply TomSelect on all Code Variants dropdowns
-   new TomSelect("label[for=Code] + select",{
-       create: true,
-       sortField: {
-          field: "text",
-          direction: "asc"
-       }
-   });
-});
 
-$(document).ready(function () {
-  // Select all dropdowns and apply Select2
-  $('select').select2({
-    placeholder: "Select an option", // Optional placeholder
-    minimumResultsForSearch: Infinity, // Hide the search bar for short dropdowns
-    allowClear: true, // Adds a clear button for single selects
-  });
-});
 
-$(document).ready(function () {
-  // Function to apply Select2
-  function applySelect2() {
-    $('select:not(.select2-hidden-accessible)').select2({
-      placeholder: "Select an option",
-      minimumResultsForSearch: Infinity,
-    });
-  }
-
-  // Initial application of Select2
-  applySelect2();
-
-  // Monitor the DOM for dynamically added dropdowns
-  const observer = new MutationObserver(function (mutations) {
-    mutations.forEach(function (mutation) {
-      if (mutation.addedNodes.length) {
-        applySelect2();
-      }
-    });
-  });
-
-  observer.observe(document.body, { childList: true, subtree: true });
-});
 
 (() => {
   const LSVG = '<svg width="16" height="16" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6" fill="none" stroke="currentColor" stroke-width="2"/></svg>';
