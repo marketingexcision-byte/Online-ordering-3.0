@@ -131,7 +131,7 @@
     }
 
     article.card.turning-grade {
-      grid-template-columns: unset;
+      grid-template-columns: unset !important;
     }
 
   }
