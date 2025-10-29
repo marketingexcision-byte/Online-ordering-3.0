@@ -440,7 +440,7 @@
   .collection-card__media.grade-chart > svg {
     width: 100%;
     height: auto;
-    max-height: 260px;                         /* caps label growth */
+    max-height: 280px;                         /* caps label growth */
     display: block;
   }
 
