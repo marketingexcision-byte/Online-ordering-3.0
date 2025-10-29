@@ -52,6 +52,7 @@
     font: var(--vmx-t);
     border-top: 2px solid #e8e8e8;
     border-right: 2px solid #e8e8e8;
+    max-height: 800px;
   }
   .vmx__th, .vmx__td {
     padding: var(--vmx-pad);
