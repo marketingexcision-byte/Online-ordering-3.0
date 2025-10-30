@@ -24,12 +24,15 @@ Sitemap: {{ group.sitemap }}
 
 User-agent: *
 
-# Block tag-combination collection URLs (e.g., /collections/.../tag1+tag2)
-Disallow: /collections/*+*
+# Block legacy tag-in-path URLs and collection feeds
+User-agent: *
+Disallow: /*.atom$                 # stop crawling of collection/tag feeds
+Disallow: /collections/*/*+*       # any combo of multiple tags (has "+")
+Disallow: /collections/*/*_*       # single tag patterns like Namespace_Value
 
-# Block Online Store 2.0 filter param URLs (e.g., ?filter.v.*)
-Disallow: /collections/*?*filter.
-Disallow: /*?*filter.
+# Do NOT block modern query-parameter filters
+Allow: /collections/*?filter.*
+
 
 # Keep internal search results out of crawl
 Disallow: /search
