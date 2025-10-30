@@ -76,8 +76,9 @@
     {%- render 'ecom_header' -%}
     <meta name="google-site-verification" content="EIKmIQXH2zL9-cCyS0Kfv4x85vRR6EMM0q9lD18Fz6E">
     {% if (template contains 'blogs' or template contains 'blog') and robots_directive == '' %}
-      <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
-    {% endif %}
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  <meta name="googlebot" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+{% endif %}
 
     {% if page_description %}
   <meta name="description" content="{{ page_description | escape }}">
@@ -111,11 +112,7 @@
       {%- if current_page != 1 -%}&ndash; {{ 'general.meta.page' | t: page: current_page }}{%- endif -%}
       {%- unless page_title contains shop.name -%}&ndash; {{ shop.name }}{%- endunless -%}
     </title>
-    {%- if page_description -%}
-      <meta name="description" content="{{ page_description | escape }}">
-    {%- else -%}
-      <meta name="description" content="{{ page_description | escape }}">
-    {%- endif -%}
+  
     <!-- Product meta ================================================== -->
     {%- include 'social-meta-tags' -%}
     <!-- Helpers ================================================== -->
