@@ -122,12 +122,13 @@
   <div class="breadcrumbs container dt-prl-30">
     <div class="row" style="display:flex;align-items:flex-start;">
       <div class="col-md-7 lazyload-element">
-        {%- liquid
+{%- liquid
   assign parent_ref = page.metafields.custom.parent_page2
   assign parent = nil
   if parent_ref and parent_ref.value != blank
     assign parent = parent_ref.value
   endif
+  assign home_label = 'general.breadcrumbs.home' | t | default: 'Home'
 -%}
 
 {%- if parent -%}
@@ -140,7 +141,18 @@
       </span>
     </a>
   </div>
+{%- else -%}
+  <div class="w-btn-wrapper lazyload-element">
+    <a class="w-btn icon_atleft"
+       href="{{ routes.root_url }}"
+       data-url="{{ routes.root_url }}">
+      <span class="w-btn-label font-bold">
+        <em>←</em> Back to {{ home_label }}
+      </span>
+    </a>
+  </div>
 {%- endif -%}
+
 
 
         <!-- Title -->
