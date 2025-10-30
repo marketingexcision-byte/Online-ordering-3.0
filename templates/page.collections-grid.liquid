@@ -272,9 +272,12 @@
                   <h3 class="collection-card__title">
                     <strong>{{ collection.title }}</strong>
                   </h3>
-                  {% if summary != blank %}
-                    <p class="collection-card__description text-p1">{{ summary | strip_html }}</p>
-                  {% endif %}
+                  {% if collection.metafields.custom.short_description != blank %}
+  <p class="collection-card__description text-p1">
+    {{ collection.metafields.custom.short_description.value | strip_html }}
+  </p>
+{% endif %}
+
 
                   {%- comment -%} Work material chips (normalized + no parentheses) {%- endcomment -%}
                   {%- assign work_material_array = collection.metafields.custom.work_material.value
@@ -417,9 +420,12 @@
                     <h3 class="collection-card__title">
                       <strong>{{ collection.title }}</strong>
                     </h3>
-                    {% if summary != blank %}
-                      <p class="collection-card__description text-p1">{{ summary | strip_html }}</p>
-                    {% endif %}
+                    {% if collection.metafields.custom.short_description != blank %}
+  <p class="collection-card__description text-p1">
+    {{ collection.metafields.custom.short_description.value | strip_html }}
+  </p>
+{% endif %}
+
 
                     {%- comment -%} Work material chips (normalized + no parentheses) {%- endcomment -%}
                     {%- assign work_material_array = collection.metafields.custom.work_material.value
@@ -586,9 +592,12 @@
                     <h3 class="collection-card__title">
                       <strong>{{ collection.title }}</strong>
                     </h3>
-                    {% if summary != blank %}
-                      <p class="collection-card__description text-p1">{{ summary | strip_html }}</p>
-                    {% endif %}
+                    {% if collection.metafields.custom.short_description != blank %}
+  <p class="collection-card__description text-p1">
+    {{ collection.metafields.custom.short_description.value | strip_html }}
+  </p>
+{% endif %}
+
 
                     {%- comment -%} Work material chips (normalized + no parentheses) {%- endcomment -%}
                     {%- assign work_material_array = collection.metafields.custom.work_material.value
@@ -737,9 +746,12 @@
                       <h3 class="collection-card__title">
                         <strong>{{ collection.title }}</strong>
                       </h3>
-                      {% if summary != blank %}
-                        <p class="collection-card__description text-p1">{{ summary | strip_html }}</p>
-                      {% endif %}
+                      {% if collection.metafields.custom.short_description != blank %}
+  <p class="collection-card__description text-p1">
+    {{ collection.metafields.custom.short_description.value | strip_html }}
+  </p>
+{% endif %}
+
 
                       {%- comment -%} Work material chips (normalized + no parentheses) {%- endcomment -%}
                       {%- assign work_material_array = collection.metafields.custom.work_material.value
