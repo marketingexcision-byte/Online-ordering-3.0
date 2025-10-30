@@ -869,40 +869,7 @@
   {% render 'feature-points' %}
 </div>
 
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    var links = document.querySelectorAll('.w-btn-wrapper a[data-url]');
-    if (!links.length) return;
 
-    links.forEach(function (link) {
-      var raw = link.getAttribute('data-url');
-      if (!raw) return;
-
-      try {
-        var url = new URL(raw, window.location.origin);
-        if (url.origin !== window.location.origin) return;
-      } catch (_e) {
-        return;
-      }
-
-      fetch(url.href, { credentials: 'same-origin' })
-        .then(function (res) {
-          return res.text();
-        })
-        .then(function (html) {
-          var doc = new DOMParser().parseFromString(html, 'text/html');
-          var title = (doc.querySelector('title') || {}).textContent || '';
-          var clean = title.trim();
-          var parts = clean.split(/[\u2013\u2014\-|]/);
-          if (parts.length > 1) clean = parts[0].trim();
-          if (!clean) clean = 'Page';
-          var label = link.querySelector('.w-btn-label');
-          if (label) label.innerHTML = '<em>←</em> Back to ' + clean;
-        })
-        .catch(function () {});
-    });
-  });
-</script>
 
 <style>
 
