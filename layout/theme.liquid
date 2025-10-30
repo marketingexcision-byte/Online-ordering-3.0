@@ -85,19 +85,16 @@
       <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
     {% endif %}
 
-    {% if template contains 'product' and product %}
-      {% assign is_service = product.tags contains 'Custom Length Service'
-        or product.tags contains 'Service Product'
-        or product.title contains ' · svc' %}
-      {% if is_service %}
-        {% assign robots_directive = 'noindex, nofollow' %}
-        {% assign googlebot_directive = 'noindex, nofollow' %}
-        {%- comment -%}
-          Optional: point canonical back to a safer landing (e.g., parent category)
-        {%- endcomment -%}
-        <link rel="canonical" href="{{ routes.collections_url }}/all">
-      {% endif %}
-    {% endif %}
+    {% if page_description %}
+  <meta name="description" content="{{ page_description | escape }}">
+{% elsif product and product.description != blank %}
+  <meta name="description" content="{{ product.description | strip_html | truncate: 160 | escape }}">
+{% elsif collection and collection.description != blank %}
+  <meta name="description" content="{{ collection.description | strip_html | truncate: 160 | escape }}">
+{% else %}
+  <meta name="description" content="{{ shop.meta_description | default: shop.description | strip_html | truncate: 160 | escape }}">
+{% endif %}
+
 
     <script>
       (function (H) {
@@ -339,73 +336,26 @@
     {% endif %}
 
     {% if template contains 'index' %}
-      <!-- Organization Schema -->
-      <script type="application/ld+json">
-        {
-          "@context": "https://schema.org",
-          "@type": "Organization",
-          "name": "Excision Pty Ltd",
-          "url": "https://excision.com.au/",
-          "logo": "https://excision.com.au/cdn/shop/files/Registered_LR_360x.png?v=1691147873",
-          "description": "A seasoned manufacturer and importer of high-quality industrial cutting solutions in Australia, boasting over 30 years of expertise.",
-          "contactPoint": {
-            "@type": "ContactPoint",
-            "telephone": "+61 035 551 4555",
-            "contactType": "customer service",
-            "areaServed": ["AU"]
-          },
-          "address": {
-            "@type": "PostalAddress",
-            "streetAddress": "35 Peck Street",
-            "addressLocality": "Hamilton",
-            "addressRegion": "VIC",
-            "postalCode": "3300",
-            "addressCountry": {
-              "@type": "Country",
-              "name": "Australia"
-            }
-          },
-          "sameAs": [
-            "https://www.facebook.com/people/Excision-Pty-Ltd/100090557419325",
-            "https://www.linkedin.com/company/4987236/"
-          ],
-          "additionalType": ["http://schema.org/Manufacturer", "http://schema.org/IndustrialCompany"]
-        }
-      </script>
 
       <!-- Manufacturer Schema -->
-      <script type="application/ld+json">
-        {
-          "@context": "https://schema.org",
-          "@type": "Organization",
-          "name": "Excision Pty Ltd",
-          "url": "https://excision.com.au/",
-          "logo": "https://excision.com.au/cdn/shop/files/Registered_LR_360x.png?v=1691147873",
-          "contactPoint": {
-            "@type": "ContactPoint",
-            "telephone": "+61 035 551 4555",
-            "contactType": "customer service",
-            "areaServed": ["AU"]
-          },
-          "description": "A seasoned manufacturer and importer of high-quality industrial cutting solutions in Australia, boasting over 30 years of expertise.",
-          "address": {
-            "@type": "PostalAddress",
-            "streetAddress": "35 Peck Street",
-            "addressLocality": "Hamilton",
-            "addressRegion": "VIC",
-            "postalCode": "3300",
-            "addressCountry": {
-              "@type": "Country",
-              "name": "Australia"
-            }
-          },
-          "sameAs": [
-            "https://www.facebook.com/people/Excision-Pty-Ltd/100090557419325",
-            "https://www.linkedin.com/company/4987236/"
-          ],
-          "additionalType": "http://schema.org/Manufacturer"
-        }
-      </script>
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@type":"Organization",
+  "name":"Excision Pty Ltd",
+  "url":"https://excision.com.au/",
+  "logo":"https://excision.com.au/cdn/shop/files/Registered_LR_360x.png?v=1691147873",
+  "description":"A seasoned manufacturer and importer of high-quality industrial cutting solutions in Australia, boasting over 30 years of expertise.",
+  "contactPoint":{"@type":"ContactPoint","telephone":"+61 035 551 4555","contactType":"customer service","areaServed":["AU"]},
+  "address":{"@type":"PostalAddress","streetAddress":"35 Peck Street","addressLocality":"Hamilton","addressRegion":"VIC","postalCode":"3300","addressCountry":"AU"},
+  "sameAs":[
+    "https://www.facebook.com/people/Excision-Pty-Ltd/100090557419325",
+    "https://www.linkedin.com/company/4987236/"
+  ],
+  "additionalType":"http://schema.org/Manufacturer"
+}
+</script>
+
 
       <!-- WebPage Schema for Homepage -->
       <script type="application/ld+json">
@@ -551,7 +501,8 @@
       $(document).ready(function () {
         $('a.dust-and-fume-control__nav-link').attr('target', '_blank');
         //Product page specifications tab
-        $('<h5>Specifications</h5>').insertBefore(".pdp.product- 'variant-matrix.description table:first-of-type");
+        var $firstTable = $('.pdp .variant-matrix .description table').first();
+        if ($firstTable.length) $('<h5>Specifications</h5>').insertBefore($firstTable);
       });
 
       $(window).scroll(function () {
