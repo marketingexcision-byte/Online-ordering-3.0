@@ -122,13 +122,26 @@
   <div class="breadcrumbs container dt-prl-30">
     <div class="row" style="display:flex;align-items:flex-start;">
       <div class="col-md-7 lazyload-element">
-        {%- if page.metafields.custom.parent_page2.value != blank -%}
-          <div class="w-btn-wrapper lazyload-element">
-            <a class="w-btn icon_atleft" href="{{ page.metafields.custom.parent_page2 }}" data-url="{{ page.metafields.custom.parent_page2 }}">
-              <span class="w-btn-label font-bold"><em>←</em> Back to {{ page.metafields.custom.parent_page2 }}</span>
-            </a>
-          </div>
-        {%- endif -%}
+        {%- liquid
+  assign parent_ref = page.metafields.custom.parent_page2
+  assign parent = nil
+  if parent_ref and parent_ref.value != blank
+    assign parent = parent_ref.value
+  endif
+-%}
+
+{%- if parent -%}
+  <div class="w-btn-wrapper lazyload-element">
+    <a class="w-btn icon_atleft"
+       href="{{ parent.url }}"
+       data-url="{{ parent.url }}">
+      <span class="w-btn-label font-bold">
+        <em>←</em> Back to {{ parent.title | escape }}
+      </span>
+    </a>
+  </div>
+{%- endif -%}
+
 
         <!-- Title -->
         <h1 id="collection-grid-heading" class="section__title text-h2">{{ heading | escape }}</h1>
