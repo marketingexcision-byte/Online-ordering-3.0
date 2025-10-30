@@ -2587,7 +2587,7 @@ nav.breadcrumb h1 {
 nav.breadcrumb .placeholder {
   padding-top: 0;
 }
-.breadcrumb .p {
+.breadcrumb p {
   color: white;
 }
 .addToCartForm .selector-wrapper select.single-option-selector {
