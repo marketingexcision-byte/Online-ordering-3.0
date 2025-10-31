@@ -5292,3 +5292,36 @@ div.turning-grade {
     flex-wrap: wrap;
     gap: 0px 40px;
     }
+
+.lb-long-card.lb-long-cta-button {
+    border: 0px solid white !important;
+    padding: 0px !important;
+}
+.lb-button {
+    font-size: 17px !important;
+    min-height: 40px;
+}
+.lb-card-title.lb-title-ld {
+    font-family: 'Humanist777BT-Bold';
+    font-size: 18px !important;
+}
+span.lb-price-sale-price.money {
+    font-size: 18px !important;
+    font-family: 'Humanist777BT-Bold';
+}
+select.lb-variant-picker {
+    font-size: 17px !important;
+    min-height: 40px;
+    border-radius: 25px !important;
+    padding: 5px 15px !important;
+    border: 2px solid #e8e8e8 !important;
+}
+img.lb-card-img.lb-image-full {
+    background: #f1f1f1;
+}
+.lb-carousel-products {
+    gap: 20px !important;
+}
+.lb-addon-title {
+    font-family: 'Humanist777BT-Bold';
+}
