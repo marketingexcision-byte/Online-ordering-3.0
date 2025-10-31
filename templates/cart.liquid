@@ -1485,29 +1485,28 @@
 </script>
 
 <script>
-(function hideOpenOptions() {
-  const normalize = s => (s || "").trim().toUpperCase();
+(function hideBadOptions() {
+  // list of forbidden option labels (case-insensitive)
+  const blocked = ['OPEN', 'BLAC', 'BLAH'];
+  const normalize = s => (s || '').trim().toUpperCase();
 
   function scrub(root = document) {
     root.querySelectorAll('select option').forEach(opt => {
       const text = normalize(opt.label || opt.textContent);
-      if (text === 'OPEN') {
-        // choose your behavior:
-        // opt.hidden = true;         // hide (works most places)
-        // opt.disabled = true;       // disable as a fallback
-        opt.remove();                 // most reliable: remove it
+      if (blocked.includes(text)) {
+        opt.remove(); // or opt.hidden = true / opt.disabled = true
       }
     });
   }
 
-  // initial pass
+  // initial run
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', scrub);
   } else {
     scrub();
   }
 
-  // watch for dynamically inserted options/selects
+  // handle dynamically inserted selects/options
   const mo = new MutationObserver(muts => {
     for (const m of muts) {
       m.addedNodes.forEach(node => {
