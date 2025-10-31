@@ -5350,7 +5350,7 @@ img.lb-card-img.lb-image-full {
     left: unset !important;
 }
 
-.lb-carousel-nav.lb-carousel-right-svg.lb-nav-default.lb-over-default:hover, lb-carousel-nav lb-carousel-left-svg lb-nav-default lb-over-default {
+.lb-carousel-nav.lb-carousel-right-svg.lb-nav-default.lb-over-default:hover, .lb-carousel-nav.lb-carousel-left-svg.lb-nav-default.lb-over-default:hover  {
   outline: 0px solid !important;
   opacity: 85%;
 }
