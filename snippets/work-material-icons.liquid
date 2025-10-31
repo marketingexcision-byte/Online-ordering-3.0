@@ -5,9 +5,9 @@
   – Shows fallback if nothing matches
 {% endcomment %}
 
-{% assign materials    = '' %}
+{% assign materials = '' %}
 {% assign handled_tags = '' %}
-{% assign has_specs    = false %}
+{% assign has_specs = false %}
 
 {%- comment -%}
   1) Collect all material codes & mark those tags handled
@@ -58,10 +58,7 @@
     {% endunless %}
     {% assign handled_tags = handled_tags | append: tag | append: ',' %}
 
-  {% elsif tag == 'Cast Iron_Good'
-    or tag == 'Cast Iron_Great'
-    or tag == 'Cast Iron_Excellent'
-  %}
+  {% elsif tag == 'Cast Iron_Good' or tag == 'Cast Iron_Great' or tag == 'Cast Iron_Excellent' %}
     {% unless materials contains 'K' %}
       {% assign materials = materials | append: 'K,' %}
     {% endunless %}
@@ -144,21 +141,22 @@
 {% comment %} turn our comma-list into an array {% endcomment %}
 {% assign codes = materials | split: ',' %}
 
-      {% if materials != '' %}
-        {% assign has_specs = true %}
-          <td style="display:flex; gap:7px; margin-bottom:-1px;">
-            {% assign ordered = 'P,M,K,N,S,H' | split: ',' %}
-            {% for code in ordered %}
-              {% if codes contains code %}
-                {% assign has_specs = true %}
-                <span class="material material-{{ code }}">{{ code }}</span>
-              {% endif %}
-            {% endfor %}
-          </td>
-      {% endif %}
+<div class="work-material-icons">
+  {% if materials != '' %}
+    {% assign has_specs = true %}
+    <td style="display:flex; gap:7px; margin-bottom:-1px;">
+      {% assign ordered = 'P,M,K,N,S,H' | split: ',' %}
+      {% for code in ordered %}
+        {% if codes contains code %}
+          {% assign has_specs = true %}
+          <span class="material material-{{ code }}">{{ code }}</span>
+        {% endif %}
+      {% endfor %}
+    </td>
+  {% endif %}
+</div>
 
 <style>
-
    .material { font-family: 'Humanist777BT-Bold'; border-radius: 5px; color: white; width: 40px; height: 40px; display: flex; justify-content: center; align-items: center; }
   .material-P { background:#0069a7 }
   .material-M { background:#f6b519 }
