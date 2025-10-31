@@ -5347,6 +5347,7 @@ img.lb-card-img.lb-image-full {
     background: #e8e8e8 !important;
     stroke: black !important;
     right: 25px !important;
+    left: unset !important;
 }
 
 .lb-carousel-nav.lb-carousel-right-svg.lb-nav-default.lb-over-default:hover {
