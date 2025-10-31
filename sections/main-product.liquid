@@ -1477,7 +1477,7 @@ function paint(){
   if (v.inventory_management) {
     if (isYG1) {
       // YG-1 override: 1–2 = Low, 3+ = In
-      if (effQty >= 3) {
+      if (effQty >= 2) {
         setBadge('In stock','green');
       } else if (effQty >= 1) {
         setBadge('Low stock','orange');
@@ -1492,7 +1492,7 @@ function paint(){
       }
     } else {
       // Original logic
-      if (effQty > 10) {
+      if (effQty > 5) {
         setBadge('In stock','green');
       } else if (effQty > 0) {
         setBadge('Low stock','orange');
