@@ -140,10 +140,9 @@
 
 {% comment %} turn our comma-list into an array {% endcomment %}
 {% assign codes = materials | split: ',' %}
-
-<label>Work material</label>
-<div class="work-material-icons">
   {% if materials != '' %}
+<label>Work Material</label>
+<div class="work-material-icons">
     {% assign has_specs = true %}
     <td style="display:flex; gap:7px; margin-bottom:-1px;">
       {% assign ordered = 'P,M,K,N,S,H' | split: ',' %}
@@ -154,9 +153,9 @@
         {% endif %}
       {% endfor %}
     </td>
-  {% endif %}
 </div>
-
+  {% endif %}
+  
 <style>
 div.work-material-icons {
 display: flex;
