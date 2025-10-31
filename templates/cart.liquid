@@ -90,7 +90,7 @@
   {%- assign is_custom_svc = true -%}
 {%- endif -%}
 
-{%- comment -%} Excision: Cart stock badge w/ YG-1 thresholds {%- endcomment -%}
+{%- comment -%} Excision: Cart stock badge w/ YG-1 thresholds + bulk pools {%- endcomment -%}
 {%- assign is_yg1 = false -%}
 {%- for t in item.product.tags -%}
   {%- if t == 'YG-1' -%}{%- assign is_yg1 = true -%}{%- break -%}{%- endif -%}
@@ -98,18 +98,79 @@
 
 {%- comment -%} Excision: MTO when product has tag 'custom length' {%- endcomment -%}
 {%- assign is_mto = false -%}
-{%- assign _tags = item.product.tags | join: '||' | downcase | split: '||' -%}
+{%- assign _tags = item.product.tags | join: '||' | downcase -%}
 {%- if _tags contains 'custom length' -%}
   {%- assign is_mto = true -%}
 {%- endif -%}
 
+{%- comment -%} ==== NEW: figure out effective qty with bulk pooling ==== {%- endcomment -%}
+{%- assign tags_down = item.product.tags | join: '||' | downcase -%}
+{%- assign is_coolant = false -%}
+{%- assign is_coldsaw = false -%}
+{%- if tags_down contains 'coolant' or tags_down contains 'coolants' or tags_down contains 'soluble oils' -%}
+  {%- assign is_coolant = true -%}
+{%- endif -%}
+{%- if tags_down contains 'coldsaw blades' or tags_down contains 'coldsaw' -%}
+  {%- assign is_coldsaw = true -%}
+{%- endif -%}
+
+{%- assign inv_base = item.variant.inventory_quantity | default: 0 -%}
+{%- assign inv_eff  = inv_base -%}
+
+{%- if item.variant.inventory_management -%}
+  {%- if is_coolant -%}
+    {%- comment -%}
+      Coolants: pool litres from:
+        • custom.is_open (inventory_quantity = litres on hand)
+        • custom.is_decant_source (units * litres_per_unit)
+      Then convert pooled litres → extra units for current variant by dividing by its litres_per_unit.
+    {%- endcomment -%}
+    {%- assign this_lpu = item.variant.metafields.custom.litres_per_unit | default: 0 | plus: 0 -%}
+    {%- assign pool_litres = 0 -%}
+    {%- for v in item.product.variants -%}
+      {%- if v.id != item.variant.id and v.inventory_management -%}
+        {%- if v.metafields.custom.is_open -%}
+          {%- assign pool_litres = pool_litres | plus: (v.inventory_quantity | default: 0) -%}
+        {%- elsif v.metafields.custom.is_decant_source -%}
+          {%- assign u = v.inventory_quantity | default: 0 -%}
+          {%- assign lpu = v.metafields.custom.litres_per_unit | default: 0 | plus: 0 -%}
+          {%- assign add_l = u | times: lpu -%}
+          {%- assign pool_litres = pool_litres | plus: add_l -%}
+        {%- endif -%}
+      {%- endif -%}
+    {%- endfor -%}
+    {%- if this_lpu > 0 -%}
+      {%- assign add_units = pool_litres | divided_by: this_lpu -%}
+      {%- assign inv_eff = inv_eff | plus: add_units -%}
+    {%- endif -%}
+  {%- elsif is_coldsaw -%}
+    {%- comment -%}
+      Coldsaw blades: add blank units (BLAH/BLAC) from same family prefix (first 7 of SKU)
+    {%- endcomment -%}
+    {%- assign key_len = 7 -%}
+    {%- assign family_key = item.variant.sku | slice: 0, key_len -%}
+    {%- assign add_blank = 0 -%}
+    {%- for v in item.product.variants -%}
+      {%- if v.id != item.variant.id and v.inventory_management -%}
+        {%- assign vsku = v.sku | upcase -%}
+        {%- if vsku ends_with 'BLAH' or vsku ends_with 'BLAC' -%}
+          {%- assign vkey = v.sku | slice: 0, key_len -%}
+          {%- if vkey == family_key -%}
+            {%- assign add_blank = add_blank | plus: (v.inventory_quantity | default: 0) -%}
+          {%- endif -%}
+        {%- endif -%}
+      {%- endif -%}
+    {%- endfor -%}
+    {%- assign inv_eff = inv_eff | plus: add_blank -%}
+  {%- endif -%}
+{%- endif -%}
 
 {%- assign ex_stock_status = '' -%}
 {%- capture ex_stock_text -%}
   {%- if is_mto -%}
     {%- assign ex_stock_status = 'mto' -%}Made to order
   {%- elsif item.variant.inventory_management -%}
-    {%- assign inv = item.variant.inventory_quantity | default: 0 -%}
+    {%- assign inv = inv_eff -%} {#-- use effective inventory from pooling --#}
 
     {%- if is_yg1 -%}
       {%- if inv >= 3 -%}
@@ -145,16 +206,16 @@
   {%- endif -%}
 {%- endcapture -%}
 
-
-
 <div class="ex-card-badge ex-card-badge--cart"
      data-status="{{ ex_stock_status | strip }}"
+     data-effective-qty="{{ inv_eff }}"
      aria-label="Stock status: {{ ex_stock_text | strip }}">
   {{ ex_stock_text | strip }}
   {%- if ex_stock_status == 'blue' and item.variant.next_incoming_date and is_custom_svc != true -%}
     <span class="ex-badge-note">ETA {{ item.variant.next_incoming_date | date: "%-d %b" }}</span>
   {%- endif -%}
 </div>
+
 
 
 
