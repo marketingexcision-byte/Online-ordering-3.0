@@ -104,86 +104,112 @@
 {%- endif -%}
 
 {%- comment -%} ==== NEW: figure out effective qty with bulk pooling ==== {%- endcomment -%}
-{%- assign tags_down = item.product.tags | join: '||' | downcase -%}
-{%- assign is_coolant = false -%}
-{%- assign is_coldsaw = false -%}
-{%- if tags_down contains 'coolant' or tags_down contains 'coolants' or tags_down contains 'soluble oils' -%}
-  {%- assign is_coolant = true -%}
-{%- endif -%}
-{%- if tags_down contains 'Coldsaw Blades' or tags_down contains 'HSS BLADES - TOOTHED' -%}
-  {%- assign is_coldsaw = true -%}
-{%- endif -%}
-
 {%- assign inv_base = item.variant.inventory_quantity | default: 0 -%}
 {%- assign inv_eff  = inv_base -%}
 
-{%- comment -%} === Coolant effective-inventory pooling (drop-in) === {%- endcomment -%}
-{%- assign tags_down = item.product.tags | join: '||' | downcase -%}
+{%- if item.variant.inventory_management -%}
+  {%- assign tags_down = item.product.tags | join: '||' | downcase -%}
 
-{%- assign is_coolant = false -%}
-{%- if tags_down contains 'coolant'
-   or tags_down contains 'coolants'
-   or tags_down contains 'soluble oils'
-   or tags_down contains 'cutting fluid' -%}
-  {%- assign is_coolant = true -%}
-{%- endif -%}
+  {%- assign is_coolant = false -%}
+  {%- if tags_down contains 'coolant'
+     or tags_down contains 'coolants'
+     or tags_down contains 'soluble oils'
+     or tags_down contains 'cutting fluid' -%}
+    {%- assign is_coolant = true -%}
+  {%- endif -%}
 
-{%- if item.variant.inventory_management and is_coolant -%}
-  {%- comment -%}
-    inv_eff may already be set earlier; default to this variant's on-hand qty if not.
-  {%- endcomment -%}
-  {%- assign inv_eff  = inv_eff  | default: (item.variant.inventory_quantity | default: 0) -%}
+  {%- assign is_coldsaw = false -%}
+  {%- if tags_down contains 'coldsaw blades'
+     or tags_down contains 'hss blades - toothed'
+     or tags_down contains 'hss blades' -%}
+    {%- assign is_coldsaw = true -%}
+  {%- endif -%}
 
-  {%- comment -%}
-    this_lpu = litres per unit for the CURRENT variant.
-  {%- endcomment -%}
-  {%- assign this_lpu = item.variant.metafields.custom.litres_per_unit | default: 0 | plus: 0 -%}
+  {%- if is_coolant -%}
+    {%- comment -%}
+      Coolants: pool litres from:
+        • metafield custom.is_open (inventory_quantity = litres on hand)
+        • metafield custom.is_decant_source (units * litres_per_unit)
+      Then convert pooled litres → extra units for the CURRENT variant.
+    {%- endcomment -%}
+    {%- assign this_lpu = item.variant.metafields.custom.litres_per_unit | default: 0 | plus: 0 -%}
+    {%- assign pool_litres = 0 -%}
 
-  {%- assign pool_litres = 0 -%}
-  {%- for v in item.product.variants -%}
-    {%- if v.id != item.variant.id and v.inventory_management -%}
-      {%- comment -%} Robust boolean checks for metafields {%- endcomment -%}
-      {%- assign v_is_open = false -%}
-      {%- if v.metafields.custom.is_open == true
-         or v.metafields.custom.is_open.value == true
-         or v.metafields.custom.is_open == 'true' -%}
-        {%- assign v_is_open = true -%}
+    {%- for v in item.product.variants -%}
+      {%- if v.id != item.variant.id and v.inventory_management -%}
+        {%- assign v_is_open = false -%}
+        {%- assign v_is_decant = false -%}
+
+        {%- if v.metafields.custom.is_open == true
+           or v.metafields.custom.is_open.value == true
+           or v.metafields.custom.is_open == 'true' -%}
+          {%- assign v_is_open = true -%}
+        {%- endif -%}
+
+        {%- if v.metafields.custom.is_decant_source == true
+           or v.metafields.custom.is_decant_source.value == true
+           or v.metafields.custom.is_decant_source == 'true' -%}
+          {%- assign v_is_decant = true -%}
+        {%- endif -%}
+
+        {%- if v_is_open -%}
+          {%- assign pool_litres = pool_litres | plus: (v.inventory_quantity | default: 0 | plus: 0) -%}
+        {%- elsif v_is_decant -%}
+          {%- assign units = v.inventory_quantity | default: 0 | plus: 0 -%}
+          {%- assign lpu   = v.metafields.custom.litres_per_unit | default: 0 | plus: 0 -%}
+          {%- assign add_l = units | times: lpu -%}
+          {%- assign pool_litres = pool_litres | plus: add_l -%}
+        {%- endif -%}
       {%- endif -%}
+    {%- endfor -%}
 
-      {%- assign v_is_decant = false -%}
-      {%- if v.metafields.custom.is_decant_source == true
-         or v.metafields.custom.is_decant_source.value == true
-         or v.metafields.custom.is_decant_source == 'true' -%}
-        {%- assign v_is_decant = true -%}
-      {%- endif -%}
-
-      {%- if v_is_open -%}
-        {%- comment -%}
-          For "open" variants, inventory_quantity represents **litres on hand**.
-        {%- endcomment -%}
-        {%- assign pool_litres = pool_litres | plus: (v.inventory_quantity | default: 0 | plus: 0) -%}
-      {%- elsif v_is_decant -%}
-        {%- comment -%}
-          For decant-source variants, convert their units → litres.
-        {%- endcomment -%}
-        {%- assign units = v.inventory_quantity | default: 0 | plus: 0 -%}
-        {%- assign lpu   = v.metafields.custom.litres_per_unit | default: 0 | plus: 0 -%}
-        {%- assign add_l = units | times: lpu -%}
-        {%- assign pool_litres = pool_litres | plus: add_l -%}
-      {%- endif -%}
+    {%- if this_lpu > 0 -%}
+      {%- assign add_units = pool_litres | divided_by: this_lpu -%}
+      {%- assign inv_eff = inv_eff | plus: add_units -%}
     {%- endif -%}
-  {%- endfor -%}
 
-  {%- comment -%}
-    Convert pooled litres → extra units for this variant, then bump inv_eff.
-    (integer division is fine—we only count whole sellable units)
-  {%- endcomment -%}
-  {%- if this_lpu > 0 -%}
-    {%- assign add_units = pool_litres | divided_by: this_lpu -%}
-    {%- assign inv_eff = inv_eff | plus: add_units -%}
+  {%- elsif is_coldsaw -%}
+    {%- comment -%}
+      Coldsaw blades: add units from variants flagged as blanks.
+      Priority:
+        1) metafield custom.is_blank (boolean)
+        2) fallback: SKU suffix BLAH/BLAC
+      Only pool blanks in the same 7-char family as the line item's SKU.
+    {%- endcomment -%}
+    {%- assign key_len = 7 -%}
+    {%- assign family_key = item.variant.sku | default: '' | slice: 0, key_len -%}
+    {%- assign add_blank = 0 -%}
+
+    {%- for v in item.product.variants -%}
+      {%- if v.id != item.variant.id and v.inventory_management -%}
+        {%- assign v_is_blank = false -%}
+
+        {%- assign mf_blank = v.metafields.custom.is_blank -%}
+        {%- if mf_blank == true or mf_blank.value == true or mf_blank == 'true' -%}
+          {%- assign v_is_blank = true -%}
+        {%- endif -%}
+
+        {%- if v_is_blank != true -%}
+          {%- assign vsku = v.sku | default: '' | upcase -%}
+          {%- if vsku ends_with 'BLAH' or vsku ends_with 'BLAC' -%}
+            {%- assign v_is_blank = true -%}
+          {%- endif -%}
+        {%- endif -%}
+
+        {%- if v_is_blank -%}
+          {%- assign vkey = v.sku | default: '' | slice: 0, key_len -%}
+          {%- if vkey == family_key -%}
+            {%- assign add_blank = add_blank | plus: (v.inventory_quantity | default: 0) -%}
+          {%- endif -%}
+        {%- endif -%}
+      {%- endif -%}
+    {%- endfor -%}
+
+    {%- assign inv_eff = inv_eff | plus: add_blank -%}
   {%- endif -%}
 {%- endif -%}
-{%- comment -%} === /Coolant pooling === {%- endcomment -%}
+{%- comment -%} ==== /effective qty with bulk pooling ==== {%- endcomment -%}
+
 
 
 {%- assign ex_stock_status = '' -%}
