@@ -170,7 +170,7 @@
   {%- if is_mto -%}
     {%- assign ex_stock_status = 'mto' -%}Made to order
   {%- elsif item.variant.inventory_management -%}
-    {%- assign inv = inv_eff -%} {#-- use effective inventory from pooling --#}
+    {%- assign inv = inv_eff -%}
 
     {%- if is_yg1 -%}
       {%- if inv >= 3 -%}
