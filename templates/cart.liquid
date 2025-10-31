@@ -1485,9 +1485,38 @@
 </script>
 
 <script>
-  document.querySelectorAll('option').forEach(opt => {
-  if (opt.textContent.trim().toUpperCase() === 'OPEN') {
-    opt.hidden = true;
+(function hideOpenOptions() {
+  const normalize = s => (s || "").trim().toUpperCase();
+
+  function scrub(root = document) {
+    root.querySelectorAll('select option').forEach(opt => {
+      const text = normalize(opt.label || opt.textContent);
+      if (text === 'OPEN') {
+        // choose your behavior:
+        // opt.hidden = true;         // hide (works most places)
+        // opt.disabled = true;       // disable as a fallback
+        opt.remove();                 // most reliable: remove it
+      }
+    });
   }
-});
+
+  // initial pass
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', scrub);
+  } else {
+    scrub();
+  }
+
+  // watch for dynamically inserted options/selects
+  const mo = new MutationObserver(muts => {
+    for (const m of muts) {
+      m.addedNodes.forEach(node => {
+        if (node.nodeType !== 1) return;
+        if (node.matches?.('select, option')) scrub(node);
+        node.querySelectorAll?.('select, option').forEach(() => scrub(node));
+      });
+    }
+  });
+  mo.observe(document.documentElement, { childList: true, subtree: true });
+})();
 </script>
