@@ -110,7 +110,7 @@
 {%- if tags_down contains 'coolant' or tags_down contains 'coolants' or tags_down contains 'soluble oils' -%}
   {%- assign is_coolant = true -%}
 {%- endif -%}
-{%- if tags_down contains 'coldsaw blades' or tags_down contains 'coldsaw' -%}
+{%- if tags_down contains 'Coldsaw Blades' or tags_down contains 'HSS BLADES - TOOTHED' -%}
   {%- assign is_coldsaw = true -%}
 {%- endif -%}
 
@@ -143,26 +143,44 @@
       {%- assign add_units = pool_litres | divided_by: this_lpu -%}
       {%- assign inv_eff = inv_eff | plus: add_units -%}
     {%- endif -%}
-  {%- elsif is_coldsaw -%}
-    {%- comment -%}
-      Coldsaw blades: add blank units (BLAH/BLAC) from same family prefix (first 7 of SKU)
-    {%- endcomment -%}
-    {%- assign key_len = 7 -%}
-    {%- assign family_key = item.variant.sku | slice: 0, key_len -%}
-    {%- assign add_blank = 0 -%}
-    {%- for v in item.product.variants -%}
-      {%- if v.id != item.variant.id and v.inventory_management -%}
-        {%- assign vsku = v.sku | upcase -%}
+{%- elsif is_coldsaw -%}
+  {%- comment -%}
+    Coldsaw blades: add units from variants flagged as blanks.
+    Priority:
+      1) metafield custom.is_blank (boolean)
+      2) fallback to SKU suffix BLAH/BLAC
+    Only pool blanks in the same 7-char family as the line item's SKU.
+  {%- endcomment -%}
+
+  {%- assign key_len = 7 -%}
+  {%- assign family_key = item.variant.sku | default: '' | slice: 0, key_len -%}
+  {%- assign add_blank = 0 -%}
+
+  {%- for v in item.product.variants -%}
+    {%- if v.id != item.variant.id and v.inventory_management -%}
+      {%- assign v_is_blank = false -%}
+
+      {%- if v.metafields.custom.is_blank -%}
+        {%- assign v_is_blank = v.metafields.custom.is_blank -%}
+      {%- else -%}
+        {%- assign vsku = v.sku | default: '' | upcase -%}
         {%- if vsku ends_with 'BLAH' or vsku ends_with 'BLAC' -%}
-          {%- assign vkey = v.sku | slice: 0, key_len -%}
-          {%- if vkey == family_key -%}
-            {%- assign add_blank = add_blank | plus: (v.inventory_quantity | default: 0) -%}
-          {%- endif -%}
+          {%- assign v_is_blank = true -%}
         {%- endif -%}
       {%- endif -%}
-    {%- endfor -%}
-    {%- assign inv_eff = inv_eff | plus: add_blank -%}
-  {%- endif -%}
+
+      {%- if v_is_blank -%}
+        {%- assign vkey = v.sku | default: '' | slice: 0, key_len -%}
+        {%- if vkey == family_key -%}
+          {%- assign add_blank = add_blank | plus: (v.inventory_quantity | default: 0) -%}
+        {%- endif -%}
+      {%- endif -%}
+    {%- endif -%}
+  {%- endfor -%}
+
+  {%- assign inv_eff = inv_eff | plus: add_blank -%}
+{%- endif -%}
+
 {%- endif -%}
 
 {%- assign ex_stock_status = '' -%}
@@ -215,9 +233,6 @@
     <span class="ex-badge-note">ETA {{ item.variant.next_incoming_date | date: "%-d %b" }}</span>
   {%- endif -%}
 </div>
-
-
-
 
 
                   {%- comment -%} 1) Other visible properties (exclude Length  any SKU-ish keys) {%- endcomment -%}
