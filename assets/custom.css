@@ -5340,6 +5340,15 @@ img.lb-card-img.lb-image-full {
     stroke: black !important;
     right: 5px !important;
 }
+.lb-carousel-nav.lb-carousel-left-svg.lb-nav-default.lb-over-default {
+    top: -60px !important;
+    height: 46px !important;
+    width: 46px !important;
+    background: #e8e8e8 !important;
+    stroke: black !important;
+    right: 25px !important;
+}
+
 .lb-carousel-nav.lb-carousel-right-svg.lb-nav-default.lb-over-default:hover {
   outline: 0px solid !important;
   opacity: 85%;
