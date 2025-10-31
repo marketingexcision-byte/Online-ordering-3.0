@@ -1,3 +1,10 @@
+{% comment %}
+  snippets/tab-snippets/Product Data.liquid
+  – Condenses Workpiece‐Material tags into one row (P,M,K,N,S,H)
+  – Groups other tag_value (_-tags) by key, joining values with ", "
+  – Shows fallback if nothing matches
+{% endcomment %}
+
 {% assign materials    = '' %}
 {% assign handled_tags = '' %}
 {% assign has_specs    = false %}
@@ -134,16 +141,29 @@
   {% endif %}
 {% endfor %}
 
-{% if materials != '' %}
-  <tr>
-    <td style="display:flex; gap:7px; margin-bottom:-1px;">
-      {% assign ordered = 'P,M,K,N,S,H' | split: ',' %}
-      {% for code in ordered %}
-        {% if codes contains code %}
-          {% assign has_specs = true %}
-          <span class="material material-{{ code }}">{{ code }}</span>
-        {% endif %}
-      {% endfor %}
-    </td>
-  </tr>
-{% endif %}
+{% comment %} turn our comma-list into an array {% endcomment %}
+{% assign codes = materials | split: ',' %}
+
+      {% if materials != '' %}
+        {% assign has_specs = true %}
+          <td style="display:flex; gap:7px; margin-bottom:-1px;">
+            {% assign ordered = 'P,M,K,N,S,H' | split: ',' %}
+            {% for code in ordered %}
+              {% if codes contains code %}
+                {% assign has_specs = true %}
+                <span class="material material-{{ code }}">{{ code }}</span>
+              {% endif %}
+            {% endfor %}
+          </td>
+      {% endif %}
+
+<style>
+
+   .material { font-family: 'Humanist777BT-Bold'; border-radius: 5px; color: white; width: 30px; height: 30px; display: flex; justify-content: center; align-items: center; }
+  .material-P { background:#0069a7 }
+  .material-M { background:#f6b519 }
+  .material-K { background:#e0592a }
+  .material-N { background:#109954 }
+  .material-S { background:#f88d2b }
+  .material-H { background:#666666 }
+</style>
