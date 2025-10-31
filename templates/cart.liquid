@@ -173,7 +173,7 @@
     {%- assign inv = inv_eff -%}
 
     {%- if is_yg1 -%}
-      {%- if inv >= 3 -%}
+      {%- if inv >= 2 -%}
         {%- assign ex_stock_status = 'green' -%}In stock
       {%- elsif inv >= 1 -%}
         {%- assign ex_stock_status = 'orange' -%}Low stock
@@ -187,7 +187,7 @@
         {%- endif -%}
       {%- endif -%}
     {%- else -%}
-      {%- if inv > 10 -%}
+      {%- if inv > 5 -%}
         {%- assign ex_stock_status = 'green' -%}In stock
       {%- elsif inv > 0 -%}
         {%- assign ex_stock_status = 'orange' -%}Low stock
