@@ -407,7 +407,7 @@
 {% assign status = '' %}
 {% capture status_text %}
   {% if any_managed %}
-    {% if total_qty > 10 %}
+    {% if total_qty > 5 %}
       {% assign status = 'green' %}In stock
     {% elsif total_qty > 0 %}
       {% assign status = 'orange' %}Low stock
