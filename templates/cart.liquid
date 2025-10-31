@@ -1482,12 +1482,12 @@
     console.error('Failed to add custom items:', e);
   }
 })();
+</script>
 
-document.querySelectorAll('option').forEach(opt => {
+<script>
+  document.querySelectorAll('option').forEach(opt => {
   if (opt.textContent.trim().toUpperCase() === 'OPEN') {
     opt.hidden = true;
   }
 });
-
 </script>
-
