@@ -491,28 +491,37 @@
         <!-- RIGHT: SUMMARY -->
         <aside class="cart-right">
 
-          {%- assign pc_id  = cart.attributes._precart_id         | default: cart.attributes.precart_id         | strip -%}
-{%- assign pc_by  = cart.attributes._precart_created_by | default: cart.attributes.precart_created_by | strip -%}
-{%- assign pc_for = cart.attributes._precart_created_for| default: cart.attributes.precart_created_for| strip -%}
-{%- assign pc_note= cart.attributes._precart_note       | default: cart.attributes.precart_note       | strip -%}
+{%- assign pc_id   = cart.attributes._precart_id          | default: cart.attributes.precart_id          | strip -%}
+{%- assign pc_by   = cart.attributes._precart_created_by  | default: cart.attributes.precart_created_by  | strip -%}
+{%- assign pc_for  = cart.attributes._precart_created_for | default: cart.attributes.precart_created_for | strip -%}
+{%- assign pc_note = cart.attributes._precart_note        | default: cart.attributes.precart_note        | strip -%}
 
-{%- if pc_id != blank or pc_by != blank or pc_for != blank or pc_note != blank -%}
-  <div class="cart-summary">
+{%- capture pc_any -%}{{ pc_id }}{{ pc_by }}{{ pc_for }}{{ pc_note }}{%- endcapture -%}
+{%- assign pc_any = pc_any | strip -%}
+
+{%- if pc_any != '' -%}
+  <div class="cart-summary precart" data-visible="no">
     <div class="precart-panel">
       <div class="precart-title">
-        PreCart{% if pc_id != blank %} <span class="precart-number">#{{ pc_id }}</span>{% endif %}
+        PreCart{% if pc_id != '' %} <span class="precart-number">#{{ pc_id }}</span>{% endif %}
       </div>
+
       <div class="precart-meta">
-        {% if pc_by  != blank %}<span class="precart-created">Created by <strong>{{ pc_by }}</strong></span>{% endif %}
-        {% if pc_for != blank %}<span class="precart-created">Created for <strong>{{ pc_for }}</strong></span>{% endif %}
+        {% if pc_by  != '' %}<span class="precart-created">Created by <strong>{{ pc_by }}</strong></span>{% endif %}
+        {% if pc_for != '' %}<span class="precart-created">Created for <strong>{{ pc_for }}</strong></span>{% endif %}
       </div>
+
       <div class="precart-msg">
-        {% if pc_note != blank %}<div class="precart-note">{{ pc_note }}</div>{% endif %}
+        {% if pc_note != '' %}<div class="precart-note">{{ pc_note }}</div>{% endif %}
         <div class="precart-standard">Feel free to add and remove products or change quantities. Simply hit checkout when you're ready to place the order.</div>
       </div>
+
+      <!-- Dismiss: clears attributes + hides forever until a new PreCart link -->
+      <button type="button" class="btn precart-dismiss" style="margin-top:10px;">Dismiss</button>
     </div>
   </div>
 {%- endif -%}
+
 
 
           <div class="cart-summary">
