@@ -5396,6 +5396,10 @@ div.lb-button {
     text-decoration: none !important;
 }
 
+div.lb-button:hover {
+  opacity: 85%;
+}
+
 div.lb-button svg {
   display: none;
 }
