@@ -5376,3 +5376,11 @@ img.lb-card-img.lb-image-full {
 .lb-product-info-img-carousel-thumbs-item[is-selected], .lb-product-info-img-carousel-thumbs-item:hover {
   border-bottom: 2px solid #e0592a !important;
 }
+
+.lb-popup-cont-body {
+    margin-bottom: var(--space-6);
+}
+
+.lb-popup-cont {
+    max-height: 72% !important;
+}
