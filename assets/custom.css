@@ -5384,3 +5384,15 @@ img.lb-card-img.lb-image-full {
 .lb-popup-cont {
     max-height: 73% !important;
 }
+
+.lb-button {
+    background: #e0592a !important;
+    height: 40px;
+    border-radius: 25px;
+    color: white !important;
+    text-decoration: none !important;
+}
+
+lb-button-cont .lb-button-flex-preview .svg {
+  display: none;
+}
