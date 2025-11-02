@@ -5404,6 +5404,10 @@ div.lb-button svg {
   display: none;
 }
 
+.lb-popup-cont-action-close {
+  outline: none !important;
+}
+
 .lb-popup-cont-action-close:hover {
   background: #f1f1f1 !important;
   outline: none !important;
