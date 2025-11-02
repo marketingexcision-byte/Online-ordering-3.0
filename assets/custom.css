@@ -211,6 +211,9 @@
     margin-top: 0px !important;
     margin-bottom: -20px !important;
   }
+  .lb-carousel-nav.lb-carousel-right-svg.lb-nav-default.lb-over-default, .lb-carousel-nav.lb-carousel-left-svg.lb-nav-default.lb-over-default {
+    display: none;
+  }
   .mh-ecom-articles
     .related-article__outer-wrapper
     .sppbp__inner
@@ -5354,3 +5357,5 @@ img.lb-card-img.lb-image-full {
   outline: 0px solid !important;
   opacity: 85%;
 }
+
+@media max-width
