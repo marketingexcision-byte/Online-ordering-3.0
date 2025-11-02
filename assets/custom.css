@@ -5385,7 +5385,7 @@ img.lb-card-img.lb-image-full {
     max-height: 73% !important;
 }
 
-.lb-button {
+.lb-button-cont .lb-button-flex-preview {
     background: #e0592a !important;
     height: 40px;
     border-radius: 25px;
@@ -5393,6 +5393,6 @@ img.lb-card-img.lb-image-full {
     text-decoration: none !important;
 }
 
-lb-button-cont .lb-button-flex-preview .svg {
+.lb-button-cont .lb-button-flex-preview .svg {
   display: none;
 }
