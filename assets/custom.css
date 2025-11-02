@@ -5390,6 +5390,9 @@ img.lb-card-img.lb-image-full {
     height: 40px;
     border-radius: 25px;
     color: white !important;
+}
+
+.lb-button-cont.lb-button-flex-preview.lb-button {
     text-decoration: none !important;
 }
 
