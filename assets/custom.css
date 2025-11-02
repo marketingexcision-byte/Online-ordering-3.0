@@ -212,7 +212,7 @@
     margin-bottom: -20px !important;
   }
   .lb-carousel-nav.lb-carousel-right-svg.lb-nav-default.lb-over-default, .lb-carousel-nav.lb-carousel-left-svg.lb-nav-default.lb-over-default {
-    display: none;
+    display: none !important;
   }
   .mh-ecom-articles
     .related-article__outer-wrapper
