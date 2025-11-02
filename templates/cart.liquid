@@ -495,22 +495,21 @@
 {%- assign pc_by   = cart.attributes._precart_created_by  | default: cart.attributes.precart_created_by  | strip -%}
 {%- assign pc_for  = cart.attributes._precart_created_for | default: cart.attributes.precart_created_for | strip -%}
 {%- assign pc_note = cart.attributes._precart_note        | default: cart.attributes.precart_note        | strip -%}
+{%- assign pc_show = cart.attributes._precart_show | default: '' | strip -%}
 
 {%- capture pc_any -%}{{ pc_id }}{{ pc_by }}{{ pc_for }}{{ pc_note }}{%- endcapture -%}
 {%- assign pc_any = pc_any | strip -%}
 
-{%- if pc_any != '' -%}
-  <div class="cart-summary precart" data-visible="no">
+{%- if pc_show == '1' and pc_any != '' -%}
+  <div class="cart-summary precart">
     <div class="precart-panel">
       <div class="precart-title">
         PreCart{% if pc_id != '' %} <span class="precart-number">#{{ pc_id }}</span>{% endif %}
       </div>
-
       <div class="precart-meta">
         {% if pc_by  != '' %}<span class="precart-created">Created by <strong>{{ pc_by }}</strong></span>{% endif %}
         {% if pc_for != '' %}<span class="precart-created">Created for <strong>{{ pc_for }}</strong></span>{% endif %}
       </div>
-
       <div class="precart-msg">
         {% if pc_note != '' %}<div class="precart-note">{{ pc_note }}</div>{% endif %}
         <div class="precart-standard">Feel free to add and remove products or change quantities. Simply hit checkout when you're ready to place the order.</div>
@@ -519,6 +518,7 @@
     </div>
   </div>
 {%- endif -%}
+
 
 
 
@@ -1393,6 +1393,7 @@
   const createdBy = (qp.get('created') || '').trim();
   const createdFor= (qp.get('for') || '').trim();
   const note      = (qp.get('note') || '').trim();
+  // Only run when at least one param is present
   if (!pcId && !createdBy && !createdFor && !note) return;
 
   const noteBits = [];
@@ -1400,28 +1401,31 @@
   if (createdFor) noteBits.push('For: ' + createdFor);
   if (note)      noteBits.push(note);
 
-  try {
-    fetch('/cart/update.js', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        note: noteBits.join(' | '),
-        attributes: {
-          _precart_id: pcId || '',
-          _precart_created_by: createdBy || '',
-          _precart_created_for: createdFor || '',
-          _precart_note: note || ''
-        }
-      })
-    });
-  } catch (_) {}
+  (async () => {
+    try {
+      await fetch('/cart/update.js', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          note: noteBits.join(' | '),
+          attributes: {
+            _precart_id: pcId || '',
+            _precart_created_by: createdBy || '',
+            _precart_created_for: createdFor || '',
+            _precart_note: note || '',
+            _precart_show: '1'                 // <<< visibility flag set ONLY on link land
+          }
+        })
+      });
+    } catch (_) {}
 
-  // Clean the URL
-  try {
-    const url = new URL(location.href);
-    ['pc','created','for','note'].forEach(k => url.searchParams.delete(k));
-    history.replaceState(null, '', url.toString());
-  } catch (_) {}
+    // Clean the URL and reload to render with the show flag
+    try {
+      const url = new URL(location.href);
+      ['pc','created','for','note'].forEach(k => url.searchParams.delete(k));
+      location.replace(url.toString());
+    } catch (_) { location.reload(); }
+  })();
 })();
 </script>
 
