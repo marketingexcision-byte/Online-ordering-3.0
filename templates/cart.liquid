@@ -514,10 +514,24 @@
         {% if pc_note != '' %}<div class="precart-note">{{ pc_note }}</div>{% endif %}
         <div class="precart-standard">Feel free to add and remove products or change quantities. Simply hit checkout when you're ready to place the order.</div>
       </div>
-
     </div>
   </div>
+  
+  <!-- 2) SELF-DESTRUCT the show flag immediately after first render -->
+  <script>
+    // Clear the visibility flag so future cart views won’t render the panel
+    (function () {
+      try {
+        fetch('/cart/update.js', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ attributes: { _precart_show: '' } })
+        });
+      } catch (_) {}
+    })();
+  </script>
 {%- endif -%}
+
 
 
 
