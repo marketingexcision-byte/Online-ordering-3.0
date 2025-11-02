@@ -5392,10 +5392,10 @@ img.lb-card-img.lb-image-full {
     color: white !important;
 }
 
-.lb-button-cont.lb-button-flex-preview.lb-button {
+.lb-button-flex-preview.lb-button {
     text-decoration: none !important;
 }
 
-.lb-button-cont.lb-button-flex-preview.svg {
+div.lb-button-flex-preview.lb-button svg {
   display: none;
 }
