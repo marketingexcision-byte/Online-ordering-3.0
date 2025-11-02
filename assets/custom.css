@@ -5396,7 +5396,7 @@ div.lb-button {
     text-decoration: none !important;
 }
 
-div.lb-button:hover {
+.lb-button-cont.lb-button-flex-preview:hover {
   opacity: 85%;
 }
 
