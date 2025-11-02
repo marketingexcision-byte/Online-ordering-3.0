@@ -5431,3 +5431,7 @@ div.lb-button svg {
 .lb-custom-checkbox {
     border-radius: 20px !important;
 }
+
+input.lb-card-checkbox {
+  min-height: unset !important;
+}
