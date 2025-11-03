@@ -5435,3 +5435,7 @@ div.lb-button svg {
 input.lb-card-checkbox {
   min-height: unset !important;
 }
+
+.lb-flat-card.lb-flat-cta-left {
+    gap: 20px !important;
+}
