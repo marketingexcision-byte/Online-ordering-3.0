@@ -5439,3 +5439,7 @@ input.lb-card-checkbox {
 .lb-flat-card.lb-flat-cta-left {
     gap: 20px !important;
 }
+
+.line-prop {
+    margin: 8px 0px;
+}
