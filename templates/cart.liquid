@@ -84,6 +84,36 @@
                 <div class="meta">
                   <a href="{{ link_url }}">{{ ex_title | default: item.product.title }}</a>
 
+{%- comment -%} Show Option 1 / 2 / 3 names + values for this line item {%- endcomment -%}
+{%- assign opt1_name = item.product.options[0] -%}
+{%- assign opt2_name = item.product.options[1] -%}
+{%- assign opt3_name = item.product.options[2] -%}
+
+{%- if item.variant.option1 and item.variant.option1 != '' 
+      and item.variant.option1 != 'Default Title'
+      and opt1_name and opt1_name != 'Title' -%}
+  <div class="line-prop">
+    {{ opt1_name }}: {{ item.variant.option1 }}
+  </div>
+{%- endif -%}
+
+{%- if item.variant.option2 and item.variant.option2 != '' 
+      and item.variant.option2 != 'Default Title'
+      and opt2_name and opt2_name != 'Title' -%}
+  <div class="line-prop">
+    {{ opt2_name }}: {{ item.variant.option2 }}
+  </div>
+{%- endif -%}
+
+{%- if item.variant.option3 and item.variant.option3 != '' 
+      and item.variant.option3 != 'Default Title'
+      and opt3_name and opt3_name != 'Title' -%}
+  <div class="line-prop">
+    {{ opt3_name }}: {{ item.variant.option3 }}
+  </div>
+{%- endif -%}
+
+
 {%- comment -%} Excision: detect custom/service variant ( · svc ) {%- endcomment -%}
 {%- assign is_custom_svc = false -%}
 {%- if item.variant.option1 and item.variant.option1 contains ' · svc' -%}
