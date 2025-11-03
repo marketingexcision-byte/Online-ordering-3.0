@@ -3448,7 +3448,7 @@ document.addEventListener('DOMContentLoaded', function () {
             "@type": "QuantitativeValue",
             "minValue": {{ handling_time_days }},
             "maxValue": {{ handling_time_days }},
-            "unitCode": "DAY"
+            "unitCode": "d"
           }
         {% endif %}
         {% if lead_time_min != blank %}
@@ -3456,7 +3456,7 @@ document.addEventListener('DOMContentLoaded', function () {
             "@type": "QuantitativeValue",
             "minValue": {{ lead_time_min }},
             "maxValue": {{ lead_time_max }},
-            "unitCode": "DAY"
+            "unitCode": "d"
           }
         {% endif %}
       }
@@ -3480,6 +3480,7 @@ document.addEventListener('DOMContentLoaded', function () {
   {%- assign variant_url = shop.secure_url | append: variant.url -%}
   {%- assign restock_date = variant.metafields.custom.restock_date | default: blank -%}
   {%- assign price_string = variant.price | money_without_currency | replace: ',', '' -%}
+  {%- assign mpn_value = variant.metafields.custom.mpn | default: variant.sku -%}
   {
     "@type": "Offer",
     "url": {{ variant_url | json }},
@@ -3489,7 +3490,7 @@ document.addEventListener('DOMContentLoaded', function () {
     "itemCondition": "https://schema.org/NewCondition",
     "availability": "https://schema.org/{{ availability }}",
     "sku": {{ variant.sku | json }},
-    "mpn": {{ variant.barcode | json }}
+    "mpn": {{ mpn_value | json }}
     {% if variant.barcode != blank %}
       {% case variant.barcode.size %}
         {% when 8 %}
