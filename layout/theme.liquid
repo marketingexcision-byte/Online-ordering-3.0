@@ -1,94 +1,65 @@
 <!doctype html>
 <html class="no-touch no-js" lang="en" dir="ltr">
   <head>
-    {% liquid
-      assign robots_directive = ''
-      assign googlebot_directive = ''
+{% liquid
+  assign request_path  = request.path        | default: '' | downcase
+  assign request_query = request.query_string| default: '' | downcase
 
-      assign request_path = request.path | default: '' | downcase
-      assign request_query = request.query_string | default: '' | downcase
+  # Defaults
+  assign robots_directive = 'index,follow'
+  assign canonical_href   = canonical_url
 
-      assign has_collection_filters = false
+  # Detect filtered collections (ONLY evaluate on collection pages)
+  assign has_collection_filters = false
+  if request.page_type == 'collection'
+    if current_tags and current_tags.size > 0
+      assign has_collection_filters = true
+    elsif request_query contains 'filter.' or request_query contains 'filter%5b' or request_query contains 'pf_' or request_query contains 'constraint=' or request_query contains 'options%5b'
+      assign has_collection_filters = true
+    else
+      # legacy tag-in-path like /collections/handle/tag1+tag2
+      assign after_collections = request_path | split: '/collections/' | last
+      assign segments = after_collections | split: '/'
+      if segments.size > 1 and segments[1] contains '+'
+        assign has_collection_filters = true
+      endif
+    endif
+  endif
 
-      # === Detect filtered collection variants ===
-      if request.page_type == 'collection' or template contains 'collection'
-        if current_tags != blank
-          assign has_collection_filters = true
-        endif
-        if has_collection_filters == false
-          if request_query contains 'filter.' or request_query contains 'filter%5b'
-            assign has_collection_filters = true
-          elsif request_query contains 'pf_'
-            assign has_collection_filters = true
-          elsif request_query contains 'constraint='
-            assign has_collection_filters = true
-          elsif request_query contains 'options%5b'
-            assign has_collection_filters = true
-          else
-            assign after_collections = request_path | split: '/collections/' | last
-            assign segments = after_collections | split: '/'
-            if segments.size > 1
-              assign tag_segment = segments[1]
-              if tag_segment contains '+'
-                assign has_collection_filters = true
-              endif
-            endif
-          endif
-        endif
+  # Per-page-type rules
+  case request.page_type
+    when 'product'
+      # Products: ALWAYS index & self-canonical
+      assign canonical_href   = shop.url | append: product.url
+      assign robots_directive = 'index,follow'
+
+      # Optional: allow explicit opt-out for true service SKUs only
+      # (remove these 3 lines if you never want any product noindexed)
+      if product.tags contains 'svc-noindex'
+        assign robots_directive = 'noindex,follow'
       endif
 
-      # === Robots logic ===
-      if has_collection_filters or request.page_type == 'search' or request_path contains '/search' or request_path contains '/compare'
-        assign robots_directive = 'noindex, follow'
-      endif
-      if robots_directive != '' and googlebot_directive == ''
-        assign googlebot_directive = robots_directive
-      endif
+    when 'collection'
+      assign canonical_href = shop.url | append: collection.url
 
-      # === Canonical logic (single tag everywhere) ===
-      assign canonical_href = canonical_url
-
-      # Filtered collections canonical back to base collection
-      if request.page_type == 'collection' and collection and has_collection_filters
-        assign canonical_href = collection.url
+      # Only filtered or paginated collection variants are noindex
+      if has_collection_filters or (paginate and paginate.current_page > 1)
+        assign robots_directive = 'noindex,follow'
       endif
 
-      # Product override for service products
-      if template contains 'product' and product
-        assign is_service = product.tags contains 'Custom Length Service' or product.tags contains 'Service Product' or product.title contains ' · svc'
-        if is_service
-          assign robots_directive = 'noindex, nofollow'
-          assign googlebot_directive = 'noindex, nofollow'
-          assign canonical_href = routes.collections_url | append: '/all'
-        endif
-      endif
-    %}
+    when 'search'
+      assign robots_directive = 'noindex,follow'
+  endcase
 
-    {%- if robots_directive != '' -%}
-      <meta name="robots" content="{{ robots_directive }}">
-    {%- endif -%}
-    {%- if googlebot_directive != '' -%}
-      <meta name="googlebot" content="{{ googlebot_directive }}">
-    {%- endif -%}
+  # Fence off app/search/compare paths (but NEVER override product setting)
+  if request.page_type != 'product' and (request_path contains '/a/search' or request_path contains '/search' or request_path contains '/compare')
+    assign robots_directive = 'noindex,follow'
+  endif
+%}
 
-    <link rel="canonical" href="{{ canonical_href }}">
+<meta name="robots" content="{{ robots_directive }}">
+<link rel="canonical" href="{{ canonical_href }}">
 
-    {%- render 'ecom_header' -%}
-    <meta name="google-site-verification" content="EIKmIQXH2zL9-cCyS0Kfv4x85vRR6EMM0q9lD18Fz6E">
-    {% if (template contains 'blogs' or template contains 'blog') and robots_directive == '' %}
-  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
-  <meta name="googlebot" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
-{% endif %}
-
-    {% if page_description %}
-  <meta name="description" content="{{ page_description | escape }}">
-{% elsif product and product.description != blank %}
-  <meta name="description" content="{{ product.description | strip_html | truncate: 160 | escape }}">
-{% elsif collection and collection.description != blank %}
-  <meta name="description" content="{{ collection.description | strip_html | truncate: 160 | escape }}">
-{% else %}
-  <meta name="description" content="{{ shop.meta_description | default: shop.description | strip_html | truncate: 160 | escape }}">
-{% endif %}
 
 
     <script>
