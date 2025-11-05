@@ -270,9 +270,17 @@ window.addEventListener("load", function() {
 
 
 
-               {% liquid
+{% liquid
   assign target_html  = article.metafields.custom.insert_before_html | default: ''
-  assign related_list = article.metafields.custom.related_products.value
+
+  # Correct resolution order for a list of product references
+  assign related_list = article.metafields.custom.related_products.references
+  if related_list == blank
+    assign related_list = article.metafields.custom.related_products.value
+  endif
+  if related_list == blank
+    assign related_list = article.metafields.custom.related_products
+  endif
 %}
 
 {% capture related_html %}
@@ -288,6 +296,7 @@ window.addEventListener("load", function() {
     {{ related_html }}
   {% endif %}
 {% endif %}
+
 
                <p class="single-article-meta"></p>                 
             </div>
