@@ -98,7 +98,7 @@ content: "\f104" !important;
     Unique hook so we only initialize this instance
   {% endcomment %}
   {% assign slider_id = 'related-products-' | append: article.id %}
-
+<hr>
   <div  id="{{ slider_id }}">
     <h2 class="related_product_heading">You Might Also Like</h2>
 
@@ -114,6 +114,7 @@ content: "\f104" !important;
       {% endfor %}
     </div>
   </div>
+  <hr>
 
   <script>
     (function() {
