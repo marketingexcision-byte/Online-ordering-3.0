@@ -213,6 +213,41 @@ window.addEventListener("load", function() {
 </script>
 {% endif %}
 
+{% comment %}DEBUG START. remove after fixing{% endcomment %}
+<div style="padding:8px;border:1px dashed #e11;background:#fff7f7;margin:12px 0;font:12px/1.4 monospace">
+  <div><strong>Debug. Article related products</strong></div>
+
+  <div>insert_before_html present:
+    {% if article.metafields.custom.insert_before_html != blank %}true{% else %}false{% endif %}
+  </div>
+
+  <div>target contained in article.content:
+    {% if article.metafields.custom.insert_before_html != blank and article.content contains article.metafields.custom.insert_before_html %}
+      true
+    {% else %}
+      false
+    {% endif %}
+  </div>
+
+  <div>related_products raw:
+    {% if article.metafields.custom.related_products != blank %}
+      {{ article.metafields.custom.related_products }}
+    {% else %}
+      blank
+    {% endif %}
+  </div>
+
+  <div>related_products.value size:
+    {% if article.metafields.custom.related_products.value != blank %}
+      {{ article.metafields.custom.related_products.value.size }}
+    {% else %}
+      nil
+    {% endif %}
+  </div>
+</div>
+{% comment %}DEBUG END{% endcomment %}
+
+
 
                {% liquid
   assign target_html  = article.metafields.custom.insert_before_html | default: ''
