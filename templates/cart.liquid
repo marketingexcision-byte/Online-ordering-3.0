@@ -84,6 +84,7 @@
                 <div class="meta">
                   <a href="{{ link_url }}">{{ ex_title | default: item.product.title }}</a>
 
+{% unless product.tags contains 'custom-length' %}
 {%- comment -%} Show Option 1 / 2 / 3 names + values for this line item {%- endcomment -%}
 {%- assign opt1_name = item.product.options[0] -%}
 {%- assign opt2_name = item.product.options[1] -%}
@@ -112,6 +113,7 @@
     {{ opt3_name }}: {{ item.variant.option3 }}
   </div>
 {%- endif -%}
+{% endunless %}
 
 
 {%- comment -%} Excision: detect custom/service variant ( · svc ) {%- endcomment -%}
