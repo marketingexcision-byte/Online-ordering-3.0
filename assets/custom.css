@@ -5475,3 +5475,6 @@ input#jdgm-email-input, input#jdgm-name-input {
     background: none;
     padding: 10px 0px;
 }
+span.jdgm-write-review-modal__checkbox-custom {
+    border-radius: 25px !important;
+}
