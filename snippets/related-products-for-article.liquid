@@ -4,6 +4,7 @@
 %}
 
 {% if related != blank %}
+  <hr>
   <h2 class="related_product_heading">{{ heading }}</h2>
   <div class="grid-uniform products-collection rlp_regular">
     {% for prod in related limit: 9 %}
@@ -12,4 +13,5 @@
       </div>
     {% endfor %}
   </div>
+  <hr>
 {% endif %}
