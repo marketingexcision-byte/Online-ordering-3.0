@@ -5448,3 +5448,6 @@ a.jdgm-write-rev-link {
     border-radius: 25px;
     font-family: 'Humanist777BT-Bold';
 }
+.jdgm-widget-actions-wrapper {
+    border-left: 2px solid #e8e8e8 !important;
+}
