@@ -84,7 +84,7 @@
                 <div class="meta">
                   <a href="{{ link_url }}">{{ ex_title | default: item.product.title }}</a>
 
-{% unless item.tags contains 'Custom Length' %}
+{% unless item.tags_down contains 'Custom Length' %}
 {%- comment -%} Show Option 1 / 2 / 3 names + values for this line item {%- endcomment -%}
 {%- assign opt1_name = item.product.options[0] -%}
 {%- assign opt2_name = item.product.options[1] -%}
