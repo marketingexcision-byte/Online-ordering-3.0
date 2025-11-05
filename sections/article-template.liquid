@@ -213,19 +213,32 @@ window.addEventListener("load", function() {
 </script>
 {% endif %}
 
-<div style="padding:8px;border:1px dashed #0a0;background:#f6fff6;margin:12px 0;font:12px/1.4 monospace">
-  <div><strong>Debug. Types</strong></div>
-  <div>related_products.type: {{ article.metafields.custom.related_products.type }}</div>
-  <div>references size:
-    {% if article.metafields.custom.related_products.references != blank %}
-      {{ article.metafields.custom.related_products.references.size }}
-    {% else %}nil{% endif %}
-  </div>
-  <div>value size:
-    {% if article.metafields.custom.related_products.value != blank %}
-      {{ article.metafields.custom.related_products.value.size }}
-    {% else %}nil{% endif %}
-  </div>
+<div style="padding:8px;border:1px dashed #06c;background:#f0f7ff;margin:12px 0;font:12px/1.4 monospace">
+  <div><strong>Debug. Items resolved</strong></div>
+
+  <div>From .references:</div>
+  {% assign refs = article.metafields.custom.related_products.references %}
+  {% if refs != blank %}
+    <ul>
+    {% for p in refs %}
+      <li>{{ p.title }} · {{ p.handle }}</li>
+    {% endfor %}
+    </ul>
+  {% else %}
+    <div>none</div>
+  {% endif %}
+
+  <div>From .value:</div>
+  {% assign vals = article.metafields.custom.related_products.value %}
+  {% if vals != blank %}
+    <ul>
+    {% for p in vals %}
+      <li>{{ p.title }} · {{ p.handle }}</li>
+    {% endfor %}
+    </ul>
+  {% else %}
+    <div>none</div>
+  {% endif %}
 </div>
 
 
