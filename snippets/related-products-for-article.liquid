@@ -1,58 +1,87 @@
 {% liquid
   assign number_of_products = 9
-  assign number_of_products_to_fetch = number_of_products | plus: 1
-  assign width = '400'
+  assign width  = '400'
   assign height = '300'
-
   assign related = products | default: article.metafields.custom.related_products.value
 %}
 
 {% if related != blank %}
   <style>
+    /* keep your existing look, only small guardrails for the slider */
     @media only screen and (max-width: 932px){
-      .small--one-half {min-width: 50% !important;}
+      .small--one-half { min-width: 50%; }
       table { max-width: fit-content; }
     }
     @media only screen and (min-width 768px) {
       .container { max-width: 900px !important; }
     }
-    .grid-uniform.products-collection { }
-    .grid-uniform.products-collection { }
     .scroll-container { position: relative; }
-    .grid-uniform.products-collection .icon-container img {
-      height: 40px !important;
-      width: 40px !important;
-    }
-    .product-comparison {
-    display: none;
-    }
-    .product-image-wrapper {
-    background: #f1f1f1f1;
-    border-radius: 10px;
-    }
-    .grid-item.large--one-quarter.medium-down--one-half {
-    min-width: 29%;
-    flex: 1;
-    }
+    .grid-uniform.products-collection .icon-container img { height: 40px !important; width: 40px !important; }
+
+    /* slider-specific niceties */
+    .related_product_section .slick-list { margin: 0 -8px; }
+    .related_product_section .slick-slide { padding: 0 8px; }
+    .related_product_section .slick-prev,
+    .related_product_section .slick-next { display: flex !important; align-items: center; justify-content: center; }
   </style>
 
-  {% assign first_product = related.first %}
-  {% if first_product and first_product.collections and first_product.collections.size > 0 %}
-    {% assign product_collection = first_product.collections.last %}
-    {% if product_collection %}
-      <p class="prd_collection font-bold">{{ product_collection.title | link_to: product_collection.url }}</p>
-    {% endif %}
-  {% endif %}
+  {% comment %}
+    Unique hook so we only initialize this instance
+  {% endcomment %}
+  {% assign slider_id = 'related-products-' | append: article.id %}
 
-  <h2 class="related_product_heading">You Might Also Like</h2>
+  <div class="related_product_section container dt-prl-30" id="{{ slider_id }}">
+    <h2 class="related_product_heading">You Might Also Like</h2>
 
-  <div class="grid-uniform products-collection rlp_regular slider slick-initialized slick-slider"">
-    {% for prod in related limit: number_of_products %}
-      {%- comment -%}
-        Use one of these lines. Prefer the first if you migrated your snippets to render.
-        If you made a render-safe duplicate, use the second.
-      {%- endcomment -%}
-      {% render 'product-grid-item', product: prod %}
-    {% endfor %}
+    {%- comment -%}
+      Base markup only. Slick will wrap with slick-list and slick-track.
+      Keep your classes so it matches site styling.
+    {%- endcomment -%}
+    <div class="grid-uniform products-collection rlp_regular regular slider js-related-products-slider">
+      {% for prod in related limit: number_of_products %}
+        <div class="grid-item medium--one-half large--one-third sp-product-item">
+          {% render 'product-grid-item', product: prod %}
+        </div>
+      {% endfor %}
+    </div>
   </div>
+
+  <script>
+    (function() {
+      var $ = window.jQuery || window.$;
+      var root = document.getElementById('{{ slider_id }}');
+      if (!root) return;
+
+      var $slider = $(root).find('.js-related-products-slider');
+
+      // prevent double init in the theme editor or ajax reloads
+      if ($slider.hasClass('is-slick-initialized')) return;
+
+      if ($ && $.fn && $.fn.slick) {
+        $slider
+          .on('init', function(){ $slider.addClass('is-slick-initialized'); })
+          .slick({
+            mobileFirst: true,
+            slidesToShow: 1,
+            slidesToScroll: 1,
+            infinite: false,
+            dots: false,
+            arrows: true,
+            adaptiveHeight: true,
+            swipeToSlide: true,
+            touchThreshold: 10,
+            prevArrow: '<i class="fa fa-angle-left slick-prev slick-arrow" aria-hidden="true"></i>',
+            nextArrow: '<i class="fa fa-angle-right slick-next slick-arrow" aria-hidden="true"></i>',
+            responsive: [
+              { breakpoint: 480,  settings: { slidesToShow: 2 } },
+              { breakpoint: 768,  settings: { slidesToShow: 3 } },
+              { breakpoint: 992,  settings: { slidesToShow: 3 } }
+            ]
+          });
+      } else {
+        console.warn('Slick not found. Rendering grid fallback for {{ slider_id }}');
+        // No JS fallback. it stays as a grid.
+      }
+    })();
+  </script>
 {% endif %}
