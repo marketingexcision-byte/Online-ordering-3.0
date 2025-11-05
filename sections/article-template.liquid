@@ -214,7 +214,25 @@ window.addEventListener("load", function() {
 {% endif %}
 
 
-               {{ article.content }}
+               {% liquid
+  assign target_html  = article.metafields.custom.insert_before_html | default: ''
+  assign related_list = article.metafields.custom.related_products.value
+%}
+
+{% capture related_html %}
+  {% render 'related-products-for-article', products: related_list, heading: 'You Might Also Like' %}
+{% endcapture %}
+
+{% if target_html != blank and article.content contains target_html and related_list != blank %}
+  {% capture _injection %}{{ related_html }}{{ target_html }}{% endcapture %}
+  {{ article.content | replace_first: target_html, _injection }}
+{% else %}
+  {{ article.content }}
+  {% if related_list != blank %}
+    {{ related_html }}
+  {% endif %}
+{% endif %}
+
                <p class="single-article-meta"></p>                 
             </div>
             {% if section.settings.social_sharing_blog %}
