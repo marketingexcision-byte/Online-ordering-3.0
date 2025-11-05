@@ -1,17 +1,54 @@
 {% liquid
+  assign number_of_products = 9
+  assign number_of_products_to_fetch = number_of_products | plus: 1
+  assign width  = '400'
+  assign height = '300'
+
   assign related = products | default: article.metafields.custom.related_products.value
-  assign heading = heading | default: 'You Might Also Like'
 %}
 
 {% if related != blank %}
-  <hr>
-  <h2 class="related_product_heading">{{ heading }}</h2>
-  <div class="grid-uniform products-collection rlp_regular">
-    {% for prod in related limit: 9 %}
-      <div class="grid__item">
+  <style>
+    @media only screen and (max-width: 932px){
+      .small--one-half {min-width: 50%;}
+      table { max-width: fit-content; }
+    }
+    @media only screen and (min-width 768px) {
+      .container { max-width: 900px !important; }
+    }
+    .grid-uniform.products-collection { }
+    .grid-uniform.products-collection { }
+    .scroll-container { position: relative; }
+    .grid-uniform.products-collection .icon-container img {
+      height: 40px !important;
+      width: 40px !important;
+    }
+  </style>
+
+  <div class="related_product_section container dt-prl-30">
+    {%- comment -%}
+      You had `product.collections.last` on product pages. Articles have no `product`.
+      Use the first related product as the source. Good enough for a category hint.
+    {%- endcomment -%}
+    {% assign first_product = related.first %}
+    {% if first_product and first_product.collections and first_product.collections.size > 0 %}
+      {% assign product_collection = first_product.collections.last %}
+      {% if product_collection %}
+        <p class="prd_collection font-bold">{{ product_collection.title | link_to: product_collection.url }}</p>
+      {% endif %}
+    {% endif %}
+
+    <h2 class="related_product_heading">You Might Also Like</h2>
+
+    <div class="grid-uniform products-collection rlp_regular">
+      {% for prod in related limit: number_of_products %}
+        {%- comment -%}
+          Use one of these lines. Prefer the first if you migrated your snippets to render.
+          If you made a render-safe duplicate, use the second.
+        {%- endcomment -%}
         {% render 'product-grid-item', product: prod %}
-      </div>
-    {% endfor %}
+        {# {% render 'product-grid-item.render', product: prod %} #}
+      {% endfor %}
+    </div>
   </div>
-  <hr>
 {% endif %}
