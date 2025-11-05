@@ -1,0 +1,15 @@
+{% liquid
+  assign products = products | default: article.metafields.custom.related_products.value
+  assign heading  = heading  | default: 'You Might Also Like'
+%}
+
+{% if products and products.size > 0 %}
+  <div class="related_product_section container dt-prl-30" role="complementary" aria-label="Related products">
+    <h2 class="related_product_heading">{{ heading }}</h2>
+    <div class="grid-uniform products-collection rlp_regular">
+      {% for prod in products limit: 9 %}
+        {% include 'product-grid-item', product: prod %}
+      {% endfor %}
+    </div>
+  </div>
+{% endif %}
