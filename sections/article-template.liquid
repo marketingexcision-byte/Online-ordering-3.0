@@ -246,15 +246,7 @@ window.addEventListener("load", function() {
 
 {% liquid
   assign target_html  = article.metafields.custom.insert_before_html | default: ''
-
-  # Correct resolution order for a list of product references
-  assign related_list = article.metafields.custom.related_products.references
-  if related_list == blank
-    assign related_list = article.metafields.custom.related_products.value
-  endif
-  if related_list == blank
-    assign related_list = article.metafields.custom.related_products
-  endif
+  assign related_list = article.metafields.custom.related_products.value
 %}
 
 {% capture related_html %}
@@ -262,14 +254,15 @@ window.addEventListener("load", function() {
 {% endcapture %}
 
 {% if target_html != blank and article.content contains target_html and related_list != blank %}
-  {% capture _injection %}{{ related_html }}{{ target_html }}{% endcapture %}
-  {{ article.content | replace_first: target_html, _injection }}
+  {% capture _inj %}{{ related_html }}{{ target_html }}{% endcapture %}
+  {{ article.content | replace_first: target_html, _inj }}
 {% else %}
   {{ article.content }}
   {% if related_list != blank %}
     {{ related_html }}
   {% endif %}
 {% endif %}
+
 
 
                <p class="single-article-meta"></p>                 

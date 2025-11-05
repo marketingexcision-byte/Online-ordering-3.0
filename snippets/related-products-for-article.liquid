@@ -1,16 +1,20 @@
 {% liquid
-  # Accept an array of product drops from .references or .value
-  assign products = products
-  assign heading  = heading | default: 'You Might Also Like'
+  assign related = products | default: article.metafields.custom.related_products.value
+  assign heading = heading | default: 'You Might Also Like'
 %}
 
-{% if products and products.size > 0 %}
+{% if related != blank %}
   <div class="related_product_section container dt-prl-30" role="complementary" aria-label="Related products">
     <h2 class="related_product_heading">{{ heading }}</h2>
     <div class="grid-uniform products-collection rlp_regular">
-      {% for prod in products limit: 9 %}
+      {% for prod in related limit: 9 %}
+        {% assign product = prod %}
         <div class="grid__item">
-          {% include 'product-grid-item', product: prod %}
+          {% include 'product-grid-item' %}
+          {%- comment -%}
+            If your theme uses render instead of include. swap to:
+            {% render 'product-grid-item', product: prod %}
+          {%- endcomment -%}
         </div>
       {% endfor %}
     </div>
