@@ -1,6 +1,7 @@
 {% liquid
-  assign products = products | default: article.metafields.custom.related_products.value
-  assign heading  = heading  | default: 'You Might Also Like'
+  # Accept an array of product drops from .references or .value
+  assign products = products
+  assign heading  = heading | default: 'You Might Also Like'
 %}
 
 {% if products and products.size > 0 %}
@@ -8,7 +9,9 @@
     <h2 class="related_product_heading">{{ heading }}</h2>
     <div class="grid-uniform products-collection rlp_regular">
       {% for prod in products limit: 9 %}
-        {% include 'product-grid-item', product: prod %}
+        <div class="grid__item">
+          {% include 'product-grid-item', product: prod %}
+        </div>
       {% endfor %}
     </div>
   </div>
