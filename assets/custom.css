@@ -5443,3 +5443,8 @@ input.lb-card-checkbox {
 .line-prop {
     margin: 8px 0px;
 }
+
+a.jdgm-write-rev-link {
+    border-radius: 25px;
+    font-family: 'Humanist777BT-Bold';
+}
