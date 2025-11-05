@@ -4,17 +4,14 @@
 %}
 
 {% if related != blank %}
-  <h2 class="related_product_heading">{{ heading }}</h2>
-  <div class="grid-uniform products-collection rlp_regular">
-    {% for prod in related limit: 9 %}
-      {% assign product = prod %}
-      <div class="grid__item">
-        {% include 'product-grid-item' %}
-        {%- comment -%}
-          If your theme uses render instead of include. swap to:
+  <div class="related_product_section container dt-prl-30" role="complementary" aria-label="Related products">
+    <h2 class="related_product_heading">{{ heading }}</h2>
+    <div class="grid-uniform products-collection rlp_regular">
+      {% for prod in related limit: 9 %}
+        <div class="grid__item">
           {% render 'product-grid-item', product: prod %}
-        {%- endcomment -%}
-      </div>
-    {% endfor %}
+        </div>
+      {% endfor %}
+    </div>
   </div>
 {% endif %}
