@@ -5451,3 +5451,12 @@ a.jdgm-write-rev-link {
 .jdgm-widget-actions-wrapper {
     border-left: 2px solid #e8e8e8 !important;
 }
+.jdgm-write-review-modal__content {
+    border-radius: 15px !important;
+}
+.jdgm-write-review-modal__product-title {
+    font-family: 'Humanist777BT-Bold';
+}
+.jdgm-write-review-modal__title {
+    font-family: 'Humanist777BT-Bold';
+}
