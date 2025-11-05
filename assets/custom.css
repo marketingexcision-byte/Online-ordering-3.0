@@ -5460,3 +5460,18 @@ a.jdgm-write-rev-link {
 .jdgm-write-review-modal__title {
     font-family: 'Humanist777BT-Bold';
 }
+button.jdgm-write-review-modal__nav-btn.jdgm-write-review-modal__nav-btn-next {
+    border-radius: 25px;
+    height: 40px;
+    padding: 5px 40px;
+}
+textarea#jdgm-review-body-input {
+    border: 2px solid #e8e8e8;
+    border-radius: 10px;
+}
+input#jdgm-email-input, input#jdgm-name-input {
+    border: none;
+    border-bottom: 2px solid #e8e8e8;
+    background: none;
+    padding: 10px 0px;
+}
