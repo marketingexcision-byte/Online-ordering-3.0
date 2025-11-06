@@ -253,6 +253,10 @@
     {%- comment -%} === GRID #1 === {%- endcomment -%}
     {% if have_items or have_handles %}
       <div class="collection-grid" role="list">
+<div class="section__header">
+          <h2 id="pr-grid-heading" class="section__title text-h3">Browse the Range</h2>
+        </div>
+
         {% if have_items %}
           {% for collection in items %}
             {% liquid
