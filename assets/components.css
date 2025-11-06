@@ -145,7 +145,6 @@
     gap: var(--space-8) var(--space-7);
     grid-template-columns: repeat(auto-fit, minmax(412px, 0fr));
     margin-bottom: var(--space-9) !important;
-    max-width: 93vw;
   }
 
   .collection-card {
@@ -154,6 +153,7 @@
     gap: var(--space-4);
     padding: var(--space-4);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
+    max-width: 93vw;
   }
 
   .collection-card__media {
