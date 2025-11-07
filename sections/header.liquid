@@ -768,6 +768,54 @@
                         padding: 0 40px;
                       }
                     }
+
+                    /* anchor */
+.site-header { position: relative; }
+
+/* default look */
+.search-bar-wrapper {
+  position: relative;
+  z-index: 110;                 /* sits above nav by default */
+  width: 260px;                 /* your compact width */
+  transition: width .25s ease, box-shadow .25s ease, border-color .25s ease;
+}
+
+/* input should occupy the wrapper */
+.search-bar-wrapper input[type="search"] {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+}
+
+/* expand OVER the header when focused */
+.site-header .search-bar-wrapper:focus-within {
+  position: absolute;           /* leave flow only while active */
+  right: 16px;                  /* keep right edge aligned to header padding */
+  width: min(760px, calc(100vw - 32px)); /* grow left. cap by viewport */
+  z-index: 9999;                /* over menus, badges, etc. */
+  box-shadow: 0 10px 30px rgba(0,0,0,.15);
+}
+
+/* optional. slightly larger touch target on focus */
+.site-header .search-bar-wrapper:focus-within .search-bar > div {
+  border: 1px solid #b9c2cc;
+}
+
+/* reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  .search-bar-wrapper { transition: none; }
+}
+
+/* mobile. just take the full width when focused */
+@media (max-width: 989px) {
+  .site-header .search-bar-wrapper:focus-within {
+    left: 16px;
+    right: 16px;
+    width: auto;
+  }
+}
+
                   </style>
 
 <script>
