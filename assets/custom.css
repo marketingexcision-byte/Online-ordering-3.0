@@ -4790,6 +4790,11 @@ div#cloud-search-results {
     border-radius: 0px 0px 15px 15px;
     min-width: 760px;
 }
+.search-bar-wrapper:focus-within #shopify-section-header input {
+  background: white !important;
+  box-shadow: 0px 0px 20px hsl(0deg 0% 0% / 10%);
+  border-radius: 15px 15px 0px 0px !important;
+}
 .header-right {
     display: none !important;
 }
