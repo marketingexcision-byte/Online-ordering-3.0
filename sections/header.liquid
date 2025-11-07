@@ -1997,7 +1997,9 @@ document.addEventListener('DOMContentLoaded', function(){
   --exp: 760px;                     /* expanded cap on desktop */
 
   width: var(--base);
+  {% comment %}
   transition: width .5s ease, transform .5s ease, box-shadow .5s ease;
+  {% endcomment %}
   position: relative;               /* stays in flow */
   z-index: 110;                     /* above neighbors */
 }
