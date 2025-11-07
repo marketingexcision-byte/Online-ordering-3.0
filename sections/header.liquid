@@ -1991,6 +1991,73 @@ document.addEventListener('DOMContentLoaded', function(){
 
 <style>
 
+    /* Tweak these if you want different sizes */
+.search-bar-wrapper {
+  --base: 300px;                    /* compact width */
+  --exp: 760px;                     /* expanded cap on desktop */
+
+  width: var(--base);
+  transition: width .25s ease, transform .25s ease, box-shadow .25s ease;
+  position: relative;               /* stays in flow */
+  z-index: 110;                     /* above neighbors */
+}
+
+/* keep input full width of wrapper */
+.search-bar-wrapper input[type="search"] {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+}
+
+/* Expand to the left. keep the right edge where it is */
+.search-bar-wrapper:focus-within {
+  --exp: min(760px, calc(100vw - 32px));
+  width: var(--exp);
+  /* clamp translate so it won’t go past -left-stop */
+  transform: translateX(
+    max(calc(var(--base) - var(--exp)), calc(-1 * var(--left-stop)))
+  );
+}
+
+/* mobile. just take the full width with matching translate */
+@media (max-width: 989px) {
+  .search-bar-wrapper { --base: 220px; }
+  .search-bar-wrapper:focus-within {
+    --exp: calc(100vw - 32px);
+  }
+}
+
+/* motion safety */
+@media (prefers-reduced-motion: reduce) {
+  .search-bar-wrapper { transition: none; }
+}
+
+:root { --nav-return-delay: 0.25s; } /* crank this up if you want longer */
+
+.site-header:has(.search-bar-wrapper:focus-within)
+  .site-header--meta-links.medium-down--hide:not(:has(.search-bar-wrapper)),
+.site-header:has(.search-bar-wrapper:focus-within) .primary-menu{
+  width: 0px !important;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity .12s ease 0s, visibility 0s linear .12s;
+}
+
+/* when search is NOT focused. delay the comeback */
+.site-header:not(:has(.search-bar-wrapper:focus-within)) 
+  .site-header--meta-links.medium-down--hide:not(:has(.search-bar-wrapper)),
+.site-header:not(:has(.search-bar-wrapper:focus-within)) .primary-menu{
+  width: unset !important;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition: opacity .15s ease var(--nav-return-delay),
+              visibility .25s ease var(--nav-return-delay),
+              width .25s ease var(--nav-return-delay);
+}
+
   /* Hide the slide-out nav by default everywhere */
 #navBar { display: none; }
 
