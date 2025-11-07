@@ -4826,7 +4826,7 @@ span.highlight-hit {
 .results-block.block-products {
     padding-bottom: 10px;
     padding-top: 10px;
-    margin: 30px;
+    margin: 0px 30px;
 }
 form.search-bar.font-bold {
     min-width: 300px !important;
