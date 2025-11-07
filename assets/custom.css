@@ -4790,7 +4790,7 @@ div#cloud-search-results {
     border-radius: 0px 0px 15px 15px;
     min-width: 760px;
 }
-.site-header:has(#cloud-search-results:visible) .search-bar input[type="search"] {
+.site-header:has(#cloud-search-results:not([hidden])) .search-bar input[type="search"] {
   background: white !important;
   box-shadow: 0px 0px 20px hsl(0deg 0% 0% / 10%);
   border-radius: 15px 15px 0px 0px !important;
