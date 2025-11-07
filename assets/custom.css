@@ -4844,12 +4844,13 @@ div#cloud-search-option-see-more-results {
 .cloud-search-results .see-more-results a {
     margin: 0 !important;
     width: 100%;
+    max-width: 100% !important;
     padding: 5px 15px !important;
     height: 40px;
     background: #e0592a;
     font-size: 16px;
     color: white;
-    border: 0px;
+    border: 0px !important;
     align-items: center;
     justify-content: center;
     
