@@ -36,7 +36,7 @@
   <a href="{{ item.url | within: current_collection }}" class="product-grid-item">
     <div class="product-grid-image">
       <div class="product-grid-image--centered">
-        {% if item.tags contains 'New' or item.tags contains 'YG-1' %}
+        {% if item.tags contains 'New' %}
           <span class="new-badge font-bold">New</span>
         {% endif %}
         {% if item.tags contains 'YG-1' %}
