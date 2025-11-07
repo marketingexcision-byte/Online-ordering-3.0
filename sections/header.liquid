@@ -2058,6 +2058,10 @@ document.addEventListener('DOMContentLoaded', function(){
               width .25s ease var(--nav-return-delay);
 }
 
+.header-logo:not(:has(.search-bar-wrapper:focus-within)) {
+min-width: 200px !important;
+}
+
   /* Hide the slide-out nav by default everywhere */
 #navBar { display: none; }
 
