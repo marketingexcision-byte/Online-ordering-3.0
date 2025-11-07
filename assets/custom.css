@@ -4793,6 +4793,11 @@ div#cloud-search-results {
     margin-top: 5px !important;
 }
 
+.cloud-search-results .see-more-results a:hover {
+    transform: none !important;
+
+}
+
 .header-right {
     text-align: left !important;
     text-transform: none !important;
@@ -4838,8 +4843,8 @@ div#cloud-search-option-see-more-results {
     max-width: 100% !important;
     padding: 5px 15px !important;
     height: 40px;
-    background: #f88d2b;
-    font-size: 15px;
+    background: #e0592a;
+    font-size: 16px;
     color: white;
 }
 .cs-item-details:hover {
