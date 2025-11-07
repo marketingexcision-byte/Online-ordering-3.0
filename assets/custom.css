@@ -4794,7 +4794,11 @@ div#cloud-search-results {
 }
 
 .header-right {
-    display: none !important;
+    text-align: left !important;
+    text-transform: none !important;
+    font-family: 'Humanist777BT-Bold';
+    font-size: 24px !important;
+    color: black !important;
 }
 .results-block.block-products {
     padding-bottom: 20px;
