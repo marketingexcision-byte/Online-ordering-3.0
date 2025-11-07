@@ -2010,6 +2010,10 @@ document.addEventListener('DOMContentLoaded', function(){
   background: transparent;
 }
 
+.search-bar-wrapper {
+  will-change: transform, width;
+}
+
 /* Expand to the left. keep the right edge where it is */
 .search-bar-wrapper:focus-within {
   --exp: min(760px, calc(100vw - 32px));
