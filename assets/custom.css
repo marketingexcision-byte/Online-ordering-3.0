@@ -4826,7 +4826,7 @@ span.highlight-hit {
 .results-block.block-products {
     padding-bottom: 10px;
     padding-top: 10px;
-    margin: 0px 20px 0px 20px;
+    margin: 30px;
 }
 form.search-bar.font-bold {
     min-width: 300px !important;
@@ -4837,6 +4837,9 @@ form.search-bar.font-bold {
 }
 div#cloud-search-option-see-more-results {
     margin: 25px;
+}
+.instant-search-menu .results-block+.results-block {
+    margin: 30px;
 }
 .cloud-search-results .see-more-results a {
     margin: 0 !important;
