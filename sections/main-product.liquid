@@ -58,7 +58,7 @@
   {% endif %}
   <div class="grid container dt-prl-30 mb-prl-0">
     <div class="grid-item large--three-fifths mobile-product-top-meta lazyload-element">
-      {% if product.tags contains 'New' or product.tags contains 'YG-1' %}
+      {% if product.tags contains 'New' %}
         <span class="new-badge font-bold">New</span>
       {% endif %}
       {% if product.tags contains 'Hot Deal' %}
@@ -228,7 +228,7 @@
     </div>
 
     <div class="grid-item large--three-fifths {% if product.images.size == 0 %}push--center{% endif %} desktop-product-meta lazyload-element">
-      {% if product.tags contains 'New' or product.tags contains 'YG-1' %}
+      {% if product.tags contains 'New' %}
         <span class="new-badge font-bold">New</span>
       {% endif %}
       {% if product.tags contains 'Hot Deal' %}
