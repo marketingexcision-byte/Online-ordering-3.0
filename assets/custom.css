@@ -1705,6 +1705,9 @@ body#find-a-local-excision-distributor .breadcrumbs .row .col {
   body#product-brochures-etc .container {
     max-width: 1040px;
   }
+  div#cloud-search-results {
+    min-width: 760px;
+  }
 }
 
 @media only screen and (min-width: 1024px) {
@@ -4789,7 +4792,6 @@ div#cloud-search-results {
     background: #f1f1f1;
     border: none;
     border-radius: 15px;
-    min-width: 760px;
     margin-top: 5px !important;
 }
 
