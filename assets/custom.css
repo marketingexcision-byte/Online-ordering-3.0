@@ -3185,6 +3185,7 @@ main.wrapper.main-contentmain-content--no-template {
   display: flex;
   justify-content: center;
   height: 100%;
+  aspect-ratio: 1 / 1;
 }
 .product-grid-image .hover-view-btn {
   opacity: 0;
