@@ -4785,16 +4785,12 @@ h2.AirReviews-Blocks--Title.AirReviews-Text--headingLg {
 }
 
 div#cloud-search-results {
-    box-shadow: 0px 20px 20px hsl(0deg 0% 0% / 10%);
+    box-shadow: none;
     border: none;
-    border-radius: 0px 0px 15px 15px;
+    border-radius: 15px;
     min-width: 760px;
 }
-.site-header:has(#cloud-search-results:not([hidden])) .search-bar input[type="search"] {
-  background: white !important;
-  box-shadow: 0px 0px 20px hsl(0deg 0% 0% / 10%);
-  border-radius: 15px 15px 0px 0px !important;
-}
+
 .header-right {
     display: none !important;
 }
