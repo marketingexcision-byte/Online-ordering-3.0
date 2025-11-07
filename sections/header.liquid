@@ -2014,7 +2014,7 @@ document.addEventListener('DOMContentLoaded', function(){
 }
 
 /* Expand to the left. keep the right edge where it is */
-.search-bar-wrapper:active {
+.search-bar-wrapper:target {
   --exp: min(760px, calc(100vw - 32px));
   width: var(--exp);
   /* clamp translate so it won’t go past -left-stop */
@@ -2027,7 +2027,7 @@ document.addEventListener('DOMContentLoaded', function(){
 /* mobile. just take the full width with matching translate */
 @media (max-width: 989px) {
   .search-bar-wrapper { --base: 220px; }
-  .search-bar-wrapper:active {
+  .search-bar-wrapper:target {
     --exp: calc(100vw - 32px);
   }
 }
@@ -2039,9 +2039,9 @@ document.addEventListener('DOMContentLoaded', function(){
 
 :root { --nav-return-delay: 0.25s; } /* crank this up if you want longer */
 
-.site-header:has(.search-bar-wrapper:active)
+.site-header:has(.search-bar-wrapper:target)
   .site-header--meta-links.medium-down--hide:not(:has(.search-bar-wrapper)),
-.site-header:has(.search-bar-wrapper:active) .primary-menu{
+.site-header:has(.search-bar-wrapper:target) .primary-menu{
   width: 0px !important;
   opacity: 0;
   visibility: hidden;
@@ -2050,9 +2050,9 @@ document.addEventListener('DOMContentLoaded', function(){
 }
 
 /* when search is NOT focused. delay the comeback */
-.site-header:not(:has(.search-bar-wrapper:active)) 
+.site-header:not(:has(.search-bar-wrapper:target)) 
   .site-header--meta-links.medium-down--hide:not(:has(.search-bar-wrapper)),
-.site-header:not(:has(.search-bar-wrapper:active)) .primary-menu{
+.site-header:not(:has(.search-bar-wrapper:target)) .primary-menu{
   width: unset !important;
   opacity: 1;
   visibility: visible;
@@ -2062,7 +2062,7 @@ document.addEventListener('DOMContentLoaded', function(){
               width .25s ease var(--nav-return-delay);
 }
 
-.header-logo:not(:has(.search-bar-wrapper:active)) {
+.header-logo:not(:has(.search-bar-wrapper:target)) {
 min-width: 200px !important;
 }
 
