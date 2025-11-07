@@ -4804,11 +4804,11 @@ div#cloud-search-results {
     border-radius: 5px;
 }
 span#cloud-search-option-0-name {
-    font-size: 16px;
+    font-size: 16px !important;
     font-family: 'Humanist777BT-Bold';
 }
 .cloud-search-results .description {
-    font-size: 14px !important;
+    font-size: 16px !important;
     color: black;
 }
 span.highlight-hit {
@@ -4824,6 +4824,7 @@ form.search-bar.font-bold {
 }
 .cloud-search-results .cs-item .cs-item-title {
   color: black;
+  font-size: 16px !important;
 }
 div#cloud-search-option-see-more-results {
     margin: 0px 20px 25px;
