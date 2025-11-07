@@ -2162,3 +2162,8 @@ min-width: 200px !important;
   .mnav__title.is-clickable { cursor: pointer; pointer-events: auto; }
 }
 </style>
+
+<script>
+  const menu = document.querySelector('.instant-search-menu');
+menu.addEventListener('mousedown', () => menu.focus());
+</script>
