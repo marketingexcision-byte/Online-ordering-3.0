@@ -4836,7 +4836,7 @@ form.search-bar.font-bold {
   font-size: 16px !important;
 }
 div#cloud-search-option-see-more-results {
-    margin: 0px 20px 25px;
+    margin: 25px;
 }
 .cloud-search-results .see-more-results a {
     margin: 0 !important;
