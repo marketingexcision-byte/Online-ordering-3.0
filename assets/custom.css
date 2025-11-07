@@ -4836,19 +4836,23 @@ form.search-bar.font-bold {
   font-size: 16px !important;
 }
 div#cloud-search-option-see-more-results {
-    margin: 25px;
+    margin: 0px 30px 40px;
 }
 .instant-search-menu .results-block+.results-block {
     margin: 30px;
 }
 .cloud-search-results .see-more-results a {
     margin: 0 !important;
-    max-width: 100% !important;
+    width: 100%;
     padding: 5px 15px !important;
     height: 40px;
     background: #e0592a;
     font-size: 16px;
     color: white;
+    border: 0px;
+    align-items: center;
+    justify-content: center;
+    
 }
 .cs-item-details:hover {
   opacity: 85%;
