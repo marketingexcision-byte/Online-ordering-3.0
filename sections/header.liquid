@@ -1991,75 +1991,30 @@ document.addEventListener('DOMContentLoaded', function(){
 
 <style>
 
-    /* Tweak these if you want different sizes */
-.search-bar-wrapper {
-  --base: 300px;                    /* compact width */
-  --exp: 760px;                     /* expanded cap on desktop */
+.search-bar-wrapper { position: relative; z-index: 110; }
 
-  width: var(--base);
-  position: relative;               /* stays in flow */
-  z-index: 110;                     /* above neighbors */
-}
-
-/* keep input full width of wrapper */
-.search-bar-wrapper input[type="search"] {
-  width: 100%;
-  border: 0;
-  outline: 0;
-  background: transparent;
-}
-
-.search-bar-wrapper {
-  will-change: transform, width;
-}
-
-/* Expand to the left. keep the right edge where it is */
-.search-bar-wrapper:focus-within, #cloud-search-results:focus {
-  --exp: min(760px, calc(100vw - 32px));
-  width: var(--exp);
-  /* clamp translate so it won’t go past -left-stop */
-  transform: translateX(
-    max(calc(var(--base) - var(--exp)), calc(-1 * var(--left-stop)))
-  );
-  transition: width 0.3s;
-}
-
-/* mobile. just take the full width with matching translate */
-@media (max-width: 989px) {
-  .search-bar-wrapper { --base: 220px; }
-  .search-bar-wrapper:focus-within, #cloud-search-results:focus {
-    --exp: calc(100vw - 32px);
-  }
-}
-
-/* motion safety */
-@media (prefers-reduced-motion: reduce) {
-  .search-bar-wrapper { transition: none; }
-}
-
-:root { --nav-return-delay: 0.25s; } /* crank this up if you want longer */
-
-.site-header:has(.search-bar-wrapper:focus-within, #cloud-search-results:focus)
-  .site-header--meta-links.medium-down--hide:not(:has(.search-bar-wrapper)),
-.site-header:has(.search-bar-wrapper:focus-within, #cloud-search-results:focus) .primary-menu{
-  width: 0px !important;
+.site-header.is-search-active .primary-menu,
+.site-header.is-search-active .site-header--meta-links {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
   transition: opacity .12s ease 0s, visibility 0s linear .12s;
 }
 
-/* when search is NOT focused. delay the comeback */
-.site-header:not(:has(.search-bar-wrapper:focus-within, #cloud-search-results:focus)) 
-  .site-header--meta-links.medium-down--hide:not(:has(.search-bar-wrapper)),
-.site-header:not(:has(.search-bar-wrapper:focus-within, #cloud-search-results:focus)) .primary-menu{
-  width: unset !important;
+.site-header:not(.is-search-active) .primary-menu,
+.site-header:not(.is-search-active) .site-header--meta-links {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
-  transition: opacity .15s ease var(--nav-return-delay),
-              visibility .25s ease var(--nav-return-delay),
-              width .25s ease var(--nav-return-delay);
+  transition: opacity .15s ease .25s, visibility .25s ease .25s;
+}
+
+/* Optional. prevents jitter when width animates */
+.search-bar-wrapper { will-change: transform, width; }
+
+/* Respect user motion preference. JS also checks. */
+@media (prefers-reduced-motion: reduce) {
+  .site-header * { transition: none !important; }
 }
 
 .header-logo:not(:has(.search-bar-wrapper:focus-within, #cloud-search-results:focus)) {
@@ -2164,12 +2119,157 @@ min-width: 200px !important;
 </style>
 
 <script>
-const menu = document.querySelector('#cloud-search-results');
+(() => {
+  const header   = document.querySelector('.site-header');
+  const wrapper  = document.querySelector('.search-bar-wrapper');
+  const input    = wrapper?.querySelector('input[type="search"]');
+  const results  = document.getElementById('cloud-search-results');
 
-if (menu) {
-  menu.addEventListener('mousedown', e => {
-    e.preventDefault();   // stops browser stealing focus
-    menu.focus();         // manually focus the div
+  if (!header || !wrapper || !input || !results) return;
+
+  // Tunables
+  const EXP_CAP_DESKTOP = 760;   // px max expanded width
+  const BASE_DESKTOP    = 300;   // px compact width
+  const BASE_MOBILE     = 220;   // px compact width on small screens
+  const VIEW_GUTTER     = 32;    // px margins to keep away from edges
+  const MOBILE_BP       = 989;   // px breakpoint
+  const NAV_RETURN_DELAY_MS = 250;
+
+  // Optional CSS var for left clamp
+  const getLeftStop = () => {
+    const v = getComputedStyle(document.documentElement)
+      .getPropertyValue('--left-stop').trim();
+    const n = parseInt(v, 10);
+    return Number.isFinite(n) ? Math.max(0, n) : 0;
+  };
+
+  const prefersReduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const mqMobile       = matchMedia(`(max-width: ${MOBILE_BP}px)`);
+
+  let active = false;
+  let rafId = null;
+
+  const setTransition = (on) => {
+    if (prefersReduced) return;
+    wrapper.style.transition = on ? 'width 0.3s ease' : 'none';
+  };
+
+  const computeDims = () => {
+    const isMobile = mqMobile.matches;
+    const base = isMobile ? BASE_MOBILE : BASE_DESKTOP;
+    const exp  = Math.min(
+      EXP_CAP_DESKTOP,
+      Math.max(base, window.innerWidth - VIEW_GUTTER)
+    );
+    const leftStop = getLeftStop();
+    const translateX = Math.max(base - exp, -leftStop);
+    return { base, exp, translateX };
+  };
+
+  const applyDims = () => {
+    const { exp, translateX } = computeDims();
+    wrapper.style.width = `${exp}px`;
+    wrapper.style.transform = `translateX(${translateX}px)`;
+  };
+
+  const applyCompact = () => {
+    const { base } = computeDims();
+    wrapper.style.width = `${base}px`;
+    wrapper.style.transform = 'translateX(0)';
+  };
+
+  const open = () => {
+    if (active) return;
+    active = true;
+    header.classList.add('is-search-active');
+    input.setAttribute('aria-expanded', 'true');
+    results.hidden = false;
+    if (!prefersReduced) setTransition(true);
+    // next frame. then apply sizes for smoothness
+    rafId = requestAnimationFrame(() => {
+      applyDims();
+    });
+  };
+
+  const close = () => {
+    if (!active) return;
+    active = false;
+    header.classList.remove('is-search-active');
+    input.setAttribute('aria-expanded', 'false');
+    if (!prefersReduced) setTransition(true);
+    applyCompact();
+    // hide results after the nav comes back
+    window.setTimeout(() => {
+      results.hidden = true;
+    }, NAV_RETURN_DELAY_MS);
+  };
+
+  const toggleByResultsVisibility = (visible) => {
+    if (visible) open(); else close();
+  };
+
+  // Public triggers
+  input.addEventListener('focus', open);
+  input.addEventListener('input', () => {
+    // If you only show results when there is text. gate here
+    if (input.value.trim().length > 0) open();
   });
-}
+
+  // Keep open while interacting inside results
+  results.addEventListener('mousedown', () => open());
+  results.addEventListener('focusin', () => open());
+
+  // Escape to close
+  const onKeydown = (e) => {
+    if (e.key === 'Escape') {
+      e.stopPropagation();
+      input.blur();
+      close();
+    }
+  };
+  document.addEventListener('keydown', onKeydown, true);
+
+  // Outside click to close
+  const onPointerDown = (e) => {
+    const insideSearch =
+      wrapper.contains(e.target) || results.contains(e.target);
+    if (!insideSearch) close();
+  };
+  document.addEventListener('pointerdown', onPointerDown);
+
+  // Resize handling
+  let resizeT;
+  const onResize = () => {
+    window.clearTimeout(resizeT);
+    resizeT = window.setTimeout(() => {
+      if (active) applyDims(); else applyCompact();
+    }, 50);
+  };
+  window.addEventListener('resize', onResize);
+  mqMobile.addEventListener?.('change', onResize);
+
+  // If results are controlled elsewhere. observe attribute changes to stay in sync
+  const ro = new MutationObserver(() => {
+    toggleByResultsVisibility(!results.hidden);
+  });
+  ro.observe(results, { attributes: true, attributeFilter: ['hidden'] });
+
+  // Initial state
+  applyCompact();
+
+  // Optional. expose small API for other scripts
+  window.CloudSearchUI = {
+    open, close, sync: () => (active ? applyDims() : applyCompact()),
+  };
+
+  // Cleanup on hot-reload environments
+  window.addEventListener('unload', () => {
+    cancelAnimationFrame(rafId);
+    document.removeEventListener('keydown', onKeydown, true);
+    document.removeEventListener('pointerdown', onPointerDown);
+    window.removeEventListener('resize', onResize);
+    mqMobile.removeEventListener?.('change', onResize);
+    ro.disconnect();
+  });
+})();
 </script>
