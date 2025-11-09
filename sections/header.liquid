@@ -2120,156 +2120,132 @@ min-width: 200px !important;
 
 <script>
 (() => {
-  const header   = document.querySelector('.site-header');
-  const wrapper  = document.querySelector('.search-bar-wrapper');
-  const input    = wrapper?.querySelector('input[type="search"]');
-  const results  = document.getElementById('cloud-search-results');
+  const wrapper = document.querySelector('.search-bar-wrapper');
+  const input   = wrapper?.querySelector('input[type="search"]');
+  const results = document.getElementById('cloud-search-results'); // must exist
 
-  if (!header || !wrapper || !input || !results) return;
+  if (!wrapper || !input || !results) return;
 
   // Tunables
-  const EXP_CAP_DESKTOP = 760;   // px max expanded width
-  const BASE_DESKTOP    = 300;   // px compact width
-  const BASE_MOBILE     = 220;   // px compact width on small screens
-  const VIEW_GUTTER     = 32;    // px margins to keep away from edges
-  const MOBILE_BP       = 989;   // px breakpoint
-  const NAV_RETURN_DELAY_MS = 250;
+  const EXP_CAP_DESKTOP = 760;   // max expanded width
+  const BASE_DESKTOP    = 300;   // compact width
+  const BASE_MOBILE     = 220;   // compact on small screens
+  const VIEW_GUTTER     = 32;    // keep off viewport edges
+  const MOBILE_BP       = 989;   // breakpoint
+  const NAV_RETURN_DELAY_MS = 250; // if you fade other nav back in elsewhere
 
-  // Optional CSS var for left clamp
+  const prefersReduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const mqMobile = matchMedia(`(max-width: ${MOBILE_BP}px)`);
+
+  // Optional: read clamp var if you’re using --left-stop on :root
   const getLeftStop = () => {
-    const v = getComputedStyle(document.documentElement)
-      .getPropertyValue('--left-stop').trim();
+    const v = getComputedStyle(document.documentElement).getPropertyValue('--left-stop').trim();
     const n = parseInt(v, 10);
     return Number.isFinite(n) ? Math.max(0, n) : 0;
   };
 
-  const prefersReduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const mqMobile       = matchMedia(`(max-width: ${MOBILE_BP}px)`);
-
   let active = false;
-  let rafId = null;
-
-  const setTransition = (on) => {
-    if (prefersReduced) return;
-    wrapper.style.transition = on ? 'width 0.3s ease' : 'none';
-  };
+  let resizeT;
 
   const computeDims = () => {
     const isMobile = mqMobile.matches;
     const base = isMobile ? BASE_MOBILE : BASE_DESKTOP;
-    const exp  = Math.min(
-      EXP_CAP_DESKTOP,
-      Math.max(base, window.innerWidth - VIEW_GUTTER)
-    );
+    const expMax = Math.min(EXP_CAP_DESKTOP, window.innerWidth - VIEW_GUTTER);
+    const exp = Math.max(base, expMax);
     const leftStop = getLeftStop();
     const translateX = Math.max(base - exp, -leftStop);
     return { base, exp, translateX };
   };
 
-  const applyDims = () => {
+  const applyExpanded = () => {
     const { exp, translateX } = computeDims();
+    if (!prefersReduced) wrapper.style.transition = 'width 0.3s ease';
     wrapper.style.width = `${exp}px`;
     wrapper.style.transform = `translateX(${translateX}px)`;
+    wrapper.dataset.state = 'expanded';
   };
 
   const applyCompact = () => {
     const { base } = computeDims();
+    if (!prefersReduced) wrapper.style.transition = 'width 0.3s ease';
     wrapper.style.width = `${base}px`;
     wrapper.style.transform = 'translateX(0)';
+    wrapper.dataset.state = 'compact';
   };
 
   const open = () => {
-    if (active) return;
+    if (active) { applyExpanded(); return; }
     active = true;
-    header.classList.add('is-search-active');
     input.setAttribute('aria-expanded', 'true');
-    results.hidden = false;
-    if (!prefersReduced) setTransition(true);
-    // next frame. then apply sizes for smoothness
-    rafId = requestAnimationFrame(() => {
-      applyDims();
-    });
+    // show results if you’re hiding it with [hidden]
+    if (results.hasAttribute('hidden')) results.removeAttribute('hidden');
+    applyExpanded();
   };
 
   const close = () => {
     if (!active) return;
     active = false;
-    header.classList.remove('is-search-active');
     input.setAttribute('aria-expanded', 'false');
-    if (!prefersReduced) setTransition(true);
     applyCompact();
-    // hide results after the nav comes back
+    // let any nav you fade-in elsewhere finish first
     window.setTimeout(() => {
-      results.hidden = true;
+      // don’t force-hide results if your search code manages visibility
+      // comment the next line out if you never want JS to hide it
+      results.setAttribute('hidden', '');
     }, NAV_RETURN_DELAY_MS);
   };
 
-  const toggleByResultsVisibility = (visible) => {
-    if (visible) open(); else close();
-  };
+  // Kickoff compact state
+  applyCompact();
 
-  // Public triggers
+  // Triggers
   input.addEventListener('focus', open);
   input.addEventListener('input', () => {
-    // If you only show results when there is text. gate here
-    if (input.value.trim().length > 0) open();
+    // If you only open when there’s text, gate it:
+    // if (!input.value.trim()) return;
+    open();
   });
 
-  // Keep open while interacting inside results
-  results.addEventListener('mousedown', () => open());
-  results.addEventListener('focusin', () => open());
+  // Keep open while interacting with results area
+  results.addEventListener('mousedown', open);
+  results.addEventListener('focusin', open);
+  results.addEventListener('click', open);
 
-  // Escape to close
-  const onKeydown = (e) => {
+  // Outside click -> close
+  document.addEventListener('pointerdown', (e) => {
+    const inside = wrapper.contains(e.target) || results.contains(e.target);
+    if (!inside) close();
+  });
+
+  // Escape -> close
+  document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       e.stopPropagation();
       input.blur();
       close();
     }
-  };
-  document.addEventListener('keydown', onKeydown, true);
+  }, true);
 
-  // Outside click to close
-  const onPointerDown = (e) => {
-    const insideSearch =
-      wrapper.contains(e.target) || results.contains(e.target);
-    if (!insideSearch) close();
-  };
-  document.addEventListener('pointerdown', onPointerDown);
-
-  // Resize handling
-  let resizeT;
+  // Resize -> recompute
   const onResize = () => {
-    window.clearTimeout(resizeT);
-    resizeT = window.setTimeout(() => {
-      if (active) applyDims(); else applyCompact();
+    clearTimeout(resizeT);
+    resizeT = setTimeout(() => {
+      if (active) applyExpanded(); else applyCompact();
     }, 50);
   };
   window.addEventListener('resize', onResize);
   mqMobile.addEventListener?.('change', onResize);
 
-  // If results are controlled elsewhere. observe attribute changes to stay in sync
-  const ro = new MutationObserver(() => {
-    toggleByResultsVisibility(!results.hidden);
+  // If some other script toggles the results container. stay in sync
+  const mo = new MutationObserver(() => {
+    const visible = !results.hasAttribute('hidden') && results.offsetParent !== null;
+    if (visible) open();
   });
-  ro.observe(results, { attributes: true, attributeFilter: ['hidden'] });
+  mo.observe(results, { attributes: true, attributeFilter: ['hidden', 'style', 'class'] });
 
-  // Initial state
-  applyCompact();
-
-  // Optional. expose small API for other scripts
-  window.CloudSearchUI = {
-    open, close, sync: () => (active ? applyDims() : applyCompact()),
-  };
-
-  // Cleanup on hot-reload environments
+  // Cleanup for hot reloads
   window.addEventListener('unload', () => {
-    cancelAnimationFrame(rafId);
-    document.removeEventListener('keydown', onKeydown, true);
-    document.removeEventListener('pointerdown', onPointerDown);
-    window.removeEventListener('resize', onResize);
-    mqMobile.removeEventListener?.('change', onResize);
-    ro.disconnect();
+    mo.disconnect();
   });
 })();
 </script>
