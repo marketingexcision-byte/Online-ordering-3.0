@@ -2122,27 +2122,26 @@ min-width: 200px !important;
 (() => {
   const wrapper = document.querySelector('.search-bar-wrapper');
   const input   = wrapper?.querySelector('input[type="search"]');
-  const results = document.getElementById('cloud-search-results'); // must exist
 
-  if (!wrapper || !input || !results) return;
+  // Bail if core elements are missing
+  if (!wrapper || !input) return;
 
   // Tunables
-  const EXP_CAP_DESKTOP = 760;   // max expanded width
-  const BASE_DESKTOP    = 300;   // compact width
-  const BASE_MOBILE     = 220;   // compact on small screens
-  const VIEW_GUTTER     = 32;    // keep off viewport edges
-  const MOBILE_BP       = 989;   // breakpoint
-  const NAV_RETURN_DELAY_MS = 250; // if you fade other nav back in elsewhere
+  const EXP_CAP_DESKTOP = 760;    // px
+  const BASE_DESKTOP    = 300;    // px
+  const BASE_MOBILE     = 220;    // px
+  const VIEW_GUTTER     = 32;     // px to keep off viewport edges
+  const MOBILE_BP       = 989;    // px
 
-  const prefersReduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const mqMobile = matchMedia(`(max-width: ${MOBILE_BP}px)`);
-
-  // Optional: read clamp var if you’re using --left-stop on :root
+  // Optional left clamp from CSS var
   const getLeftStop = () => {
-    const v = getComputedStyle(document.documentElement).getPropertyValue('--left-stop').trim();
+    const v = getComputedStyle(document.documentElement)
+      .getPropertyValue('--left-stop').trim();
     const n = parseInt(v, 10);
     return Number.isFinite(n) ? Math.max(0, n) : 0;
   };
+
+  const mqMobile = matchMedia(`(max-width: ${MOBILE_BP}px)`);
 
   let active = false;
   let resizeT;
@@ -2150,102 +2149,78 @@ min-width: 200px !important;
   const computeDims = () => {
     const isMobile = mqMobile.matches;
     const base = isMobile ? BASE_MOBILE : BASE_DESKTOP;
-    const expMax = Math.min(EXP_CAP_DESKTOP, window.innerWidth - VIEW_GUTTER);
-    const exp = Math.max(base, expMax);
+    const exp  = Math.max(base, Math.min(EXP_CAP_DESKTOP, window.innerWidth - VIEW_GUTTER));
     const leftStop = getLeftStop();
-    const translateX = Math.max(base - exp, -leftStop);
+    const translateX = Math.max(base - exp, -leftStop); // negative or zero
     return { base, exp, translateX };
   };
 
+  const setImportant = (el, prop, val) => el.style.setProperty(prop, val, 'important');
+
   const applyExpanded = () => {
     const { exp, translateX } = computeDims();
-    if (!prefersReduced) wrapper.style.transition = 'width 0.3s ease';
-    wrapper.style.width = `${exp}px`;
-    wrapper.style.transform = `translateX(${translateX}px)`;
-    wrapper.dataset.state = 'expanded';
+    setImportant(wrapper, 'width', `${exp}px`);
+    setImportant(wrapper, 'transform', `translateX(${translateX}px)`);
+    input.setAttribute('aria-expanded', 'true');
   };
 
   const applyCompact = () => {
     const { base } = computeDims();
-    if (!prefersReduced) wrapper.style.transition = 'width 0.3s ease';
-    wrapper.style.width = `${base}px`;
-    wrapper.style.transform = 'translateX(0)';
-    wrapper.dataset.state = 'compact';
+    setImportant(wrapper, 'width', `${base}px`);
+    setImportant(wrapper, 'transform', 'translateX(0)');
+    input.setAttribute('aria-expanded', 'false');
   };
 
   const open = () => {
-    if (active) { applyExpanded(); return; }
     active = true;
-    input.setAttribute('aria-expanded', 'true');
-    // show results if you’re hiding it with [hidden]
-    if (results.hasAttribute('hidden')) results.removeAttribute('hidden');
     applyExpanded();
   };
 
   const close = () => {
-    if (!active) return;
     active = false;
-    input.setAttribute('aria-expanded', 'false');
     applyCompact();
-    // let any nav you fade-in elsewhere finish first
-    window.setTimeout(() => {
-      // don’t force-hide results if your search code manages visibility
-      // comment the next line out if you never want JS to hide it
-      results.setAttribute('hidden', '');
-    }, NAV_RETURN_DELAY_MS);
   };
 
-  // Kickoff compact state
+  // Initial state
   applyCompact();
 
-  // Triggers
+  // Expand on focus or typing
   input.addEventListener('focus', open);
-  input.addEventListener('input', () => {
-    // If you only open when there’s text, gate it:
-    // if (!input.value.trim()) return;
-    open();
-  });
+  input.addEventListener('input', () => open());
 
-  // Keep open while interacting with results area
-  results.addEventListener('mousedown', open);
-  results.addEventListener('focusin', open);
-  results.addEventListener('click', open);
-
-  // Outside click -> close
+  // Delegate: expand if clicking inside results, even if injected later
   document.addEventListener('pointerdown', (e) => {
-    const inside = wrapper.contains(e.target) || results.contains(e.target);
-    if (!inside) close();
+    const inResults = e.target.closest('#cloud-search-results');
+    if (inResults) {
+      open();
+      return;
+    }
+    // If click is outside both the wrapper and results. collapse
+    const insideWrapper = wrapper.contains(e.target);
+    if (!insideWrapper) close();
   });
 
-  // Escape -> close
+  // Keep expanded when tabbing into results
+  document.addEventListener('focusin', (e) => {
+    if (e.target.closest('#cloud-search-results')) open();
+  });
+
+  // Escape to close
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
-      e.stopPropagation();
       input.blur();
       close();
     }
   }, true);
 
-  // Resize -> recompute
+  // Resize recompute
   const onResize = () => {
     clearTimeout(resizeT);
     resizeT = setTimeout(() => {
-      if (active) applyExpanded(); else applyCompact();
+      active ? applyExpanded() : applyCompact();
     }, 50);
   };
   window.addEventListener('resize', onResize);
   mqMobile.addEventListener?.('change', onResize);
-
-  // If some other script toggles the results container. stay in sync
-  const mo = new MutationObserver(() => {
-    const visible = !results.hasAttribute('hidden') && results.offsetParent !== null;
-    if (visible) open();
-  });
-  mo.observe(results, { attributes: true, attributeFilter: ['hidden', 'style', 'class'] });
-
-  // Cleanup for hot reloads
-  window.addEventListener('unload', () => {
-    mo.disconnect();
-  });
 })();
 </script>
