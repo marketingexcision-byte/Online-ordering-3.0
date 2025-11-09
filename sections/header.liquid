@@ -1991,28 +1991,6 @@ document.addEventListener('DOMContentLoaded', function(){
 
 <style>
 
-/* The search wrapper must be allowed to own its width */
-.search-bar-wrapper{
-  position: relative;
-  z-index: 110;
-  flex: 0 0 auto !important;
-  min-width: 0 !important;
-  max-width: none !important;
-  overflow: visible !important;
-  will-change: width, transform;
-}
-.site-header{ overflow: visible !important; }
-
-/* Optional animation */
-@media (prefers-reduced-motion: no-preference){
-  .search-bar-wrapper{ transition: width .25s ease, transform .25s ease; }
-}
-
-/* Results on top of everything */
-#cloud-search-results{ z-index: 9999 !important; }
-
-
-
 
   /* Hide the slide-out nav by default everywhere */
 #navBar { display: none; }
@@ -2111,178 +2089,103 @@ document.addEventListener('DOMContentLoaded', function(){
 }
 </style>
 
-<script>
-(() => {
-  const wrapper = document.querySelector('.search-bar-wrapper');
-  const input   = wrapper?.querySelector('input[type="search"]');
+<style>
+  /* Sizes. same idea as yours */
+.search-bar-wrapper{
+  --base: 300px;
+  --exp: 760px;
+  width: var(--base);
+  position: relative;
+  z-index: 110;
 
-  if (!wrapper || !input) return;
+  /* Hardening for flex headers */
+  flex: 0 0 auto;
+  min-width: 0;
+  max-width: none;
 
-  // Tweaks
-  const EXP_CAP_DESKTOP = 760;
-  const BASE_DESKTOP    = 300;
-  const BASE_MOBILE     = 220;
-  const VIEW_GUTTER     = 32;
-  const MOBILE_BP       = 989;
+  /* Smoothness */
+  will-change: width, transform;
+}
 
-  // Helpers
-  const mqMobile = matchMedia(`(max-width:${MOBILE_BP}px)`);
-  const important = (el, prop, val) => el.style.setProperty(prop, val, 'important');
+.search-bar-wrapper input[type="search"]{
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+}
 
-  const getLeftStop = () => {
-    const v = getComputedStyle(document.documentElement).getPropertyValue('--left-stop').trim();
-    const n = parseInt(v, 10);
-    return Number.isFinite(n) ? Math.max(0, n) : 0;
-  };
+/* Do not let the header clip leftward expansion */
+.site-header{ overflow: visible; }
 
-  const computeDims = () => {
-    const base = mqMobile.matches ? BASE_MOBILE : BASE_DESKTOP;
-    const exp  = Math.max(base, Math.min(EXP_CAP_DESKTOP, window.innerWidth - VIEW_GUTTER));
-    const leftStop = getLeftStop();
-    const translateX = Math.max(base - exp, -leftStop);
-    return { base, exp, translateX };
-  };
+/* EXPANSION. apply styles to the WRAPPER. based on state elsewhere */
+.site-header:has(.search-bar-wrapper:focus-within) .search-bar-wrapper,
+body:has(#cloud-search-results:focus-within) .search-bar-wrapper,
+body:has(#cloud-search-results :focus) .search-bar-wrapper,
+body:has(#cloud-search-results:hover) .search-bar-wrapper{
+  --exp: min(760px, calc(100vw - 32px));
+  width: var(--exp);
+  transform: translateX(
+    max(calc(var(--base) - var(--exp)), calc(-1 * var(--left-stop)))
+  );
+  transition: width .30s ease, transform .30s ease;
+}
 
-  // Detect clipping ancestors that would block leftward growth
-  const hasClippingAncestor = (el) => {
-    let n = el.parentElement;
-    while (n && n !== document.body){
-      const s = getComputedStyle(n);
-      if ((s.overflowX !== 'visible' && s.overflowX !== 'clip') || s.transform !== 'none') return true;
-      n = n.parentElement;
-    }
-    return false;
-  };
+/* Mobile. same selectors. different --base and --exp */
+@media (max-width: 989px){
+  .search-bar-wrapper{ --base: 220px; }
+  .site-header:has(.search-bar-wrapper:focus-within) .search-bar-wrapper,
+  body:has(#cloud-search-results:focus-within) .search-bar-wrapper,
+  body:has(#cloud-search-results :focus) .search-bar-wrapper,
+  body:has(#cloud-search-results:hover) .search-bar-wrapper{
+    --exp: calc(100vw - 32px);
+  }
+}
 
-  // State
-  let active = false;
-  let fixedOverlayMode = false; // fallback if clipped
-  let resultsEl = null;
+/* Motion safety */
+@media (prefers-reduced-motion: reduce){
+  .search-bar-wrapper{ transition: none !important; }
+}
 
-  // Find or wait for the results container
-  const findResults = () => document.getElementById('cloud-search-results');
-  resultsEl = findResults();
+/* Hide nav while active. now driven by the same robust conditions */
+.site-header:has(.search-bar-wrapper:focus-within) .site-header--meta-links.medium-down--hide:not(:has(.search-bar-wrapper)),
+.site-header:has(.search-bar-wrapper:focus-within) .primary-menu,
+body:has(#cloud-search-results:focus-within) .site-header .site-header--meta-links.medium-down--hide:not(:has(.search-bar-wrapper)),
+body:has(#cloud-search-results:focus-within) .site-header .primary-menu,
+body:has(#cloud-search-results :focus) .site-header .site-header--meta-links.medium-down--hide:not(:has(.search-bar-wrapper)),
+body:has(#cloud-search-results :focus) .site-header .primary-menu,
+body:has(#cloud-search-results:hover) .site-header .site-header--meta-links.medium-down--hide:not(:has(.search-bar-wrapper)),
+body:has(#cloud-search-results:hover) .site-header .primary-menu{
+  width: 0 !important;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity .12s ease 0s, visibility 0s linear .12s;
+}
 
-  // Mutation observer to catch late injection or id changes
-  const mo = new MutationObserver(() => {
-    resultsEl = findResults();
-  });
-  mo.observe(document.documentElement, { subtree:true, childList:true, attributes:true, attributeFilter:['id'] });
+/* When inactive. bring nav back with delay */
+:root{ --nav-return-delay: .25s; }
 
-  // Apply compact or expanded in normal mode
-  const applyCompact = () => {
-    const { base } = computeDims();
-    important(wrapper, 'width', `${base}px`);
-    important(wrapper, 'transform', 'translateX(0)');
-    important(wrapper, 'flex', '0 0 auto');
-    important(wrapper, 'max-width', 'none');
-    important(wrapper, 'min-width', '0');
-    input.setAttribute('aria-expanded', 'false');
-  };
+.site-header:not(:has(.search-bar-wrapper:focus-within))
+  .site-header--meta-links.medium-down--hide:not(:has(.search-bar-wrapper)),
+.site-header:not(:has(.search-bar-wrapper:focus-within)) .primary-menu{
+  width: unset !important;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition: opacity .15s ease var(--nav-return-delay),
+              visibility .25s ease var(--nav-return-delay),
+              width .25s ease var(--nav-return-delay);
+}
 
-  const applyExpanded = () => {
-    const { exp, translateX } = computeDims();
-    important(wrapper, 'width', `${exp}px`);
-    important(wrapper, 'transform', `translateX(${translateX}px)`);
-    important(wrapper, 'flex', '0 0 auto');
-    important(wrapper, 'max-width', 'none');
-    important(wrapper, 'min-width', '0');
-    input.setAttribute('aria-expanded', 'true');
-  };
+/* Mirror the same inactive state for when the body is NOT hosting focused or hovered results */
+body:not(:has(#cloud-search-results:focus-within)):not(:has(#cloud-search-results :focus)):not(:has(#cloud-search-results:hover)) .site-header .site-header--meta-links.medium-down--hide:not(:has(.search-bar-wrapper)),
+body:not(:has(#cloud-search-results:focus-within)):not(:has(#cloud-search-results :focus)):not(:has(#cloud-search-results:hover)) .site-header .primary-menu{
+  width: unset !important;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
 
-  // Fixed overlay fallback. anchors right edge at the current visual right
-  const toFixedOverlay = () => {
-    const r = wrapper.getBoundingClientRect();
-    fixedOverlayMode = true;
-    important(wrapper, 'position', 'fixed');
-    important(wrapper, 'top', `${Math.round(r.top + window.scrollY)}px`);
-    // anchor right edge
-    const right = Math.round(window.innerWidth - (r.left + r.width));
-    important(wrapper, 'right', `${right}px`);
-    important(wrapper, 'left', 'auto');
-    important(wrapper, 'z-index', '10000');
-
-    // Now expand width leftward
-    const { exp } = computeDims();
-    important(wrapper, 'width', `${exp}px`);
-    important(wrapper, 'transform', 'translateX(0)'); // not needed in fixed mode
-  };
-
-  const fromFixedOverlay = () => {
-    fixedOverlayMode = false;
-    wrapper.style.removeProperty('position');
-    wrapper.style.removeProperty('top');
-    wrapper.style.removeProperty('right');
-    wrapper.style.removeProperty('left');
-    wrapper.style.removeProperty('z-index');
-  };
-
-  // Open / Close
-  const open = () => {
-    active = true;
-    // If we are clipped by ancestors. switch to fixed overlay once
-    if (!fixedOverlayMode && hasClippingAncestor(wrapper)) {
-      toFixedOverlay();
-    }
-    fixedOverlayMode ? toFixedOverlay() : applyExpanded();
-  };
-
-  const close = () => {
-    active = false;
-    if (fixedOverlayMode) fromFixedOverlay();
-    applyCompact();
-  };
-
-  // Init compact
-  applyCompact();
-
-  // Expand on focus or typing
-  input.addEventListener('focus', open, { passive:true });
-  input.addEventListener('input', open, { passive:true });
-
-  // Keep expanded when interacting with results. use delegation so late injection works
-  const keepOpenIfResults = (target) => {
-    if (!resultsEl) return false;
-    return !!target.closest?.('#cloud-search-results');
-  };
-
-  // Pointer. Mouse. Touch
-  const onPointerDown = (e) => {
-    const t = e.target;
-    if (keepOpenIfResults(t)) { open(); return; }
-    if (!wrapper.contains(t)) { close(); }
-  };
-  document.addEventListener('pointerdown', onPointerDown, true);
-  document.addEventListener('mousedown', onPointerDown, true);
-  document.addEventListener('touchstart', onPointerDown, { passive:true, capture:true });
-
-  // Focus traversal into results
-  document.addEventListener('focusin', (e) => {
-    if (keepOpenIfResults(e.target)) open();
-  }, true);
-
-  // Escape to close
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      input.blur();
-      close();
-    }
-  }, true);
-
-  // Resize
-  let resizeT;
-  const onResize = () => {
-    clearTimeout(resizeT);
-    resizeT = setTimeout(() => {
-      if (active) {
-        fixedOverlayMode ? toFixedOverlay() : applyExpanded();
-      } else {
-        applyCompact();
-      }
-    }, 50);
-  };
-  window.addEventListener('resize', onResize);
-  mqMobile.addEventListener?.('change', onResize);
-
-})();
-</script>
+/* Keep logo from collapsing while inactive. same logic */
+.header-logo{ min-width: 200px !important; }
+</style>
