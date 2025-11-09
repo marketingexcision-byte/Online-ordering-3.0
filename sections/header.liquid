@@ -1991,26 +1991,28 @@ document.addEventListener('DOMContentLoaded', function(){
 
 <style>
 
-/* Make the wrapper respect width and allow it to overflow left */
-.search-bar-wrapper {
+/* The search wrapper must be allowed to own its width */
+.search-bar-wrapper{
   position: relative;
   z-index: 110;
-  flex: 0 0 auto;         /* critical when inside a flex header */
-  min-width: 0;           /* allow shrinking without weird clamps */
-  overflow: visible;      /* let it grow left */
+  flex: 0 0 auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  overflow: visible !important;
   will-change: width, transform;
 }
+.site-header{ overflow: visible !important; }
 
-/* Optional. smoother animation when allowed */
-@media (prefers-reduced-motion: no-preference) {
-  .search-bar-wrapper { transition: width .3s ease, transform .3s ease; }
+/* Optional animation */
+@media (prefers-reduced-motion: no-preference){
+  .search-bar-wrapper{ transition: width .25s ease, transform .25s ease; }
 }
 
-/* Make sure the header does not clip the left expansion */
-.site-header { overflow: visible; }
+/* Results on top of everything */
+#cloud-search-results{ z-index: 9999 !important; }
 
-/* If your results need to float over nav. give them a high z */
-#cloud-search-results { z-index: 9999; }
+
+
 
   /* Hide the slide-out nav by default everywhere */
 #navBar { display: none; }
