@@ -2090,55 +2090,40 @@ document.addEventListener('DOMContentLoaded', function(){
 </style>
 
 <style>
-  /* Sizes. same idea as yours */
+ /* Base */
 .search-bar-wrapper{
   --base: 300px;
   --exp: 760px;
   width: var(--base);
   position: relative;
   z-index: 110;
-
-  /* Hardening for flex headers */
   flex: 0 0 auto;
   min-width: 0;
   max-width: none;
-
-  /* Smoothness */
   will-change: width, transform;
 }
-
 .search-bar-wrapper input[type="search"]{
   width: 100%;
   border: 0;
   outline: 0;
   background: transparent;
 }
-
-/* Do not let the header clip leftward expansion */
 .site-header{ overflow: visible; }
 
-/* EXPANSION. apply styles to the WRAPPER. based on state elsewhere */
-.site-header:has(.search-bar-wrapper:focus-within) .search-bar-wrapper,
-body:has(#cloud-search-results:focus-within) .search-bar-wrapper,
-body:has(#cloud-search-results :focus) .search-bar-wrapper,
-body:has(#cloud-search-results:hover) .search-bar-wrapper{
+/* Expanded whenever body has the state. right edge stays put */
+body.is-search-active .search-bar-wrapper{
   --exp: min(760px, calc(100vw - 32px));
   width: var(--exp);
   transform: translateX(
     max(calc(var(--base) - var(--exp)), calc(-1 * var(--left-stop)))
   );
-  transition: width .30s ease, transform .30s ease;
+  transition: width .3s ease, transform .3s ease;
 }
 
-/* Mobile. same selectors. different --base and --exp */
+/* Mobile sizing */
 @media (max-width: 989px){
   .search-bar-wrapper{ --base: 220px; }
-  .site-header:has(.search-bar-wrapper:focus-within) .search-bar-wrapper,
-  body:has(#cloud-search-results:focus-within) .search-bar-wrapper,
-  body:has(#cloud-search-results :focus) .search-bar-wrapper,
-  body:has(#cloud-search-results:hover) .search-bar-wrapper{
-    --exp: calc(100vw - 32px);
-  }
+  body.is-search-active .search-bar-wrapper{ --exp: calc(100vw - 32px); }
 }
 
 /* Motion safety */
@@ -2146,15 +2131,11 @@ body:has(#cloud-search-results:hover) .search-bar-wrapper{
   .search-bar-wrapper{ transition: none !important; }
 }
 
-/* Hide nav while active. now driven by the same robust conditions */
-.site-header:has(.search-bar-wrapper:focus-within) .site-header--meta-links.medium-down--hide:not(:has(.search-bar-wrapper)),
-.site-header:has(.search-bar-wrapper:focus-within) .primary-menu,
-body:has(#cloud-search-results:focus-within) .site-header .site-header--meta-links.medium-down--hide:not(:has(.search-bar-wrapper)),
-body:has(#cloud-search-results:focus-within) .site-header .primary-menu,
-body:has(#cloud-search-results :focus) .site-header .site-header--meta-links.medium-down--hide:not(:has(.search-bar-wrapper)),
-body:has(#cloud-search-results :focus) .site-header .primary-menu,
-body:has(#cloud-search-results:hover) .site-header .site-header--meta-links.medium-down--hide:not(:has(.search-bar-wrapper)),
-body:has(#cloud-search-results:hover) .site-header .primary-menu{
+/* Hide nav while active. do NOT depend on hover */
+:root{ --nav-return-delay: .25s; }
+
+body.is-search-active .site-header .site-header--meta-links.medium-down--hide:not(:has(.search-bar-wrapper)),
+body.is-search-active .site-header .primary-menu{
   width: 0 !important;
   opacity: 0;
   visibility: hidden;
@@ -2162,12 +2143,8 @@ body:has(#cloud-search-results:hover) .site-header .primary-menu{
   transition: opacity .12s ease 0s, visibility 0s linear .12s;
 }
 
-/* When inactive. bring nav back with delay */
-:root{ --nav-return-delay: .25s; }
-
-.site-header:not(:has(.search-bar-wrapper:focus-within))
-  .site-header--meta-links.medium-down--hide:not(:has(.search-bar-wrapper)),
-.site-header:not(:has(.search-bar-wrapper:focus-within)) .primary-menu{
+body:not(.is-search-active) .site-header .site-header--meta-links.medium-down--hide:not(:has(.search-bar-wrapper)),
+body:not(.is-search-active) .site-header .primary-menu{
   width: unset !important;
   opacity: 1;
   visibility: visible;
@@ -2177,15 +2154,59 @@ body:has(#cloud-search-results:hover) .site-header .primary-menu{
               width .25s ease var(--nav-return-delay);
 }
 
-/* Mirror the same inactive state for when the body is NOT hosting focused or hovered results */
-body:not(:has(#cloud-search-results:focus-within)):not(:has(#cloud-search-results :focus)):not(:has(#cloud-search-results:hover)) .site-header .site-header--meta-links.medium-down--hide:not(:has(.search-bar-wrapper)),
-body:not(:has(#cloud-search-results:focus-within)):not(:has(#cloud-search-results :focus)):not(:has(#cloud-search-results:hover)) .site-header .primary-menu{
-  width: unset !important;
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
-}
-
-/* Keep logo from collapsing while inactive. same logic */
+/* Keep the logo from shrinking when inactive */
 .header-logo{ min-width: 200px !important; }
+
 </style>
+
+<script>
+(() => {
+  const body    = document.body;
+  const wrapper = document.querySelector('.search-bar-wrapper');
+  const input   = wrapper?.querySelector('input[type="search"]');
+
+  if (!wrapper || !input) return;
+
+  const isVisible = (el) => {
+    if (!el) return false;
+    if (el.hasAttribute('hidden')) return false;
+    const cs = getComputedStyle(el);
+    if (cs.display === 'none' || cs.visibility === 'hidden' || parseFloat(cs.opacity) === 0) return false;
+    const r = el.getBoundingClientRect();
+    return r.width > 0 && r.height > 0;
+  };
+
+  const resultsEl = () => document.getElementById('cloud-search-results');
+
+  const isFocusedIn = (root) => {
+    const a = document.activeElement;
+    return !!(a && root && root.contains(a));
+  };
+
+  const update = () => {
+    const results = resultsEl();
+    const open = isVisible(results);
+    const focused = isFocusedIn(wrapper) || isFocusedIn(results);
+    const shouldBeActive = open || focused;
+    body.classList.toggle('is-search-active', shouldBeActive);
+  };
+
+  // Triggers that change state
+  ['focusin','focusout','input','pointerdown','keyup'].forEach(evt =>
+    document.addEventListener(evt, update, true)
+  );
+  window.addEventListener('resize', update);
+
+  // Watch results for open/close flips. handles inline style, class, hidden, content changes
+  const mo = new MutationObserver(update);
+  mo.observe(document.documentElement, {
+    subtree: true,
+    childList: true,
+    attributes: true,
+    attributeFilter: ['style','class','hidden','aria-hidden']
+  });
+
+  // First pass
+  update();
+})();
+</script>
