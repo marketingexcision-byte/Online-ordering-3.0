@@ -2116,87 +2116,150 @@ document.addEventListener('DOMContentLoaded', function(){
   const wrapper = document.querySelector('.search-bar-wrapper');
   const input   = wrapper?.querySelector('input[type="search"]');
 
-  // Bail if core elements are missing
   if (!wrapper || !input) return;
 
-  // Tunables
-  const EXP_CAP_DESKTOP = 760;    // px
-  const BASE_DESKTOP    = 300;    // px
-  const BASE_MOBILE     = 220;    // px
-  const VIEW_GUTTER     = 32;     // px to keep off viewport edges
-  const MOBILE_BP       = 989;    // px
+  // Tweaks
+  const EXP_CAP_DESKTOP = 760;
+  const BASE_DESKTOP    = 300;
+  const BASE_MOBILE     = 220;
+  const VIEW_GUTTER     = 32;
+  const MOBILE_BP       = 989;
 
-  // Optional left clamp from CSS var
+  // Helpers
+  const mqMobile = matchMedia(`(max-width:${MOBILE_BP}px)`);
+  const important = (el, prop, val) => el.style.setProperty(prop, val, 'important');
+
   const getLeftStop = () => {
-    const v = getComputedStyle(document.documentElement)
-      .getPropertyValue('--left-stop').trim();
+    const v = getComputedStyle(document.documentElement).getPropertyValue('--left-stop').trim();
     const n = parseInt(v, 10);
     return Number.isFinite(n) ? Math.max(0, n) : 0;
   };
 
-  const mqMobile = matchMedia(`(max-width: ${MOBILE_BP}px)`);
-
-  let active = false;
-  let resizeT;
-
   const computeDims = () => {
-    const isMobile = mqMobile.matches;
-    const base = isMobile ? BASE_MOBILE : BASE_DESKTOP;
+    const base = mqMobile.matches ? BASE_MOBILE : BASE_DESKTOP;
     const exp  = Math.max(base, Math.min(EXP_CAP_DESKTOP, window.innerWidth - VIEW_GUTTER));
     const leftStop = getLeftStop();
-    const translateX = Math.max(base - exp, -leftStop); // negative or zero
+    const translateX = Math.max(base - exp, -leftStop);
     return { base, exp, translateX };
   };
 
-  const setImportant = (el, prop, val) => el.style.setProperty(prop, val, 'important');
-
-  const applyExpanded = () => {
-    const { exp, translateX } = computeDims();
-    setImportant(wrapper, 'width', `${exp}px`);
-    setImportant(wrapper, 'transform', `translateX(${translateX}px)`);
-    input.setAttribute('aria-expanded', 'true');
+  // Detect clipping ancestors that would block leftward growth
+  const hasClippingAncestor = (el) => {
+    let n = el.parentElement;
+    while (n && n !== document.body){
+      const s = getComputedStyle(n);
+      if ((s.overflowX !== 'visible' && s.overflowX !== 'clip') || s.transform !== 'none') return true;
+      n = n.parentElement;
+    }
+    return false;
   };
 
+  // State
+  let active = false;
+  let fixedOverlayMode = false; // fallback if clipped
+  let resultsEl = null;
+
+  // Find or wait for the results container
+  const findResults = () => document.getElementById('cloud-search-results');
+  resultsEl = findResults();
+
+  // Mutation observer to catch late injection or id changes
+  const mo = new MutationObserver(() => {
+    resultsEl = findResults();
+  });
+  mo.observe(document.documentElement, { subtree:true, childList:true, attributes:true, attributeFilter:['id'] });
+
+  // Apply compact or expanded in normal mode
   const applyCompact = () => {
     const { base } = computeDims();
-    setImportant(wrapper, 'width', `${base}px`);
-    setImportant(wrapper, 'transform', 'translateX(0)');
+    important(wrapper, 'width', `${base}px`);
+    important(wrapper, 'transform', 'translateX(0)');
+    important(wrapper, 'flex', '0 0 auto');
+    important(wrapper, 'max-width', 'none');
+    important(wrapper, 'min-width', '0');
     input.setAttribute('aria-expanded', 'false');
   };
 
+  const applyExpanded = () => {
+    const { exp, translateX } = computeDims();
+    important(wrapper, 'width', `${exp}px`);
+    important(wrapper, 'transform', `translateX(${translateX}px)`);
+    important(wrapper, 'flex', '0 0 auto');
+    important(wrapper, 'max-width', 'none');
+    important(wrapper, 'min-width', '0');
+    input.setAttribute('aria-expanded', 'true');
+  };
+
+  // Fixed overlay fallback. anchors right edge at the current visual right
+  const toFixedOverlay = () => {
+    const r = wrapper.getBoundingClientRect();
+    fixedOverlayMode = true;
+    important(wrapper, 'position', 'fixed');
+    important(wrapper, 'top', `${Math.round(r.top + window.scrollY)}px`);
+    // anchor right edge
+    const right = Math.round(window.innerWidth - (r.left + r.width));
+    important(wrapper, 'right', `${right}px`);
+    important(wrapper, 'left', 'auto');
+    important(wrapper, 'z-index', '10000');
+
+    // Now expand width leftward
+    const { exp } = computeDims();
+    important(wrapper, 'width', `${exp}px`);
+    important(wrapper, 'transform', 'translateX(0)'); // not needed in fixed mode
+  };
+
+  const fromFixedOverlay = () => {
+    fixedOverlayMode = false;
+    wrapper.style.removeProperty('position');
+    wrapper.style.removeProperty('top');
+    wrapper.style.removeProperty('right');
+    wrapper.style.removeProperty('left');
+    wrapper.style.removeProperty('z-index');
+  };
+
+  // Open / Close
   const open = () => {
     active = true;
-    applyExpanded();
+    // If we are clipped by ancestors. switch to fixed overlay once
+    if (!fixedOverlayMode && hasClippingAncestor(wrapper)) {
+      toFixedOverlay();
+    }
+    fixedOverlayMode ? toFixedOverlay() : applyExpanded();
   };
 
   const close = () => {
     active = false;
+    if (fixedOverlayMode) fromFixedOverlay();
     applyCompact();
   };
 
-  // Initial state
+  // Init compact
   applyCompact();
 
   // Expand on focus or typing
-  input.addEventListener('focus', open);
-  input.addEventListener('input', () => open());
+  input.addEventListener('focus', open, { passive:true });
+  input.addEventListener('input', open, { passive:true });
 
-  // Delegate: expand if clicking inside results, even if injected later
-  document.addEventListener('pointerdown', (e) => {
-    const inResults = e.target.closest('#cloud-search-results');
-    if (inResults) {
-      open();
-      return;
-    }
-    // If click is outside both the wrapper and results. collapse
-    const insideWrapper = wrapper.contains(e.target);
-    if (!insideWrapper) close();
-  });
+  // Keep expanded when interacting with results. use delegation so late injection works
+  const keepOpenIfResults = (target) => {
+    if (!resultsEl) return false;
+    return !!target.closest?.('#cloud-search-results');
+  };
 
-  // Keep expanded when tabbing into results
+  // Pointer. Mouse. Touch
+  const onPointerDown = (e) => {
+    const t = e.target;
+    if (keepOpenIfResults(t)) { open(); return; }
+    if (!wrapper.contains(t)) { close(); }
+  };
+  document.addEventListener('pointerdown', onPointerDown, true);
+  document.addEventListener('mousedown', onPointerDown, true);
+  document.addEventListener('touchstart', onPointerDown, { passive:true, capture:true });
+
+  // Focus traversal into results
   document.addEventListener('focusin', (e) => {
-    if (e.target.closest('#cloud-search-results')) open();
-  });
+    if (keepOpenIfResults(e.target)) open();
+  }, true);
 
   // Escape to close
   document.addEventListener('keydown', (e) => {
@@ -2206,14 +2269,20 @@ document.addEventListener('DOMContentLoaded', function(){
     }
   }, true);
 
-  // Resize recompute
+  // Resize
+  let resizeT;
   const onResize = () => {
     clearTimeout(resizeT);
     resizeT = setTimeout(() => {
-      active ? applyExpanded() : applyCompact();
+      if (active) {
+        fixedOverlayMode ? toFixedOverlay() : applyExpanded();
+      } else {
+        applyCompact();
+      }
     }, 50);
   };
   window.addEventListener('resize', onResize);
   mqMobile.addEventListener?.('change', onResize);
+
 })();
 </script>
