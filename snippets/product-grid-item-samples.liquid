@@ -28,20 +28,7 @@
         {% if product.tags contains 'New' %}
           <span class="new-badge font-bold">New</span>
         {% endif %}
-        {% if product.tags contains 'YG-1' %}
-          <div
-            class="yg-logo-wrapper"
-            style="position: absolute; top: 0; right: 0; z-index: 10; padding: 15px; background: #d52e30; border-radius: 0px 15px;"
-          >
-            <img
-              src="https://cdn.shopify.com/s/files/1/0439/5597/8399/files/YG_Logo_White.png?v=1748387180"
-              alt="YG-1 Logo"
-              class="yg-logo"
-              style="max-width: 50px; height: auto;"
-              width="50px"
-            >
-          </div>
-        {% endif %}
+        
 
         {% if product.featured_image %}
           {% assign first_image = product.featured_image %}
