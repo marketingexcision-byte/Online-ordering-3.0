@@ -25,7 +25,7 @@
   <a href="{{ product.url | within: current_collection }}" class="product-grid-item">
     <div class="product-grid-image">
       <div class="product-grid-image--centered">
-        {% if product.tags contains 'New'%}
+        {% if product.tags contains 'New' %}
           <span class="new-badge font-bold">New</span>
         {% endif %}
         {% if product.tags contains 'YG-1' %}
@@ -100,176 +100,195 @@
 
     <div class="product-item--price">
       <span class="medium--left">
-{% if on_sale %}
-  <span class="visually-hidden">{{ 'products.general.sale_price' | t }}</span>
-{% else %}
-  <span class="visually-hidden">{{ 'products.general.regular_price' | t }}</span>
-{% endif %}
+        {% if on_sale %}
+          <span class="visually-hidden">{{ 'products.general.sale_price' | t }}</span>
+        {% else %}
+          <span class="visually-hidden">{{ 'products.general.regular_price' | t }}</span>
+        {% endif %}
 
-{%- comment -%} === PRICE BLOCK (INC dominant + small EX) === {%- endcomment -%}
-{%- assign is_matrix = false -%}
-{%- if product.metafields.custom.price_matrix.value != blank or product.metafields.custom.price_matrix != blank -%}
-  {%- assign is_matrix = true -%}
-{%- endif -%}
+        {%- comment -%} === PRICE BLOCK (INC dominant + small EX) === {%- endcomment -%}
+        {%- assign is_matrix = false -%}
+        {%- if product.metafields.custom.price_matrix.value != blank
+          or product.metafields.custom.price_matrix != blank
+        -%}
+          {%- assign is_matrix = true -%}
+        {%- endif -%}
 
-{%- assign taxable  = product.selected_or_first_available_variant.taxable | default: true -%}
+        {%- assign taxable = product.selected_or_first_available_variant.taxable | default: true -%}
 
-{%- if is_matrix -%}
-{%- comment -%} Parse minimum price from the matrix text (robust) {%- endcomment -%}
-{%- assign raw = product.metafields.custom.price_matrix.value | default: product.metafields.custom.price_matrix -%}
-{%- assign text = raw | strip | replace: '\r\n', '\n' | replace: '\r', '\n' -%}
-{%- assign lines = text | split: '\n' -%}
-{%- assign header = lines.first | default: '' -%}
+        {%- if is_matrix -%}
+          {%- comment -%} Parse minimum price from the matrix text (robust) {%- endcomment -%}
+          {%- assign raw = product.metafields.custom.price_matrix.value
+            | default: product.metafields.custom.price_matrix
+          -%}
+          {%- assign text = raw | strip | replace: '\r\n', '\n' | replace: '\r', '\n' -%}
+          {%- assign lines = text | split: '\n' -%}
+          {%- assign header = lines.first | default: '' -%}
 
-{%- capture tab %}	{% endcapture %}{% comment %} real tab {% endcomment %}
-{%- assign comma_cols = header | split: ',' | size -%}
-{%- assign tab_cols   = header | split: tab | size -%}
-{%- assign delim = ',' -%}
-{%- if tab_cols > comma_cols -%}{%- assign delim = tab -%}{%- endif -%}
+          {%- capture tab %}	{% endcapture -%}
+          {% comment %} real tab {% endcomment %}
+          {%- assign comma_cols = header | split: ',' | size -%}
+          {%- assign tab_cols = header | split: tab | size -%}
+          {%- assign delim = ',' -%}
+          {%- if tab_cols > comma_cols -%}{%- assign delim = tab -%}{%- endif -%}
 
-{%- assign cols = header | split: delim -%}
-{%- assign price_col = -1 -%}
-{%- for c in cols -%}
-  {%- assign k = c | strip | downcase -%}
-  {%- if price_col < 0 -%}
-    {%- if k == 'price' or k contains 'web price' or k contains 'price 1+' or k contains 'inc gst' or k contains 'ex gst' or k contains 'price inc' or k contains 'price ex' -%}
-      {%- assign price_col = forloop.index0 -%}
-    {%- endif -%}
-  {%- endif -%}
-{%- endfor -%}
+          {%- assign cols = header | split: delim -%}
+          {%- assign price_col = -1 -%}
+          {%- for c in cols -%}
+            {%- assign k = c | strip | downcase -%}
+            {%- if price_col < 0 -%}
+              {%- if k == 'price'
+                or k contains 'web price'
+                or k contains 'price 1+'
+                or k contains 'inc gst'
+                or k contains 'ex gst'
+                or k contains 'price inc'
+                or k contains 'price ex'
+              -%}
+                {%- assign price_col = forloop.index0 -%}
+              {%- endif -%}
+            {%- endif -%}
+          {%- endfor -%}
 
-{%- assign min_price_cents = blank -%}
-{%- if price_col >= 0 -%}
-  {%- for l in lines offset:1 -%}
-    {%- assign parts = l | split: delim -%}
-    {%- if parts.size != cols.size -%}{% continue %}{%- endif -%}{% comment %} skip malformed rows {% endcomment %}
+          {%- assign min_price_cents = blank -%}
+          {%- if price_col >= 0 -%}
+            {%- for l in lines offset: 1 -%}
+              {%- assign parts = l | split: delim -%}
+              {%- if parts.size != cols.size -%}{% continue %}{%- endif -%}
+              {% comment %} skip malformed rows {% endcomment %}
 
-    {%- assign rawp = parts[price_col] | default: '' -%}
-    {%- assign p = rawp | strip | remove: 'AU$' | remove: '$' | replace: ',', '' -%}
-    {%- if p == '' -%}{% continue %}{%- endif -%}{% comment %} empty price cell {% endcomment %}
+              {%- assign rawp = parts[price_col] | default: '' -%}
+              {%- assign p = rawp | strip | remove: 'AU$' | remove: '$' | replace: ',', '' -%}
+              {%- if p == '' -%}{% continue %}{%- endif -%}
+              {% comment %} empty price cell {% endcomment %}
 
-    {%- assign cents = p | plus: 0 | times: 100 | round -%}
-    {%- if cents > 0 -%}
-      {%- if min_price_cents == blank or cents < min_price_cents -%}
-        {%- assign min_price_cents = cents -%}
-      {%- endif -%}
-    {%- endif -%}
-  {%- endfor -%}
-{%- endif -%}
+              {%- assign cents = p | plus: 0 | times: 100 | round -%}
+              {%- if cents > 0 -%}
+                {%- if min_price_cents == blank or cents < min_price_cents -%}
+                  {%- assign min_price_cents = cents -%}
+                {%- endif -%}
+              {%- endif -%}
+            {%- endfor -%}
+          {%- endif -%}
 
+          {%- if min_price_cents != blank -%}
+            {# or: if min_price_cents > 0 #}
+            {%- assign from_ex = min_price_cents -%}
+            {%- assign from_inc = min_price_cents -%}
+            {%- if taxable -%}
+              {%- if shop.taxes_included -%}
+                {%- assign from_inc = min_price_cents -%}
+                {%- assign from_ex = min_price_cents | times: 10 | divided_by: 11 -%}
+              {%- else -%}
+                {%- assign from_ex = min_price_cents -%}
+                {%- assign from_inc = min_price_cents | times: 11 | divided_by: 10 -%}
+              {%- endif -%}
+            {%- endif -%}
 
+            <span class="ex-price ex-price--stack from-price">
+              <strong class="ex-price__inc">
+                From&nbsp;{{ from_inc | money -}}
+                <span class="inc-price__label">INC GST</span>
+              </strong>
+              {% if taxable %}
+                <div class="ex-price__ex">
+                  From&nbsp;{{ from_ex | money }}
+                  <span class="ex-price__label">EX GST</span>
+                </div>
+              {% endif %}
+            </span>
+          {%- else -%}
+            {%- comment -%} Fallback if matrix couldn’t be parsed — find lowest non-zero variant price instead of $0 {%- endcomment -%}
+            {%- assign safe_min = blank -%}
+            {%- for v in product.variants -%}
+              {%- if v.price > 0 -%}
+                {%- if safe_min == blank or v.price < safe_min -%}{%- assign safe_min = v.price -%}{%- endif -%}
+              {%- endif -%}
+            {%- endfor -%}
+            {%- if safe_min != blank -%}
+              {%- assign ex_cents = safe_min -%}
+              {%- assign inc_cents = safe_min -%}
+              {%- if taxable -%}
+                {%- if shop.taxes_included -%}
+                  {%- assign ex_cents = safe_min | times: 10 | divided_by: 11 -%}
+                {%- else -%}
+                  {%- assign inc_cents = safe_min | times: 11 | divided_by: 10 -%}
+                {%- endif -%}
+              {%- endif -%}
+              <span class="ex-price ex-price--stack from-price">
+                <strong class="ex-price__inc">
+                  From&nbsp;{{ inc_cents | money -}}
+                  <span class="inc-price__label">INC GST</span>
+                </strong>
+                {% if taxable %}
+                  <div class="ex-price__ex">
+                    From&nbsp;{{ ex_cents | money }}
+                    <span class="ex-price__label">EX GST</span>
+                  </div>
+                {% endif %}
+              </span>
+            {%- else -%}
+              <span class="ex-price ex-price--stack from-price">
+                <strong class="ex-price__inc">Select your blade</strong>
+              </span>
+            {%- endif -%}
+          {%- endif -%}
 
-  {%- if min_price_cents != blank -%}   {# or: if min_price_cents > 0 #}
-    {%- assign from_ex  = min_price_cents -%}
-    {%- assign from_inc = min_price_cents -%}
-    {%- if taxable -%}
-      {%- if shop.taxes_included -%}
-        {%- assign from_inc = min_price_cents -%}
-        {%- assign from_ex  = min_price_cents | times: 10 | divided_by: 11 -%}
-      {%- else -%}
-        {%- assign from_ex  = min_price_cents -%}
-        {%- assign from_inc = min_price_cents | times: 11 | divided_by: 10 -%}
-      {%- endif -%}
-    {%- endif -%}
+        {%- else -%}
+          {%- comment -%} Normal products — min/max across variants {%- endcomment -%}
+          {%- assign min_price_cents = null -%}
+          {%- assign max_price_cents = null -%}
+          {%- for v in product.variants -%}
+            {%- if v.price > 0 -%}
+              {%- if min_price_cents == null or v.price < min_price_cents -%}
+                {%- assign min_price_cents = v.price -%}
+              {%- endif -%}
+              {%- if max_price_cents == null or v.price > max_price_cents -%}
+                {%- assign max_price_cents = v.price -%}
+              {%- endif -%}
+            {%- endif -%}
+          {%- endfor -%}
 
-    <span class="ex-price ex-price--stack from-price">
-      <strong class="ex-price__inc">
-  From&nbsp;{{ from_inc | money }}<span class="inc-price__label">INC GST</span>
-</strong>
-{% if taxable %}
-  <div class="ex-price__ex">
-    From&nbsp;{{ from_ex | money }} <span class="ex-price__label">EX GST</span>
-  </div>
-{% endif %}
+          {%- if min_price_cents -%}
+            {% assign show_from = false %}
+            {% if product.variants.size > 1 and min_price_cents != max_price_cents %}
+              {% assign show_from = true %}
+            {% endif %}
 
-    </span>
-{%- else -%}
-  {%- comment -%} Fallback if matrix couldn’t be parsed — find lowest non-zero variant price instead of $0 {%- endcomment -%}
-  {%- assign safe_min = blank -%}
-  {%- for v in product.variants -%}
-    {%- if v.price > 0 -%}
-      {%- if safe_min == blank or v.price < safe_min -%}{%- assign safe_min = v.price -%}{%- endif -%}
-    {%- endif -%}
-  {%- endfor -%}
-  {%- if safe_min != blank -%}
-    {%- assign ex_cents  = safe_min -%}
-    {%- assign inc_cents = safe_min -%}
-    {%- if taxable -%}
-      {%- if shop.taxes_included -%}
-        {%- assign ex_cents  = safe_min | times: 10 | divided_by: 11 -%}
-      {%- else -%}
-        {%- assign inc_cents = safe_min | times: 11 | divided_by: 10 -%}
-      {%- endif -%}
-    {%- endif -%}
-    <span class="ex-price ex-price--stack from-price">
-      <strong class="ex-price__inc">
-  From&nbsp;{{ inc_cents | money }}<span class="inc-price__label">INC GST</span>
-</strong>
-{% if taxable %}
-  <div class="ex-price__ex">
-    From&nbsp;{{ ex_cents | money }} <span class="ex-price__label">EX GST</span>
-  </div>
-{% endif %}
+            {%- assign ex_cents = min_price_cents -%}
+            {%- assign inc_cents = min_price_cents -%}
+            {%- if taxable -%}
+              {%- if shop.taxes_included -%}
+                {%- assign inc_cents = min_price_cents -%}
+                {%- assign ex_cents = min_price_cents | times: 10 | divided_by: 11 -%}
+              {%- else -%}
+                {%- assign ex_cents = min_price_cents -%}
+                {%- assign inc_cents = min_price_cents | times: 11 | divided_by: 10 -%}
+              {%- endif -%}
+            {%- endif -%}
 
-    </span>
-  {%- else -%}
-    <span class="ex-price ex-price--stack from-price">
-      <strong class="ex-price__inc">Select your blade</strong>
-    </span>
-  {%- endif -%}
-{%- endif -%}
-
-
-{%- else -%}
-  {%- comment -%} Normal products — min/max across variants {%- endcomment -%}
-  {%- assign min_price_cents = nil -%}
-  {%- assign max_price_cents = nil -%}
-  {%- for v in product.variants -%}
-    {%- if v.price > 0 -%}
-      {%- if min_price_cents == nil or v.price < min_price_cents -%}{%- assign min_price_cents = v.price -%}{%- endif -%}
-      {%- if max_price_cents == nil or v.price > max_price_cents -%}{%- assign max_price_cents = v.price -%}{%- endif -%}
-    {%- endif -%}
-  {%- endfor -%}
-
-  {%- if min_price_cents -%}
-    {% assign show_from = false %}
-{% if product.variants.size > 1 and min_price_cents != max_price_cents %}
-  {% assign show_from = true %}
-{% endif %}
-
-
-    {%- assign ex_cents  = min_price_cents -%}
-    {%- assign inc_cents = min_price_cents -%}
-    {%- if taxable -%}
-      {%- if shop.taxes_included -%}
-        {%- assign inc_cents = min_price_cents -%}
-        {%- assign ex_cents  = min_price_cents | times: 10 | divided_by: 11 -%}
-      {%- else -%}
-        {%- assign ex_cents  = min_price_cents -%}
-        {%- assign inc_cents = min_price_cents | times: 11 | divided_by: 10 -%}
-      {%- endif -%}
-    {%- endif -%}
-
-    <span class="ex-price ex-price--stack {%- if show_from -%}from-price{%- endif -%}">
-      <strong class="ex-price__inc">
-  {%- if show_from -%}From&nbsp;{%- endif -%}{{ inc_cents | money }}<span class="inc-price__label">INC GST</span>
-</strong>
-{% if taxable %}
-  <div class="ex-price__ex">
-    {%- if show_from -%}From&nbsp;{%- endif -%}{{ ex_cents | money }} <span class="ex-price__label">EX GST</span>
-  </div>
-{% endif %}
-
-    </span>
-{%- else -%}
-  {%- comment -%} No non-zero variant prices → show a request label instead of $0.00 {%- endcomment -%}
-  <span class="ex-price ex-price--stack from-price">
-    <strong class="ex-price__inc">Pricing available on request</strong>
-  </span>
-{%- endif -%}
-{%- endif -%}
-
-</span>
+            <span class="ex-price ex-price--stack {%- if show_from -%}from-price{%- endif -%}">
+              <strong class="ex-price__inc">
+                {%- if show_from -%}From&nbsp;{%- endif -%}
+                {{ inc_cents | money -}}
+                <span class="inc-price__label">INC GST</span>
+              </strong>
+              {% if taxable %}
+                <div class="ex-price__ex">
+                  {%- if show_from -%}From&nbsp;{%- endif -%}
+                  {{ ex_cents | money }}
+                  <span class="ex-price__label">EX GST</span>
+                </div>
+              {% endif %}
+            </span>
+          {%- else -%}
+            {%- comment -%} No non-zero variant prices → show a request label instead of $0.00 {%- endcomment -%}
+            <span class="ex-price ex-price--stack from-price">
+              <strong class="ex-price__inc">Pricing available on request</strong>
+            </span>
+          {%- endif -%}
+        {%- endif -%}
+      </span>
 
       <style>
                   .product-item--price small {
@@ -302,7 +321,7 @@
 
         /* fallback for older browsers; may miss whitespace-only nodes */
         .icon-container:empty{ display:none; }
-      
+
         .card-variants {
           margin-bottom: 15px;
         }
@@ -379,33 +398,33 @@
       <span class="shopify-product-reviews-badge" data-id="{{ product.id }}"></span>
     {% endif %}
 
-{% assign total_qty = 0 %}
-{% assign any_managed = false %}
-{% assign any_available = false %}
-{% assign any_continue = false %}
-{% assign any_incoming = false %}
-{% assign next_date = blank %}
+    {% assign total_qty = 0 %}
+    {% assign any_managed = false %}
+    {% assign any_available = false %}
+    {% assign any_continue = false %}
+    {% assign any_incoming = false %}
+    {% assign next_date = blank %}
 
-{% assign is_yg1 = false %}
-{% if product and product.tags and product.tags contains 'YG-1' %}
-  {% assign is_yg1 = true %}
-{% endif %}
+    {% assign is_yg1 = false %}
+    {% if product and product.tags and product.tags contains 'YG-1' %}
+      {% assign is_yg1 = true %}
+    {% endif %}
 
-{% for v in product.variants %}
-  {% if v.inventory_management %}
-    {% assign any_managed = true %}
-    {% assign total_qty = total_qty | plus: v.inventory_quantity %}
-  {% endif %}
-  {% if v.available %}{% assign any_available = true %}{% endif %}
-  {% if v.inventory_policy == 'continue' %}{% assign any_continue = true %}{% endif %}
-  {% if v.incoming and v.next_incoming_date %}
-    {% assign any_incoming = true %}
-    {% assign next_date = v.next_incoming_date %}
-  {% endif %}
-{% endfor %}
+    {% for v in product.variants %}
+      {% if v.inventory_management %}
+        {% assign any_managed = true %}
+        {% assign total_qty = total_qty | plus: v.inventory_quantity %}
+      {% endif %}
+      {% if v.available %}{% assign any_available = true %}{% endif %}
+      {% if v.inventory_policy == 'continue' %}{% assign any_continue = true %}{% endif %}
+      {% if v.incoming and v.next_incoming_date %}
+        {% assign any_incoming = true %}
+        {% assign next_date = v.next_incoming_date %}
+      {% endif %}
+    {% endfor %}
 
-{% assign status = '' %}
-{% capture status_text %}
+    {% assign status = '' %}
+    {% capture status_text %}
   {% if any_managed %}
     {% if total_qty > 5 %}
       {% assign status = 'green' %}In stock
@@ -431,7 +450,6 @@
     {% assign status = 'grey' %}Quantity unavailable
   {% endif %}
 {% endcapture %}
-
 
     <div class="ex-card-badge" data-status="{{ status | strip }}">
       {{ status_text | strip }}
@@ -488,5 +506,4 @@
       z-index: 2;
     }
   </style>
-
 </div>
