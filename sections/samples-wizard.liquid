@@ -53,29 +53,24 @@
         <div id="sw-error-1" style="color:#b00020"></div>
       </article>
 
-<!-- Step 2 (PLAIN LIQUID – NO parse_json) -->
+<!-- Step 2 (grouped by category . one pick per category) -->
 <article class="card" data-panel="2" hidden>
   {% assign cat_blocks = 
-    "alu_power_endmill|Alu-Power Endmill|alu-power-1-flute-30-helix-end-mill-e5e47|ALU1_ROWS,
-     alu_power_endmill|Alu-Power Endmill|alu-power-2-flute-45-helix-long-end-mill-e5522|ALU2_ROWS,
-     alu_power_endmill|Alu-Power Endmill|alu-power-3-flute-45-helix-long-end-mill-e5e49|ALU3_ROWS,
-     k_2_carbide_endmill|K-2 Carbide Endmill|k-2-carbide-2-flute-30-helix-short-end-mill-g9424|K2_2F_ROWS,
-     k_2_carbide_endmill|K-2 Carbide Endmill|k-2-carbide-3-flute-30-helix-short-end-mill-g9425|K2_3F_ROWS,
-     k_2_carbide_endmill|K-2 Carbide Endmill|k-2-carbide-4-flute-30-helix-short-end-mill-g9432|K2_4F_ROWS,
-     combo_tap|Combo Tap|din371-din376-combo-spiral-flute-bright-tc804|TC804_ROWS,
-     combo_tap|Combo Tap|din371-din376-combo-spiral-point-bright-tc814|TC814_ROWS,
-     gold_p_jobber_drill|Gold-P Jobber Drill|gold-p-drills-jobber-din338-dlgp195|GOLDP_ROWS,
-     iso_inserts|ISO Inserts|tnmg-uf-finishing-turning-insert-60-negative|TNMG_ROWS,
-     iso_inserts|ISO Inserts|wnmg-uf-finishing-turning-insert-80-trigonal-negative|WNMG_ROWS,
-     iso_inserts|ISO Inserts|cnmg-uf-finishing-turning-insert-80-negative|CNMG_ROWS,
-     iso_inserts|ISO Inserts|dnmg-uf-finishing-turning-insert-55-negative|DNMG_ROWS" | split: "," %}
+  "alu_power_endmill|Alu-Power Endmill|alu-power-1-flute-30-helix-end-mill-e5e47|ALU1_ROWS,
+   alu_power_endmill|Alu-Power Endmill|alu-power-2-flute-45-helix-long-end-mill-e5522|ALU2_ROWS,
+   alu_power_endmill|Alu-Power Endmill|alu-power-3-flute-45-helix-long-end-mill-e5e49|ALU3_ROWS,
+   k_2_carbide_endmill|K-2 Carbide Endmill|k-2-carbide-2-flute-30-helix-short-end-mill-g9424|K2_2F_ROWS,
+   k_2_carbide_endmill|K-2 Carbide Endmill|k-2-carbide-3-flute-30-helix-short-end-mill-g9425|K2_3F_ROWS,
+   k_2_carbide_endmill|K-2 Carbide Endmill|k-2-carbide-4-flute-30-helix-short-end-mill-g9432|K2_4F_ROWS,
+   combo_tap|Combo Tap|din371-din376-combo-spiral-flute-bright-tc804|TC804_ROWS,
+   combo_tap|Combo Tap|din371-din376-combo-spiral-point-bright-tc814|TC814_ROWS,
+   gold_p_jobber_drill|Gold-P Jobber Drill|gold-p-drills-jobber-din338-dlgp195|GOLDP_ROWS,
+   iso_inserts|ISO Inserts|tnmg-uf-finishing-turning-insert-60-negative|TNMG_ROWS,
+   iso_inserts|ISO Inserts|wnmg-uf-finishing-turning-insert-80-trigonal-negative|WNMG_ROWS,
+   iso_inserts|ISO Inserts|cnmg-uf-finishing-turning-insert-80-negative|CNMG_ROWS,
+   iso_inserts|ISO Inserts|dnmg-uf-finishing-turning-insert-55-negative|DNMG_ROWS" | split: "," %}
 
-  {%- comment -%}
-    Delimiters:
-    - Row sep: ¶
-    - Col sep: ‖
-    col0 = token (product handle ~ option key). col1 = chip label. col2 = HubSpot form value.
-  {%- endcomment -%}
+  {%- comment -%} Delims: row = ¶ . col = ‖ {%- endcomment -%}
 
   {% capture ALU1_ROWS -%}
   alu-power-1-flute-30-helix-end-mill-e5e47~3‖Ø3.0‖Alu-Power 1 Flute | 30° Helix | 3 x 3 x 12 x 50mm (E5E47030)¶
@@ -176,76 +171,102 @@
   dnmg-uf-finishing-turning-insert-55-negative~DNMG150608-UF-YG3030‖DNMG150608-UF / YG3030‖DNMG150608-UF-YG3030/DNMG442-UF (22000233)
   {%- endcapture %}
 
-  <div class="w-btn-wrapper" style="margin-bottom:12px">
+  {%- comment -%} Build unique category list {%- endcomment -%}
+  {% assign cats_raw = "" %}
+  {% for raw in cat_blocks %}
+    {% assign parts = raw | strip | split: "|" %}
+    {% assign k = parts[0] %}
+    {% assign marker = '§' | append: k | append: '§' %}
+    {% unless cats_raw contains marker %}{% assign cats_raw = cats_raw | append: marker %}{% endunless %}
+  {% endfor %}
+  {% assign categories = cats_raw | split: "§" %}
+
+  {%- comment -%} Buttons for nav {%- endcomment -%}
+  <div class="w-btn-wrapper" style="display:flex;gap:12px;margin-bottom:12px">
     <button class="btn btn-outline" id="sw-back-2">Back</button>
     <button class="btn btn-primary" id="sw-next-2">Review</button>
   </div>
 
-  {% for raw in cat_blocks %}
-    {% assign parts = raw | strip | split: "|" %}
-    {% assign cat_key = parts[0] %}
-    {% assign cat_label = parts[1] %}
-    {% assign handle = parts[2] %}
-    {% assign rows_var = parts[3] %}
+  {%- comment -%} Render grouped categories {%- endcomment -%}
+  {% for cat in categories %}
+    {% assign cat_key = cat | strip %}
+    {% if cat_key == "" %}{% continue %}{% endif %}
 
-    <h3 class="section__title" style="margin:.5rem 0 1rem">{{ cat_label }}</h3>
+    {%- comment -%} Find label from first matching block {%- endcomment -%}
+    {% assign cat_label = cat_key %}
+    {% for raw in cat_blocks %}
+      {% assign parts = raw | strip | split: "|" %}
+      {% if parts[0] == cat_key %}
+        {% assign cat_label = parts[1] %}
+        {% break %}
+      {% endif %}
+    {% endfor %}
 
-    {% assign p = all_products[handle] %}
-    {% if p %}
-      <div class="grid-uniform products-collection rlp_regular" data-category="{{ cat_key }}">
-        <div class="sw-card-wrap" data-product-handle="{{ p.handle }}">
-          {% render 'product-grid-item-samples', product: p %}
+    <div class="sw-category" data-category="{{ cat_key }}" style="margin-bottom:24px">
+      <h3 class="section__title" style="margin:.5rem 0 1rem">{{ cat_label }}</h3>
 
-          <div class="card-variants">
-            <div class="card-variants-label">Choose option</div>
-            <div class="card-variants-chips">
+      <div class="grid-uniform products-collection rlp_regular">
+        {%- comment -%} Loop all products that belong to this category {%- endcomment -%}
+        {% for raw in cat_blocks %}
+          {% assign parts = raw | strip | split: "|" %}
+          {% if parts[0] != cat_key %}{% continue %}{% endif %}
+          {% assign handle = parts[2] %}
+          {% assign rows_var = parts[3] %}
+          {% assign p = all_products[handle] %}
 
-              {% assign rows_raw = '' %}
-              {% case rows_var %}
-                {% when 'ALU1_ROWS' %}{% assign rows_raw = ALU1_ROWS %}
-                {% when 'ALU2_ROWS' %}{% assign rows_raw = ALU2_ROWS %}
-                {% when 'ALU3_ROWS' %}{% assign rows_raw = ALU3_ROWS %}
-                {% when 'K2_2F_ROWS' %}{% assign rows_raw = K2_2F_ROWS %}
-                {% when 'K2_3F_ROWS' %}{% assign rows_raw = K2_3F_ROWS %}
-                {% when 'K2_4F_ROWS' %}{% assign rows_raw = K2_4F_ROWS %}
-                {% when 'TC804_ROWS' %}{% assign rows_raw = TC804_ROWS %}
-                {% when 'TC814_ROWS' %}{% assign rows_raw = TC814_ROWS %}
-                {% when 'GOLDP_ROWS' %}{% assign rows_raw = GOLDP_ROWS %}
-                {% when 'TNMG_ROWS' %}{% assign rows_raw = TNMG_ROWS %}
-                {% when 'WNMG_ROWS' %}{% assign rows_raw = WNMG_ROWS %}
-                {% when 'CNMG_ROWS' %}{% assign rows_raw = CNMG_ROWS %}
-                {% when 'DNMG_ROWS' %}{% assign rows_raw = DNMG_ROWS %}
-              {% endcase %}
+          {% if p %}
+            <div class="sw-card-wrap" data-product-handle="{{ p.handle }}" style="margin-bottom:12px">
+              {% render 'product-grid-item-samples', product: p %}
 
-              {% assign rows = rows_raw | split: "¶" %}
+              <div class="card-variants">
+                <div class="card-variants-label">Choose option</div>
+                <div class="card-variants-chips">
+                  {% assign rows_raw = '' %}
+                  {% case rows_var %}
+                    {% when 'ALU1_ROWS' %}{% assign rows_raw = ALU1_ROWS %}
+                    {% when 'ALU2_ROWS' %}{% assign rows_raw = ALU2_ROWS %}
+                    {% when 'ALU3_ROWS' %}{% assign rows_raw = ALU3_ROWS %}
+                    {% when 'K2_2F_ROWS' %}{% assign rows_raw = K2_2F_ROWS %}
+                    {% when 'K2_3F_ROWS' %}{% assign rows_raw = K2_3F_ROWS %}
+                    {% when 'K2_4F_ROWS' %}{% assign rows_raw = K2_4F_ROWS %}
+                    {% when 'TC804_ROWS' %}{% assign rows_raw = TC804_ROWS %}
+                    {% when 'TC814_ROWS' %}{% assign rows_raw = TC814_ROWS %}
+                    {% when 'GOLDP_ROWS' %}{% assign rows_raw = GOLDP_ROWS %}
+                    {% when 'TNMG_ROWS' %}{% assign rows_raw = TNMG_ROWS %}
+                    {% when 'WNMG_ROWS' %}{% assign rows_raw = WNMG_ROWS %}
+                    {% when 'CNMG_ROWS' %}{% assign rows_raw = CNMG_ROWS %}
+                    {% when 'DNMG_ROWS' %}{% assign rows_raw = DNMG_ROWS %}
+                  {% endcase %}
 
-              {% for r in rows %}
-                {% assign cols = r | strip | split: "‖" %}
-                {% assign vid  = cols[0] | strip %}
-                {% assign lab  = cols[1] | strip %}
-                {% assign hs   = cols[2] | strip %}
-                {% if vid != '' and lab != '' and hs != '' %}
-                  <button type="button"
-                          class="variant-chip sw-select-variant"
-                          data-hs-prop="{{ cat_key }}"
-                          data-hs-value="{{ hs | escape }}"
-                          data-variant-id="{{ vid | escape }}">
-                    {{ lab }}
-                  </button>
-                {% endif %}
-              {% endfor %}
+                  {% assign rows = rows_raw | split: "¶" %}
+                  {% for r in rows %}
+                    {% assign cols = r | strip | split: "‖" %}
+                    {% assign vid  = cols[0] | strip %}  {# token like handle~size #}
+                    {% assign lab  = cols[1] | strip %}
+                    {% assign hs   = cols[2] | strip %}
+                    {% if vid != '' and lab != '' and hs != '' %}
+                      <button type="button"
+                              class="variant-chip sw-select-variant"
+                              data-hs-prop="{{ cat_key }}"
+                              data-hs-value="{{ hs | escape }}"
+                              data-variant-id="{{ vid | escape }}">
+                        {{ lab }}
+                      </button>
+                    {% endif %}
+                  {% endfor %}
+                </div>
+              </div>
 
+              <div class="w-btn-wrapper">
+                <button class="btn btn-outline sw-select-btn" data-category="{{ cat_key }}">Confirm selection</button>
+              </div>
             </div>
-          </div>
-
-          <div class="w-btn-wrapper">
-            <button class="btn btn-outline sw-select-btn" data-category="{{ cat_key }}">Confirm selection</button>
-          </div>
-        </div>
+          {% else %}
+            <div class="card">Missing product handle: <code>{{ handle }}</code></div>
+          {% endif %}
+        {% endfor %}
       </div>
-    {% else %}
-      <div class="card">Missing product handle: <code>{{ handle }}</code></div>
-    {% endif %}
+    </div>
   {% endfor %}
 
   <div class="w-btn-wrapper" style="display:flex;gap:12px">
@@ -253,6 +274,7 @@
     <button class="btn btn-primary" id="sw-next-2">Review</button>
   </div>
 </article>
+
 
 
 
@@ -327,54 +349,58 @@
     $('#sw-next-2').addEventListener('click', ()=> setStep(3));
     $('#sw-back-3').addEventListener('click', ()=> setStep(2));
 
-     // state.selections[cat] = { variantId, sku, hsValue }
-  const catSections = document.querySelectorAll('.grid-uniform.products-collection');
+// state.selections[cat] = { variantId, sku, hsValue }
+// OLD: const catSections = document.querySelectorAll('.grid-uniform.products-collection');
+const catSections = document.querySelectorAll('.sw-category');
 
-  catSections.forEach(section => {
-    const cat = section.dataset.category;
+catSections.forEach(section => {
+  const cat = section.dataset.category;
 
-    // choose a chip
-    section.addEventListener('click', e => {
-      const chip = e.target.closest('.sw-select-variant');
-      if (!chip) return;
+  // choose a chip (within any product card in this category)
+  section.addEventListener('click', e => {
+    const chip = e.target.closest('.sw-select-variant');
+    if (!chip) return;
 
-      // set active visual within the same card
-      const wrap = chip.closest('.sw-card-wrap');
-      wrap.querySelectorAll('.sw-select-variant').forEach(c => c.classList.remove('is-active'));
-      chip.classList.add('is-active');
+    // visual active state . only within that card
+    const wrap = chip.closest('.sw-card-wrap');
+    wrap.querySelectorAll('.sw-select-variant').forEach(c => c.classList.remove('is-active'));
+    chip.classList.add('is-active');
 
-      // stash the pending pick on the card
-      wrap.dataset.pendingVariantId = chip.dataset.variantId;
-      wrap.dataset.pendingSku = chip.dataset.variantSku || '';
-      wrap.dataset.pendingHsValue = chip.dataset.hsValue;
-    });
-
-    // confirm selection for the category
-    section.addEventListener('click', e => {
-      const btn = e.target.closest('.sw-select-btn');
-      if (!btn) return;
-
-      const wrap = btn.closest('.sw-card-wrap');
-      const vid = wrap.dataset.pendingVariantId;
-      const hsValue = wrap.dataset.pendingHsValue;
-
-      if (!vid || !hsValue) {
-        alert('Pick a variant first.');
-        return;
-      }
-
-      // lock this selection at category level
-      state.selections[cat] = {
-        variantId: vid,
-        sku: wrap.dataset.pendingSku || '',
-        value: hsValue
-      };
-
-      // highlight the chosen card for the category
-      section.querySelectorAll('.sw-card-wrap').forEach(w => w.style.outline='none');
-      wrap.style.outline = '2px solid var(--color-secondary-steel)';
-    });
+    // stash pending pick on the card
+    wrap.dataset.pendingVariantId = chip.dataset.variantId;
+    wrap.dataset.pendingSku = chip.dataset.variantSku || '';
+    wrap.dataset.pendingHsValue = chip.dataset.hsValue;
   });
+
+  // confirm selection for the CATEGORY (one total across all cards)
+  section.addEventListener('click', e => {
+    const btn = e.target.closest('.sw-select-btn');
+    if (!btn) return;
+
+    // find the card in this category that currently has a pending selection
+    const candidate = Array.from(section.querySelectorAll('.sw-card-wrap'))
+      .find(w => w.dataset.pendingVariantId && w.dataset.pendingHsValue);
+
+    if (!candidate) {
+      alert('Pick an option first.');
+      return;
+    }
+
+    const vid = candidate.dataset.pendingVariantId;
+    const hsValue = candidate.dataset.pendingHsValue;
+
+    // lock ONE selection for this category (overwrites any previous pick)
+    state.selections[cat] = {
+      variantId: vid,
+      sku: candidate.dataset.pendingSku || '',
+      value: hsValue
+    };
+
+    // clear outlines on all cards in this category . then outline the chosen card
+    section.querySelectorAll('.sw-card-wrap').forEach(w => w.style.outline='none');
+    candidate.style.outline = '2px solid var(--color-primary-blue)';
+  });
+});
 
     function renderReview(){
       const c = state.contact, s = state.selections;
