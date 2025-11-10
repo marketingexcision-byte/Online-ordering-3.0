@@ -349,35 +349,44 @@
     $('#sw-next-2').addEventListener('click', ()=> setStep(3));
     $('#sw-back-3').addEventListener('click', ()=> setStep(2));
 
-// state.selections[cat] = { variantId, sku, hsValue }
-// OLD: const catSections = document.querySelectorAll('.grid-uniform.products-collection');
+// ONE pick per category. easy switching. pretty outline with offset
 const catSections = document.querySelectorAll('.sw-category');
 
 catSections.forEach(section => {
   const cat = section.dataset.category;
 
-  // choose a chip (within any product card in this category)
+  // When a chip is clicked in this category
   section.addEventListener('click', e => {
     const chip = e.target.closest('.sw-select-variant');
     if (!chip) return;
 
-    // visual active state . only within that card
+    // Which card was clicked
     const wrap = chip.closest('.sw-card-wrap');
-    wrap.querySelectorAll('.sw-select-variant').forEach(c => c.classList.remove('is-active'));
+
+    // 1) Clear "pending" from every card in this category
+    section.querySelectorAll('.sw-card-wrap').forEach(w => {
+      delete w.dataset.pendingVariantId;
+      delete w.dataset.pendingSku;
+      delete w.dataset.pendingHsValue;
+      // also clear any active chip styling inside each card
+      w.querySelectorAll('.sw-select-variant').forEach(c => c.classList.remove('is-active'));
+    });
+
+    // 2) Mark this chip active within its card
     chip.classList.add('is-active');
 
-    // stash pending pick on the card
+    // 3) Stash pending pick on THIS card only
     wrap.dataset.pendingVariantId = chip.dataset.variantId;
     wrap.dataset.pendingSku = chip.dataset.variantSku || '';
     wrap.dataset.pendingHsValue = chip.dataset.hsValue;
   });
 
-  // confirm selection for the CATEGORY (one total across all cards)
+  // Confirm selection for the CATEGORY (overwrites previous)
   section.addEventListener('click', e => {
     const btn = e.target.closest('.sw-select-btn');
     if (!btn) return;
 
-    // find the card in this category that currently has a pending selection
+    // The only card that currently has a pending selection
     const candidate = Array.from(section.querySelectorAll('.sw-card-wrap'))
       .find(w => w.dataset.pendingVariantId && w.dataset.pendingHsValue);
 
@@ -389,16 +398,23 @@ catSections.forEach(section => {
     const vid = candidate.dataset.pendingVariantId;
     const hsValue = candidate.dataset.pendingHsValue;
 
-    // lock ONE selection for this category (overwrites any previous pick)
+    // Persist the category selection
     state.selections[cat] = {
       variantId: vid,
       sku: candidate.dataset.pendingSku || '',
       value: hsValue
     };
 
-    // clear outlines on all cards in this category . then outline the chosen card
-    section.querySelectorAll('.sw-card-wrap').forEach(w => w.style.outline='none');
-    candidate.style.outline = '2px solid var(--color-secondary-steel)';
+    // Visuals: mark selected card with class. clear on others
+    section.querySelectorAll('.sw-card-wrap').forEach(w => w.classList.remove('is-selected'));
+    candidate.classList.add('is-selected');
+
+    // Important: clear ALL pending markers so a new click starts fresh
+    section.querySelectorAll('.sw-card-wrap').forEach(w => {
+      delete w.dataset.pendingVariantId;
+      delete w.dataset.pendingSku;
+      delete w.dataset.pendingHsValue;
+    });
   });
 });
 
@@ -458,24 +474,32 @@ catSections.forEach(section => {
 </section>
 
 <style>
-  .product-grid-image--centered {
-    background: #f1f1f1;
-    border-radius: 15px;
-}
-button.variant-chip.sw-select-variant {
-    background: none;
-}
-.grid-item.large--one-quarter.medium-down--one-half {
-    width: 100%;
-}
-.sw-card-wrap {
-    display: flex;
-    flex-direction: column;
-    max-width: 330px;
-    border-radius: 15px;
-}
+/* selected chip state . you already had this */
 button.variant-chip.sw-select-variant.is-active {
-    border: 2px solid var(--color-secondary-steel);
+  border: 2px solid var(--color-secondary-steel);
+}
+
+/* selected CARD outline with offset */
+.sw-card-wrap.is-selected {
+  outline: 2px solid var(--color-secondary-steel);
+  outline-offset: 10px; /* this is the offset you wanted */
+  border-radius: 15px;  /* matches your card radius so it looks clean */
+}
+
+/* optional . makes the offset look nicer on light bg */
+.product-grid-image--centered {
+  background: #f1f1f1;
+  border-radius: 15px;
+}
+
+/* keep your existing layout tweaks */
+.grid-item.large--one-quarter.medium-down--one-half { width: 100%; }
+.sw-card-wrap { display:flex; flex-direction:column; max-width:330px; border-radius:15px; }
+button.variant-chip.sw-select-variant { background:none; }
+
+button.btn.btn-outline.sw-select-btn {
+    width: 100%;
+    font-size: 17px;
 }
 </style>
 
