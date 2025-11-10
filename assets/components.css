@@ -357,7 +357,7 @@
   }
 
   .container.layout-constrained {
-    margin-top: var(--space-8) !important;
+    margin-top: var(--space-8);
   }
 
   .container.layout-constrained h2 {
