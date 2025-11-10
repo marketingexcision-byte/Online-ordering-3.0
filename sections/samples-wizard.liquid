@@ -300,7 +300,7 @@
           <button class="btn btn-primary full-width" id="sw-submit">Send me samples</button>
         </div>
         <div id="sw-error-3" style="color:#b00020"></div>
-        <div id="sw-success" class="card" style="display:none;padding:20px;display:flex;justify-content:center;background:#109954;color:white">
+        <div id="sw-success" class="card" style="display:none;padding:20px;justify-content:center;background:#109954;color:white">
           Thanks, we’ve got it.
         </div>
       </article>
@@ -500,7 +500,7 @@
             body: JSON.stringify(buildPayload()),
           });
           if (!res.ok) throw new Error(await res.text());
-          $('#sw-success').style.display = 'block';
+          $('#sw-success').style.display = 'flex';
           if (HUBSPOT.redirectUrl) setTimeout(() => (location.href = HUBSPOT.redirectUrl), 900);
         } catch (err) {
           $('#sw-error-3').textContent = 'Submission failed: ' + (err.message || err);
