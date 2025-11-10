@@ -178,7 +178,24 @@ Samples Wizard – stepper + product selection + HubSpot submit via Cloudflare W
                 {% assign vid  = cols[0] | strip %}
                 {% assign lab  = cols[1] | strip %}
                 {% assign hs   = cols[2] | strip %}
-                {% assign v = p.variants | where: 'id', vid | first %}
+                {%- assign v = nil -%}
+
+{%- comment %} try numeric where first {%- endcomment -%}
+{%- assign wanted_num = vid | plus: 0 -%}
+{%- assign v = p.variants | where: 'id', wanted_num | first -%}
+
+{%- if v == nil -%}
+  {%- comment %} fallback . compare as strings to avoid type issues {%- endcomment -%}
+  {%- assign target = vid | append: '' -%}
+  {%- for cand in p.variants -%}
+    {%- assign cid = cand.id | append: '' -%}
+    {%- if cid == target -%}
+      {%- assign v = cand -%}
+      {%- break -%}
+    {%- endif -%}
+  {%- endfor -%}
+{%- endif -%}
+
                 {% if v %}
                   <button type="button"
                           class="variant-chip sw-select-variant"
