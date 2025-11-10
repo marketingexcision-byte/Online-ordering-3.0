@@ -30,13 +30,14 @@ Hardened Steels(HRc30~45):H,
 Hardened Steels(HRc45~):H,
 Hardened Steels(HRc45~55):H,
 High Hardened Steels(HRc55~70):H
-' | split: ',' %}
+'
+  | split: ','
+%}
 
 {% assign excluded_filters = 'Price,Ecom' | split: ',' %}
 
 {% if section.settings.collection_sidebar_filters == 'groups' and collection.all_tags.size > 0 %}
   <div class="grid-uniform" style="display:flex;flex-direction:column;">
-
     {%- comment -%}
       1) Define the hardcoded Workpiece Material order
     {%- endcomment -%}
@@ -72,7 +73,9 @@ Hardened Steels(HRc30~45),
 Hardened Steels(HRc45~),
 Hardened Steels(HRc45~55),
 High Hardened Steels(HRc55~70)
-' | split: ',' %}
+'
+      | split: ','
+    %}
 
     {%- comment -%}
       Helper: does any tag exist for a given group (prefix before "_")?
@@ -158,10 +161,14 @@ High Hardened Steels(HRc55~70)
                   {% if tag contains '_' %}
                     {% assign parts = tag | split: '_' %}
                     {% assign tag_prefix = parts[0] | strip | downcase %}
-                    {% assign tag_value  = parts[1] | strip %}
+                    {% assign tag_value = parts[1] | strip %}
                     {% if tag_prefix == group_lower %}
                       {% if current_tags contains tag %}
-                        <li class="advanced-filter active-filter" data-group="{{ group }}" data-handle="{{ tag | handle }}">
+                        <li
+                          class="advanced-filter active-filter"
+                          data-group="{{ group }}"
+                          data-handle="{{ tag | handle }}"
+                        >
                           {{ tag_value | link_to_remove_tag: tag }}
                         </li>
                       {% else %}
@@ -176,9 +183,9 @@ High Hardened Steels(HRc55~70)
             </div>
 
             <script>
-              $('#searchTheKey-{{ group | handle }}').on('keyup', function() {
+              $('#searchTheKey-{{ group | handle }}').on('keyup', function () {
                 var value = $(this).val().toLowerCase();
-                $('#matchKey-{{ group | handle }} li').each(function() {
+                $('#matchKey-{{ group | handle }} li').each(function () {
                   if ($(this).text().toLowerCase().indexOf(value) > -1) {
                     $(this).show();
                     $('.af_filter_clear-{{ group | handle }}').hide();
@@ -197,7 +204,7 @@ High Hardened Steels(HRc55~70)
                 if ($('#matchKey-{{ group | handle }}').find('li').length > 19) {
                   $('#matchKey-{{ group | handle }}').addClass('af_overflow_scroll');
                 }
-                $('#matchKey-{{ group | handle }} li.active-filter').parents('ul').css('display','block');
+                $('#matchKey-{{ group | handle }} li.active-filter').parents('ul').css('display', 'block');
                 $('#matchKey-{{ group | handle }} li.active-filter').parents('ul').prev('h2').addClass('active');
               });
             </script>
@@ -215,7 +222,7 @@ High Hardened Steels(HRc55~70)
       {% assign material_prefixes_down = material_prefixes_down | append: ',' | append: g | downcase %}
     {% endfor %}
 
-    {%- comment -%} Build unique non-material prefixes from collection tags {% endcomment -%}
+    {%- comment -%} Build unique non-material prefixes from collection tags {%- endcomment -%}
     {% assign seen_prefixes = '' %}
     {% assign spec_prefixes = '' %}
 
@@ -232,7 +239,8 @@ High Hardened Steels(HRc55~70)
 
         {% assign is_excluded = false %}
         {% for ex in excluded_filters %}
-          {% if pfx == ex | downcase %}
+          {% assign ex_down = ex | downcase %}
+          {% if pfx == ex_down %}
             {% assign is_excluded = true %}
           {% endif %}
         {% endfor %}
@@ -283,10 +291,14 @@ High Hardened Steels(HRc55~70)
                 {% if tag contains '_' %}
                   {% assign parts = tag | split: '_' %}
                   {% assign tag_prefix = parts[0] | strip | downcase %}
-                  {% assign tag_value  = parts[1] | strip %}
+                  {% assign tag_value = parts[1] | strip %}
                   {% if tag_prefix == group_lower %}
                     {% if current_tags contains tag %}
-                      <li class="advanced-filter active-filter" data-group="{{ group_label }}" data-handle="{{ tag | handle }}">
+                      <li
+                        class="advanced-filter active-filter"
+                        data-group="{{ group_label }}"
+                        data-handle="{{ tag | handle }}"
+                      >
                         {{ tag_value | link_to_remove_tag: tag }}
                       </li>
                     {% else %}
@@ -301,9 +313,9 @@ High Hardened Steels(HRc55~70)
           </div>
 
           <script>
-            $('#searchTheKey-{{ group_lower | handle }}').on('keyup', function() {
+            $('#searchTheKey-{{ group_lower | handle }}').on('keyup', function () {
               var value = $(this).val().toLowerCase();
-              $('#matchKey-{{ group_lower | handle }} li').each(function() {
+              $('#matchKey-{{ group_lower | handle }} li').each(function () {
                 if ($(this).text().toLowerCase().indexOf(value) > -1) {
                   $(this).show();
                   $('.af_filter_clear-{{ group_lower | handle }}').hide();
@@ -322,14 +334,13 @@ High Hardened Steels(HRc55~70)
               if ($('#matchKey-{{ group_lower | handle }}').find('li').length > 19) {
                 $('#matchKey-{{ group_lower | handle }}').addClass('af_overflow_scroll');
               }
-              $('#matchKey-{{ group_lower | handle }} li.active-filter').parents('ul').css('display','block');
+              $('#matchKey-{{ group_lower | handle }} li.active-filter').parents('ul').css('display', 'block');
               $('#matchKey-{{ group_lower | handle }} li.active-filter').parents('ul').prev('h2').addClass('active');
             });
           </script>
         {% endfor %}
       </div>
     {% endif %}
-
   </div>
 {% else %}
   {# Fallback to non-grouped filters, if you still need that #}
