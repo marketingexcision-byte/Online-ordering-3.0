@@ -241,7 +241,7 @@
                   {% assign rows = rows_raw | split: "¶" %}
                   {% for r in rows %}
                     {% assign cols = r | strip | split: "‖" %}
-                    {% assign vid  = cols[0] | strip %}  {# token like handle~size #}
+                    {% assign vid  = cols[0] | strip %}
                     {% assign lab  = cols[1] | strip %}
                     {% assign hs   = cols[2] | strip %}
                     {% if vid != '' and lab != '' and hs != '' %}
