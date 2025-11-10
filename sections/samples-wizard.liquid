@@ -114,56 +114,64 @@ Samples Wizard – stepper + product selection + HubSpot submit via Cloudflare W
 
 <!-- Step 2 (HARDCODED + VARIANTS) -->
 <article class="card" data-panel="2" hidden>
-  {% assign CAT_LABELS = 
-    '{ 
-      "alu_power_endmill": "Alu-Power Endmill",
-      "k_2_carbide_endmill": "K-2 Carbide Endmill",
-      "combo_tap": "Combo Tap",
-      "gold_p_jobber_drill": "Gold-P Jobber Drill",
-      "iso_inserts": "ISO Inserts"
-    }' | parse_json %}
+  {% assign cat_keys = "alu_power_endmill|k_2_carbide_endmill|combo_tap|gold_p_jobber_drill|iso_inserts" | split: "|" %}
+  {% assign cat_labels = 
+    '{
+      "alu_power_endmill":"Alu-Power Endmill",
+      "k_2_carbide_endmill":"K-2 Carbide Endmill",
+      "combo_tap":"Combo Tap",
+      "gold_p_jobber_drill":"Gold-P Jobber Drill",
+      "iso_inserts":"ISO Inserts"
+    }' | parse_json
+  %}
 
-  {% for pair in CAT_LABELS %}
-    {% assign cat_key = pair[0] %}
-    <h3 class="section__title" style="margin:.5rem 0 1rem">{{ CAT_LABELS[cat_key] }}</h3>
+  {% for cat_key in cat_keys %}
+    <h3 class="section__title" style="margin:.5rem 0 1rem">{{ cat_labels[cat_key] }}</h3>
 
     <div class="grid-uniform products-collection rlp_regular" data-category="{{ cat_key }}">
       {% assign entries = hard_catalog[cat_key] %}
-      {% for entry in entries %}
-        {% assign p = all_products[entry.handle] %}
-        {% if p %}
-          {% assign product = p %}
-          <div class="sw-card-wrap" data-product-handle="{{ p.handle }}">
-            {% include 'product-grid-item' %}
-            <div class="card-variants">
-              <div class="card-variants-label">Choose variant</div>
-              <div class="card-variants-chips">
-                {% for vdef in entry.variants %}
-                  {% assign v = p.variants | where: 'id', vdef.id | first %}
-                  {% if v %}
-                    <button
-                      type="button"
-                      class="variant-chip sw-select-variant"
-                      data-hs-prop="{{ cat_key }}"
-                      data-hs-value="{{ vdef.hs_value | escape }}"
-                      data-variant-id="{{ v.id }}"
-                      data-variant-sku="{{ v.sku | escape }}"
-                    >{{ vdef.label }}</button>
-                  {% else %}
-                    <span class="variant-chip variant-chip--more">Missing variant {{ vdef.label }}</span>
-                  {% endif %}
-                {% endfor %}
+      {% if entries and entries.size > 0 %}
+        {% for entry in entries %}
+          {% assign p = all_products[entry.handle] %}
+
+          {% if p %}
+            <div class="sw-card-wrap" data-product-handle="{{ p.handle }}">
+              {% render 'product-grid-item', product: p %}  {# pass product explicitly #}
+
+              <div class="card-variants">
+                <div class="card-variants-label">Choose variant</div>
+                <div class="card-variants-chips">
+                  {% for vdef in entry.variants %}
+                    {% assign v = p.variants | where: 'id', vdef.id | first %}
+                    {% if v %}
+                      <button type="button"
+                              class="variant-chip sw-select-variant"
+                              data-hs-prop="{{ cat_key }}"
+                              data-hs-value="{{ vdef.hs_value | escape }}"
+                              data-variant-id="{{ v.id }}"
+                              data-variant-sku="{{ v.sku | escape }}">
+                        {{ vdef.label }}
+                      </button>
+                    {% else %}
+                      <span class="variant-chip variant-chip--more">Missing variant {{ vdef.label }}</span>
+                    {% endif %}
+                  {% endfor %}
+                </div>
+              </div>
+
+              <div class="w-btn-wrapper">
+                <button class="btn btn-outline sw-select-btn" data-category="{{ cat_key }}">Confirm selection</button>
               </div>
             </div>
-
-            <div class="w-btn-wrapper">
-              <button class="btn btn-outline sw-select-btn" data-category="{{ cat_key }}">Confirm selection</button>
+          {% else %}
+            <div class="sw-card-wrap">
+              <div class="card">Missing product handle: <code>{{ entry.handle }}</code></div>
             </div>
-          </div>
-        {% else %}
-          <div class="sw-card-wrap"><div class="card">Missing product handle: {{ entry.handle }}</div></div>
-        {% endif %}
-      {% endfor %}
+          {% endif %}
+        {% endfor %}
+      {% else %}
+        <div class="card">No entries for {{ cat_labels[cat_key] }}</div>
+      {% endif %}
     </div>
   {% endfor %}
 
