@@ -1,8 +1,5 @@
 {% comment %}
-Samples Wizard – stepper + product selection + HubSpot submit via Worker
-Settings:
-- pick a collection for each category (we render using 'product-grid-item')
-- configure Worker endpoint + thank-you URL
+Samples Wizard – stepper + product selection + HubSpot submit via Cloudflare Worker
 {% endcomment %}
 
 <section id="samples-wizard" class="section">
@@ -20,7 +17,7 @@ Settings:
 
       <!-- Step 1 -->
       <article class="card" data-panel="1">
-        <div class="grid" style="display:grid;grid-template-columns:repeat(12,1fr);gap:16px">
+        <div style="display:grid;grid-template-columns:repeat(12,1fr);gap:16px">
           <div style="grid-column:span 6">
             <label>First name*</label>
             <input class="form-input" id="sw-firstname" required>
@@ -79,7 +76,6 @@ Settings:
             <div class="grid-uniform products-collection rlp_regular" data-category="{{ key[0] }}">
               {% for product in catCollection.products %}
                 {% assign first_variant = product.selected_or_first_available_variant %}
-                {% comment %} Your shop snippet renders card UI {% endcomment %}
                 <div class="sw-card-wrap" data-product-title="{{ product.title | escape }}" data-variant-sku="{{ first_variant.sku | escape }}">
                   {% include 'product-grid-item' %}
                   <div class="w-btn-wrapper">
@@ -118,8 +114,8 @@ Settings:
     const HUBSPOT = {
       portalId: "2595431",
       formGuid: "30c37b27-b6db-444a-9872-19ddb7e78b89",
-      workerEndpoint: "{{ section.settings.worker_endpoint | escape }}",
-      redirectUrl: "{{ section.settings.thankyou_url | escape }}"
+      workerEndpoint: "https://samples-hs-submit.marketingexcision.workers.dev/",
+      redirectUrl: "" // set a thank-you URL if you want a redirect
     };
 
     const FIELD_MAP = {
@@ -144,7 +140,6 @@ Settings:
     const $ = s => document.querySelector(s);
     const $$ = (s,root=document) => Array.from(root.querySelectorAll(s));
 
-    // Stepper
     function setStep(n){
       state.step = n;
       $$('.tabs button').forEach((b,i)=> b.setAttribute('aria-selected', String(i+1===n)));
@@ -169,7 +164,7 @@ Settings:
     $('#sw-next-2').addEventListener('click', ()=> setStep(3));
     $('#sw-back-3').addEventListener('click', ()=> setStep(2));
 
-    // Selection via product-grid-item wrappers
+    // Selection using your product-grid-item wrappers
     $$('.grid-uniform.products-collection').forEach(section => {
       section.addEventListener('click', (e)=>{
         const btn = e.target.closest('.sw-select-btn');
@@ -179,15 +174,14 @@ Settings:
         const title = wrap.dataset.productTitle;
         const sku = wrap.dataset.variantSku || '';
         state.selections[category] = { title, sku, value: `${title}${sku ? ' ('+sku+')' : ''}` };
-        // Visual: mark selected card
+        // visual highlight
         $$('.sw-card-wrap', section).forEach(w => w.style.outline='none');
         wrap.style.outline = '2px solid var(--color-primary-blue)';
       });
     });
 
     function renderReview(){
-      const c = state.contact;
-      const s = state.selections;
+      const c = state.contact, s = state.selections;
       $('#sw-review').innerHTML = `
         <div><strong>Contact</strong><br>
         ${c.firstname||''} ${c.lastname||''} · ${c.email||''}<br>
@@ -196,7 +190,7 @@ Settings:
         Materials: ${c.metals_machining||''}</div>
         <hr style="margin:12px 0">
         <div><strong>Samples</strong><ul style="margin:.5rem 0">
-          ${Object.keys(FIELD_MAP.products).map(k => {
+          ${Object.entries(FIELD_MAP.products).map(([k,_]) => {
             const v = s[k]?.value || '—';
             const label = k.replaceAll('_',' ').replace('k 2','K-2');
             return `<li>${label}: ${v}</li>`;
@@ -211,7 +205,6 @@ Settings:
         if(k==='products') return;
         fields.push({ name: FIELD_MAP[k], value: String(c[k]||'') });
       });
-      // product selections
       Object.entries(FIELD_MAP.products).forEach(([cat, prop])=>{
         const val = state.selections[cat]?.value || '';
         fields.push({ name: prop, value: val });
@@ -228,8 +221,7 @@ Settings:
     $('#sw-submit').addEventListener('click', async ()=>{
       try{
         $('#sw-error-3').textContent = '';
-        const payload = buildPayload();
-        const res = await fetch(HUBSPOT.workerEndpoint, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+        const res = await fetch(HUBSPOT.workerEndpoint, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(buildPayload()) });
         if(!res.ok) throw new Error(await res.text());
         $('#sw-success').style.display='block';
         if(HUBSPOT.redirectUrl) setTimeout(()=> location.href=HUBSPOT.redirectUrl, 900);
@@ -242,3 +234,17 @@ Settings:
   })();
   </script>
 </section>
+
+{% schema %}
+{
+  "name": "Samples Wizard",
+  "settings": [
+    { "type":"collection", "id":"alu_power_endmill", "label":"Alu-Power Endmill collection" },
+    { "type":"collection", "id":"k_2_carbide_endmill", "label":"K-2 Carbide Endmill collection" },
+    { "type":"collection", "id":"combo_tap", "label":"Combo Tap collection" },
+    { "type":"collection", "id":"gold_p_jobber_drill", "label":"Gold-P Jobber Drill collection" },
+    { "type":"collection", "id":"iso_inserts", "label":"ISO Inserts collection" }
+  ],
+  "presets": [{ "name":"Samples Wizard" }]
+}
+{% endschema %}
