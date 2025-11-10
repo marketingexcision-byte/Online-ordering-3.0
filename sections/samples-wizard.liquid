@@ -6,12 +6,12 @@ Samples Wizard – stepper + product selection + HubSpot submit via Cloudflare W
 '{
   "alu_power_endmill": [
     {
-      "handle": "e5e47-alu-power-carbide-1flute-end-mill-plain-shank",
+      "handle": "alu-power-1-flute-30-helix-end-mill-e5e47",
       "variants": [
-        { "id": 11111111111111, "label": "Ø3.0",  "hs_value": "Alu-Power 1 Flute | 30° Helix | 3 x 3 x 12 x 50mm (E5E47030)" },
-        { "id": 22222222222222, "label": "Ø4.0",  "hs_value": "Alu-Power 1 Flute | 30° Helix | 4 x 4 x 15 x 60mm (E5E47040)" },
-        { "id": 33333333333333, "label": "Ø6.0",  "hs_value": "Alu-Power 1 Flute | 30° Helix | 6 x 6 x 20 x 65mm (E5E47060)" },
-        { "id": 44444444444444, "label": "Ø8.0",  "hs_value": "Alu-Power 1 Flute | 30° Helix | 8 x 8 x 22 x 65mm (E5E47080)" }
+        { "id": 47931053801701, "label": "Ø3.0",  "hs_value": "Alu-Power 1 Flute | 30° Helix | 3 x 3 x 12 x 50mm (E5E47030)" },
+        { "id": 47931053834469, "label": "Ø4.0",  "hs_value": "Alu-Power 1 Flute | 30° Helix | 4 x 4 x 15 x 60mm (E5E47040)" },
+        { "id": 47931053900005, "label": "Ø6.0",  "hs_value": "Alu-Power 1 Flute | 30° Helix | 6 x 6 x 20 x 65mm (E5E47060)" },
+        { "id": 47931053932773, "label": "Ø8.0",  "hs_value": "Alu-Power 1 Flute | 30° Helix | 8 x 8 x 22 x 65mm (E5E47080)" }
       ]
     }
   ],
@@ -347,6 +347,14 @@ Samples Wizard – stepper + product selection + HubSpot submit via Cloudflare W
   </script>
 </section>
 
+<style>
+  .sw-select-variant.is-active {
+    border-color: var(--color-primary-blue);
+    box-shadow: 0 0 0 2px rgba(0,105,167,.12);
+  }
+</style>
+
+
 {% schema %}
 {
   "name": "Samples Wizard",
@@ -360,3 +368,4 @@ Samples Wizard – stepper + product selection + HubSpot submit via Cloudflare W
   "presets": [{ "name":"Samples Wizard" }]
 }
 {% endschema %}
+
