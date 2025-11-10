@@ -22,7 +22,7 @@
 {% endif %}
 
 <div class="grid-item {{ grid_item_width }}{% if on_sale %} on-sale{% endif %}">
-  <a href="{{ product.url | within: current_collection }}" class="product-grid-item">
+  
     <div class="product-grid-image">
       <div class="product-grid-image--centered">
         {% if product.tags contains 'New' %}
@@ -83,7 +83,8 @@
     </p>
 
 
-    
+    <a href="{{ product.url | within: current_collection }}" class="product-grid-item">
+      <button>Learn more</button>
 
       <style>
                   .product-item--price small {
