@@ -246,8 +246,9 @@ High Hardened Steels(HRc55~70)
         {% endfor %}
 
         {% unless is_material or is_excluded %}
-          {% unless seen_prefixes contains ',' | append: pfx | append: ',' %}
-            {% assign seen_prefixes = seen_prefixes | append: ',' | append: pfx | append: ',' %}
+          {% assign needle = ',' | append: pfx | append: ',' %}
+          {% unless seen_prefixes contains needle %}
+            {% assign seen_prefixes = seen_prefixes | append: needle %}
             {% assign spec_prefixes = spec_prefixes | append: ',' | append: pfx %}
           {% endunless %}
         {% endunless %}
