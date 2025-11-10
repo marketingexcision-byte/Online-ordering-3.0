@@ -2,8 +2,8 @@
 Samples Wizard – stepper + product selection + HubSpot submit via Cloudflare Worker
 {% endcomment %}
 
-{%- assign HARD_CATALOG = 
-'{
+{%- capture _hard_catalog_json -%}
+{
   "alu_power_endmill": [
     {
       "handle": "alu-power-1-flute-30-helix-end-mill-e5e47",
@@ -17,7 +17,7 @@ Samples Wizard – stepper + product selection + HubSpot submit via Cloudflare W
   ],
   "k_2_carbide_endmill": [
     {
-      "handle": "k2-carbide-endmill", 
+      "handle": "k2-carbide-endmill",
       "variants": [
         { "id": 55555555555555, "label": "Ø3.0",  "hs_value": "K-2 Carbide 2 Flute | 30° | Short | 3 x 3 x 12 x 32mm (G9424030)" },
         { "id": 66666666666666, "label": "Ø6.0",  "hs_value": "K-2 Carbide 4 Flute | 30° | Short | 6 x 6 x 16 x 50mm (G9432060)" },
@@ -51,7 +51,10 @@ Samples Wizard – stepper + product selection + HubSpot submit via Cloudflare W
       ]
     }
   ]
-}' | parse_json -%}
+}
+{%- endcapture -%}
+{%- assign hard_catalog = _hard_catalog_json | strip | parse_json -%}
+
 
 
 <section id="samples-wizard" class="section">
@@ -125,7 +128,7 @@ Samples Wizard – stepper + product selection + HubSpot submit via Cloudflare W
     <h3 class="section__title" style="margin:.5rem 0 1rem">{{ CAT_LABELS[cat_key] }}</h3>
 
     <div class="grid-uniform products-collection rlp_regular" data-category="{{ cat_key }}">
-      {% assign entries = HARD_CATALOG[cat_key] %}
+      {% assign entries = hard_catalog[cat_key] %}
       {% for entry in entries %}
         {% assign p = all_products[entry.handle] %}
         {% if p %}
