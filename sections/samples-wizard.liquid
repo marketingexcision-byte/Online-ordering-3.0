@@ -2,11 +2,38 @@
 Samples Wizard – stepper + product selection + HubSpot submit via Cloudflare Worker
 {% endcomment %}
 
+{% assign HARD_LIST = 
+  '{
+    "alu_power_endmill": [
+      { "handle": "alu-power-1f-3mm",  "sku": "E5E47030", "value": "Alu-Power 1 Flute | 30° Helix | 3 x 3 x 12 x 50mm (E5E47030)" },
+      { "handle": "alu-power-1f-4mm",  "sku": "E5E47040", "value": "Alu-Power 1 Flute | 30° Helix | 4 x 4 x 15 x 60mm (E5E47040)" },
+      { "handle": "alu-power-1f-6mm",  "sku": "E5E47060", "value": "Alu-Power 1 Flute | 30° Helix | 6 x 6 x 20 x 65mm (E5E47060)" },
+      { "handle": "alu-power-1f-8mm",  "sku": "E5E47080", "value": "Alu-Power 1 Flute | 30° Helix | 8 x 8 x 22 x 65mm (E5E47080)" }
+    ],
+    "k_2_carbide_endmill": [
+      { "handle": "k2-carbide-2f-3mm", "sku": "G9424030", "value": "K-2 Carbide 2 Flute | 30° | Short | 3 x 3 x 12 x 32mm (G9424030)" },
+      { "handle": "k2-carbide-4f-6mm", "sku": "G9432060", "value": "K-2 Carbide 4 Flute | 30° | Short | 6 x 6 x 16 x 50mm (G9432060)" },
+      { "handle": "k2-carbide-4f-8mm", "sku": "G9432080", "value": "K-2 Carbide 4 Flute | 30° | Short | 8 x 8 x 20 x 60mm (G9432080)" }
+    ],
+    "combo_tap": [
+      { "handle": "hss-e-combo-m4",     "sku": "TC804246", "value": "HSS-E Combo Tap | DIN371 | Spiral Flute | M4 x 0.7 6H 63.0L (TC804246)" },
+      { "handle": "hss-e-combo-m8",     "sku": "TC814366", "value": "HSS-E Combo Tap | DIN371 | Gun Point | M8 x 1.25 6H 90.0L (TC814366)" }
+    ],
+    "gold_p_jobber_drill": [
+      { "handle": "gold-p-jobber-3-3",  "sku": "DLGP195033", "value": "Gold-P Jobber Drill | DIN338/N | 3.3 x 36 x 65mm (DLGP195033)" },
+      { "handle": "gold-p-jobber-6-8",  "sku": "DLGP195068", "value": "Gold-P Jobber Drill | DIN338/N | 6.8 x 69 x 109mm (DLGP195068)" }
+    ],
+    "iso_inserts": [
+      { "handle": "dnmg150604-uf-yg3030", "sku": "22000227", "value": "DNMG150604-UF-YG3030/DNMG441-UF (22000227)" }
+    ]
+  }' | parse_json %}
+
+
 <section id="samples-wizard" class="section">
   <div class="container layout-constrained">
     <div class="section__header">
       <h2 class="section__title">Free Samples</h2>
-    </div>
+    </div>    
 
     <div id="sw-app">
       <div class="tabs" role="tablist" aria-label="Progress">
@@ -57,41 +84,53 @@ Samples Wizard – stepper + product selection + HubSpot submit via Cloudflare W
         <div id="sw-error-1" style="color:#b00020"></div>
       </article>
 
-      <!-- Step 2 -->
-      <article class="card" data-panel="2" hidden>
-        {% assign cats = 
-          '{ 
-            "alu_power_endmill": "Alu-Power Endmill",
-            "k_2_carbide_endmill": "K-2 Carbide Endmill",
-            "combo_tap": "Combo Tap",
-            "gold_p_jobber_drill": "Gold-P Jobber Drill",
-            "iso_inserts": "ISO Inserts"
-          }' | parse_json %}
+      <!-- Step 2 (HARDCODED) -->
+<article class="card" data-panel="2" hidden>
+  {% assign cat_labels = 
+    '{ 
+      "alu_power_endmill": "Alu-Power Endmill",
+      "k_2_carbide_endmill": "K-2 Carbide Endmill",
+      "combo_tap": "Combo Tap",
+      "gold_p_jobber_drill": "Gold-P Jobber Drill",
+      "iso_inserts": "ISO Inserts"
+    }' | parse_json %}
 
-        {% for key in cats %}
-          {% assign handle = section.settings[key[0]] %}
-          {% if handle %}
-            {% assign catCollection = collections[handle] %}
-            <h3 class="section__title" style="margin:.5rem 0 1rem">{{ key[1] }}</h3>
-            <div class="grid-uniform products-collection rlp_regular" data-category="{{ key[0] }}">
-              {% for product in catCollection.products %}
-                {% assign first_variant = product.selected_or_first_available_variant %}
-                <div class="sw-card-wrap" data-product-title="{{ product.title | escape }}" data-variant-sku="{{ first_variant.sku | escape }}">
-                  {% include 'product-grid-item' %}
-                  <div class="w-btn-wrapper">
-                    <button class="btn btn-outline sw-select-btn">Select sample</button>
-                  </div>
-                </div>
-              {% endfor %}
+  {% for cat_key in cat_labels %}
+    <h3 class="section__title" style="margin:.5rem 0 1rem">{{ cat_labels[cat_key[0]] }}</h3>
+    <div class="grid-uniform products-collection rlp_regular" data-category="{{ cat_key[0] }}">
+      {% assign items = HARD_LIST[cat_key[0]] %}
+      {% for item in items %}
+        {% assign p = all_products[item.handle] %}
+        {% if p %}
+          {% comment %}
+          We render your existing card. Then add a Select button that carries the hardcoded HS value.
+          {% endcomment %}
+          <div class="sw-card-wrap" data-product-title="{{ p.title | escape }}" data-variant-sku="{{ item.sku | escape }}">
+            {% assign product = p %}
+            {% include 'product-grid-item' %}
+            <div class="w-btn-wrapper">
+              <button 
+                class="btn btn-outline sw-select-btn"
+                data-hs-prop="{{ cat_key[0] }}"
+                data-hs-value="{{ item.value | escape }}"
+              >Select sample</button>
             </div>
-          {% endif %}
-        {% endfor %}
+          </div>
+        {% else %}
+          <div class="sw-card-wrap">
+            <div class="card">Missing product for handle: {{ item.handle }}</div>
+          </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+  {% endfor %}
 
-        <div class="w-btn-wrapper" style="display:flex;gap:12px">
-          <button class="btn btn-outline" id="sw-back-2">Back</button>
-          <button class="btn btn-primary" id="sw-next-2">Review</button>
-        </div>
-      </article>
+  <div class="w-btn-wrapper" style="display:flex;gap:12px">
+    <button class="btn btn-outline" id="sw-back-2">Back</button>
+    <button class="btn btn-primary" id="sw-next-2">Review</button>
+  </div>
+</article>
+
 
       <!-- Step 3 -->
       <article class="card" data-panel="3" hidden>
@@ -115,7 +154,7 @@ Samples Wizard – stepper + product selection + HubSpot submit via Cloudflare W
       portalId: "2595431",
       formGuid: "30c37b27-b6db-444a-9872-19ddb7e78b89",
       workerEndpoint: "https://samples-hs-submit.marketingexcision.workers.dev/",
-      redirectUrl: "" // set a thank-you URL if you want a redirect
+      redirectUrl: "/pages/thank-you"
     };
 
     const FIELD_MAP = {
@@ -164,21 +203,26 @@ Samples Wizard – stepper + product selection + HubSpot submit via Cloudflare W
     $('#sw-next-2').addEventListener('click', ()=> setStep(3));
     $('#sw-back-3').addEventListener('click', ()=> setStep(2));
 
-    // Selection using your product-grid-item wrappers
-    $$('.grid-uniform.products-collection').forEach(section => {
-      section.addEventListener('click', (e)=>{
-        const btn = e.target.closest('.sw-select-btn');
-        if(!btn) return;
-        const wrap = e.target.closest('.sw-card-wrap');
-        const category = section.dataset.category;
-        const title = wrap.dataset.productTitle;
-        const sku = wrap.dataset.variantSku || '';
-        state.selections[category] = { title, sku, value: `${title}${sku ? ' ('+sku+')' : ''}` };
-        // visual highlight
-        $$('.sw-card-wrap', section).forEach(w => w.style.outline='none');
-        wrap.style.outline = '2px solid var(--color-primary-blue)';
-      });
+   // Replace the old Step 2 selection handler with this:
+  document.querySelectorAll('.grid-uniform.products-collection').forEach(section => {
+    section.addEventListener('click', (e)=>{
+      const btn = e.target.closest('.sw-select-btn');
+      if(!btn) return;
+
+      const hsProp = btn.getAttribute('data-hs-prop');   // e.g. "alu_power_endmill"
+      const hsValue = btn.getAttribute('data-hs-value'); // e.g. "Alu-Power ... (E5E47030)"
+
+      if(!hsProp || !hsValue) return;
+
+      // Save selection for review + submission
+      state.selections[hsProp] = { value: hsValue };
+
+      // Visual highlight on the chosen card
+      section.querySelectorAll('.sw-card-wrap').forEach(w => w.style.outline='none');
+      const wrap = btn.closest('.sw-card-wrap');
+      if(wrap) wrap.style.outline = '2px solid var(--color-primary-blue)';
     });
+  });
 
     function renderReview(){
       const c = state.contact, s = state.selections;
