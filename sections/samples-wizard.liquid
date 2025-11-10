@@ -2,31 +2,56 @@
 Samples Wizard – stepper + product selection + HubSpot submit via Cloudflare Worker
 {% endcomment %}
 
-{% assign HARD_LIST = 
-  '{
-    "alu_power_endmill": [
-      { "handle": "alu-power-1f-3mm",  "sku": "E5E47030", "value": "Alu-Power 1 Flute | 30° Helix | 3 x 3 x 12 x 50mm (E5E47030)" },
-      { "handle": "alu-power-1f-4mm",  "sku": "E5E47040", "value": "Alu-Power 1 Flute | 30° Helix | 4 x 4 x 15 x 60mm (E5E47040)" },
-      { "handle": "alu-power-1f-6mm",  "sku": "E5E47060", "value": "Alu-Power 1 Flute | 30° Helix | 6 x 6 x 20 x 65mm (E5E47060)" },
-      { "handle": "alu-power-1f-8mm",  "sku": "E5E47080", "value": "Alu-Power 1 Flute | 30° Helix | 8 x 8 x 22 x 65mm (E5E47080)" }
-    ],
-    "k_2_carbide_endmill": [
-      { "handle": "k2-carbide-2f-3mm", "sku": "G9424030", "value": "K-2 Carbide 2 Flute | 30° | Short | 3 x 3 x 12 x 32mm (G9424030)" },
-      { "handle": "k2-carbide-4f-6mm", "sku": "G9432060", "value": "K-2 Carbide 4 Flute | 30° | Short | 6 x 6 x 16 x 50mm (G9432060)" },
-      { "handle": "k2-carbide-4f-8mm", "sku": "G9432080", "value": "K-2 Carbide 4 Flute | 30° | Short | 8 x 8 x 20 x 60mm (G9432080)" }
-    ],
-    "combo_tap": [
-      { "handle": "hss-e-combo-m4",     "sku": "TC804246", "value": "HSS-E Combo Tap | DIN371 | Spiral Flute | M4 x 0.7 6H 63.0L (TC804246)" },
-      { "handle": "hss-e-combo-m8",     "sku": "TC814366", "value": "HSS-E Combo Tap | DIN371 | Gun Point | M8 x 1.25 6H 90.0L (TC814366)" }
-    ],
-    "gold_p_jobber_drill": [
-      { "handle": "gold-p-jobber-3-3",  "sku": "DLGP195033", "value": "Gold-P Jobber Drill | DIN338/N | 3.3 x 36 x 65mm (DLGP195033)" },
-      { "handle": "gold-p-jobber-6-8",  "sku": "DLGP195068", "value": "Gold-P Jobber Drill | DIN338/N | 6.8 x 69 x 109mm (DLGP195068)" }
-    ],
-    "iso_inserts": [
-      { "handle": "dnmg150604-uf-yg3030", "sku": "22000227", "value": "DNMG150604-UF-YG3030/DNMG441-UF (22000227)" }
-    ]
-  }' | parse_json %}
+{%- assign HARD_CATALOG = 
+'{
+  "alu_power_endmill": [
+    {
+      "handle": "e5e47-alu-power-carbide-1flute-end-mill-plain-shank",
+      "variants": [
+        { "id": 11111111111111, "label": "Ø3.0",  "hs_value": "Alu-Power 1 Flute | 30° Helix | 3 x 3 x 12 x 50mm (E5E47030)" },
+        { "id": 22222222222222, "label": "Ø4.0",  "hs_value": "Alu-Power 1 Flute | 30° Helix | 4 x 4 x 15 x 60mm (E5E47040)" },
+        { "id": 33333333333333, "label": "Ø6.0",  "hs_value": "Alu-Power 1 Flute | 30° Helix | 6 x 6 x 20 x 65mm (E5E47060)" },
+        { "id": 44444444444444, "label": "Ø8.0",  "hs_value": "Alu-Power 1 Flute | 30° Helix | 8 x 8 x 22 x 65mm (E5E47080)" }
+      ]
+    }
+  ],
+  "k_2_carbide_endmill": [
+    {
+      "handle": "k2-carbide-endmill", 
+      "variants": [
+        { "id": 55555555555555, "label": "Ø3.0",  "hs_value": "K-2 Carbide 2 Flute | 30° | Short | 3 x 3 x 12 x 32mm (G9424030)" },
+        { "id": 66666666666666, "label": "Ø6.0",  "hs_value": "K-2 Carbide 4 Flute | 30° | Short | 6 x 6 x 16 x 50mm (G9432060)" },
+        { "id": 77777777777777, "label": "Ø8.0",  "hs_value": "K-2 Carbide 4 Flute | 30° | Short | 8 x 8 x 20 x 60mm (G9432080)" }
+      ]
+    }
+  ],
+  "combo_tap": [
+    {
+      "handle": "hss-e-combo-tap",
+      "variants": [
+        { "id": 88888888888888, "label": "M4 x 0.7",  "hs_value": "HSS-E Combo Tap | DIN371 | Spiral Flute | M4 x 0.7 6H 63.0L (TC804246)" },
+        { "id": 99999999999999, "label": "M8 x 1.25", "hs_value": "HSS-E Combo Tap | DIN371 | Gun Point | M8 x 1.25 6H 90.0L (TC814366)" }
+      ]
+    }
+  ],
+  "gold_p_jobber_drill": [
+    {
+      "handle": "gold-p-jobber-drill",
+      "variants": [
+        { "id": 12312312312312, "label": "Ø3.3", "hs_value": "Gold-P Jobber Drill | DIN338/N | 3.3 x 36 x 65mm (DLGP195033)" },
+        { "id": 12412412412412, "label": "Ø6.8", "hs_value": "Gold-P Jobber Drill | DIN338/N | 6.8 x 69 x 109mm (DLGP195068)" }
+      ]
+    }
+  ],
+  "iso_inserts": [
+    {
+      "handle": "dnmg-insert",
+      "variants": [
+        { "id": 13513513513513, "label": "DNMG150604-UF-YG3030", "hs_value": "DNMG150604-UF-YG3030/DNMG441-UF (22000227)" }
+      ]
+    }
+  ]
+}' | parse_json -%}
 
 
 <section id="samples-wizard" class="section">
@@ -84,9 +109,9 @@ Samples Wizard – stepper + product selection + HubSpot submit via Cloudflare W
         <div id="sw-error-1" style="color:#b00020"></div>
       </article>
 
-      <!-- Step 2 (HARDCODED) -->
+<!-- Step 2 (HARDCODED + VARIANTS) -->
 <article class="card" data-panel="2" hidden>
-  {% assign cat_labels = 
+  {% assign CAT_LABELS = 
     '{ 
       "alu_power_endmill": "Alu-Power Endmill",
       "k_2_carbide_endmill": "K-2 Carbide Endmill",
@@ -95,31 +120,45 @@ Samples Wizard – stepper + product selection + HubSpot submit via Cloudflare W
       "iso_inserts": "ISO Inserts"
     }' | parse_json %}
 
-  {% for cat_key in cat_labels %}
-    <h3 class="section__title" style="margin:.5rem 0 1rem">{{ cat_labels[cat_key[0]] }}</h3>
-    <div class="grid-uniform products-collection rlp_regular" data-category="{{ cat_key[0] }}">
-      {% assign items = HARD_LIST[cat_key[0]] %}
-      {% for item in items %}
-        {% assign p = all_products[item.handle] %}
+  {% for pair in CAT_LABELS %}
+    {% assign cat_key = pair[0] %}
+    <h3 class="section__title" style="margin:.5rem 0 1rem">{{ CAT_LABELS[cat_key] }}</h3>
+
+    <div class="grid-uniform products-collection rlp_regular" data-category="{{ cat_key }}">
+      {% assign entries = HARD_CATALOG[cat_key] %}
+      {% for entry in entries %}
+        {% assign p = all_products[entry.handle] %}
         {% if p %}
-          {% comment %}
-          We render your existing card. Then add a Select button that carries the hardcoded HS value.
-          {% endcomment %}
-          <div class="sw-card-wrap" data-product-title="{{ p.title | escape }}" data-variant-sku="{{ item.sku | escape }}">
-            {% assign product = p %}
+          {% assign product = p %}
+          <div class="sw-card-wrap" data-product-handle="{{ p.handle }}">
             {% include 'product-grid-item' %}
+            <div class="card-variants">
+              <div class="card-variants-label">Choose variant</div>
+              <div class="card-variants-chips">
+                {% for vdef in entry.variants %}
+                  {% assign v = p.variants | where: 'id', vdef.id | first %}
+                  {% if v %}
+                    <button
+                      type="button"
+                      class="variant-chip sw-select-variant"
+                      data-hs-prop="{{ cat_key }}"
+                      data-hs-value="{{ vdef.hs_value | escape }}"
+                      data-variant-id="{{ v.id }}"
+                      data-variant-sku="{{ v.sku | escape }}"
+                    >{{ vdef.label }}</button>
+                  {% else %}
+                    <span class="variant-chip variant-chip--more">Missing variant {{ vdef.label }}</span>
+                  {% endif %}
+                {% endfor %}
+              </div>
+            </div>
+
             <div class="w-btn-wrapper">
-              <button 
-                class="btn btn-outline sw-select-btn"
-                data-hs-prop="{{ cat_key[0] }}"
-                data-hs-value="{{ item.value | escape }}"
-              >Select sample</button>
+              <button class="btn btn-outline sw-select-btn" data-category="{{ cat_key }}">Confirm selection</button>
             </div>
           </div>
         {% else %}
-          <div class="sw-card-wrap">
-            <div class="card">Missing product for handle: {{ item.handle }}</div>
-          </div>
+          <div class="sw-card-wrap"><div class="card">Missing product handle: {{ entry.handle }}</div></div>
         {% endif %}
       {% endfor %}
     </div>
@@ -130,6 +169,7 @@ Samples Wizard – stepper + product selection + HubSpot submit via Cloudflare W
     <button class="btn btn-primary" id="sw-next-2">Review</button>
   </div>
 </article>
+
 
 
       <!-- Step 3 -->
@@ -203,24 +243,52 @@ Samples Wizard – stepper + product selection + HubSpot submit via Cloudflare W
     $('#sw-next-2').addEventListener('click', ()=> setStep(3));
     $('#sw-back-3').addEventListener('click', ()=> setStep(2));
 
-   // Replace the old Step 2 selection handler with this:
-  document.querySelectorAll('.grid-uniform.products-collection').forEach(section => {
-    section.addEventListener('click', (e)=>{
+     // state.selections[cat] = { variantId, sku, hsValue }
+  const catSections = document.querySelectorAll('.grid-uniform.products-collection');
+
+  catSections.forEach(section => {
+    const cat = section.dataset.category;
+
+    // choose a chip
+    section.addEventListener('click', e => {
+      const chip = e.target.closest('.sw-select-variant');
+      if (!chip) return;
+
+      // set active visual within the same card
+      const wrap = chip.closest('.sw-card-wrap');
+      wrap.querySelectorAll('.sw-select-variant').forEach(c => c.classList.remove('is-active'));
+      chip.classList.add('is-active');
+
+      // stash the pending pick on the card
+      wrap.dataset.pendingVariantId = chip.dataset.variantId;
+      wrap.dataset.pendingSku = chip.dataset.variantSku || '';
+      wrap.dataset.pendingHsValue = chip.dataset.hsValue;
+    });
+
+    // confirm selection for the category
+    section.addEventListener('click', e => {
       const btn = e.target.closest('.sw-select-btn');
-      if(!btn) return;
+      if (!btn) return;
 
-      const hsProp = btn.getAttribute('data-hs-prop');   // e.g. "alu_power_endmill"
-      const hsValue = btn.getAttribute('data-hs-value'); // e.g. "Alu-Power ... (E5E47030)"
-
-      if(!hsProp || !hsValue) return;
-
-      // Save selection for review + submission
-      state.selections[hsProp] = { value: hsValue };
-
-      // Visual highlight on the chosen card
-      section.querySelectorAll('.sw-card-wrap').forEach(w => w.style.outline='none');
       const wrap = btn.closest('.sw-card-wrap');
-      if(wrap) wrap.style.outline = '2px solid var(--color-primary-blue)';
+      const vid = wrap.dataset.pendingVariantId;
+      const hsValue = wrap.dataset.pendingHsValue;
+
+      if (!vid || !hsValue) {
+        alert('Pick a variant first.');
+        return;
+      }
+
+      // lock this selection at category level
+      state.selections[cat] = {
+        variantId: vid,
+        sku: wrap.dataset.pendingSku || '',
+        value: hsValue
+      };
+
+      // highlight the chosen card for the category
+      section.querySelectorAll('.sw-card-wrap').forEach(w => w.style.outline='none');
+      wrap.style.outline = '2px solid var(--color-primary-blue)';
     });
   });
 
