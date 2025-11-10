@@ -398,7 +398,8 @@ catSections.forEach(section => {
 
     // clear outlines on all cards in this category . then outline the chosen card
     section.querySelectorAll('.sw-card-wrap').forEach(w => w.style.outline='none');
-    candidate.style.outline = '2px solid var(--color-primary-blue)';
+    candidate.style.outline = '2px solid var(--color-secondary-steel)';
+    candidate.style.outline-offset = '10px';
   });
 });
 
@@ -472,6 +473,7 @@ button.variant-chip.sw-select-variant {
     display: flex;
     flex-direction: column;
     max-width: 330px;
+    border-radius: 15px;
 }
 button.variant-chip.sw-select-variant.is-active {
     border: 2px solid var(--color-secondary-steel);
