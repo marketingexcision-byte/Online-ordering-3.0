@@ -1,47 +1,5 @@
-{% assign material_map = '
-Carbon Steels:P,
-Alloy Steels:P,
-High Alloy Steels:P,
-High Carbon Steels:P,
-Prehardened Steels:P,
-Structural Steels:P,
-Mild & Free Machining:P,
-Tool Steels:P,
-High Alloyed:P,
-Structural & Low Carbon Steels:M,
-Stainless Steels:M,
-Cast Iron:K,
-Graphite:K,
-Aluminium:N,
-Bronze:N,
-Brass Bronze:N,
-Copper:N,
-CFRP:N,
-Non-ferrous:N,
-Aluminum & Aluminum alloy:N,
-Magnesium & Magnesium Alloys:N,
-Plastic:N,
-Acrylic:N,
-Inconel:S,
-Titanium:S,
-Nickel:S,
-Hardened Steels(HRc40~45):H,
-Hardened Steels(HRc30~45):H,
-Hardened Steels(HRc45~):H,
-Hardened Steels(HRc45~55):H,
-High Hardened Steels(HRc55~70):H
-'
-  | split: ','
-%}
-
-{% assign excluded_filters = 'Price,Ecom' | split: ',' %}
-
-{% if section.settings.collection_sidebar_filters == 'groups' and collection.all_tags.size > 0 %}
-  <div class="grid-uniform" style="display:flex;flex-direction:column;">
-    {%- comment -%}
-      1) Define the hardcoded Workpiece Material order
-    {%- endcomment -%}
-    {% assign material_groups_order = '
+{%- comment -%} Hardcoded, ordered list stays the same {%- endcomment -%}
+{% assign material_groups_order = '
 Carbon Steels,
 Alloy Steels,
 High Alloy Steels,
@@ -73,290 +31,225 @@ Hardened Steels(HRc30~45),
 Hardened Steels(HRc45~),
 Hardened Steels(HRc45~55),
 High Hardened Steels(HRc55~70)
-'
-      | split: ','
-    %}
+' | split: ',' %}
 
-    {%- comment -%}
-      Helper: does any tag exist for a given group (prefix before "_")?
-    {%- endcomment -%}
-    {% assign any_material_present = false %}
+{%- comment -%}
+  Create a comma-wrapped string of NORMALIZED keys for membership checks.
+  Normalization: downcase. replace & -> and. collapse double spaces. trim.
+{%- endcomment -%}
+{% assign material_keys = ',' %}
+{% for g in material_groups_order %}
+  {% assign k = g | strip | downcase | replace: '&','and' | replace: '  ',' ' %}
+  {% assign material_keys = material_keys | append: k | append: ',' %}
+{% endfor %}
+
+{% assign any_material_present = false %}
+{% for tag in collection.all_tags %}
+  {% if tag contains '_' %}
+    {% assign parts = tag | split: '_' %}
+    {% assign pfx = parts[0] | strip | downcase | replace: '&','and' | replace: '  ',' ' %}
+    {% assign mat_needle = ',' | append: pfx | append: ',' %}
+    {% if material_keys contains mat_needle %}
+      {% assign any_material_present = true %}
+      {% break %}
+    {% endif %}
+  {% endif %}
+{% endfor %}
+
+{% if any_material_present %}
+  <div class="filter-group">
+    <h2 class="filter-group">Workpiece Material</h2>
+
     {% for group in material_groups_order %}
-      {% assign group = group | strip %}
-      {% assign group_lower = group | downcase %}
+      {% assign group_raw = group | strip %}
+      {% assign group_norm = group_raw | downcase | replace: '&','and' | replace: '  ',' ' %}
+
+      {%- comment -%} Does this specific group have any tags? {%- endcomment -%}
       {% assign has_tag = false %}
       {% for tag in collection.all_tags %}
         {% if tag contains '_' %}
           {% assign parts = tag | split: '_' %}
-          {% assign tag_prefix = parts[0] | strip | downcase %}
-          {% if tag_prefix == group_lower %}
+          {% assign tag_prefix_norm = parts[0] | strip | downcase | replace: '&','and' | replace: '  ',' ' %}
+          {% if tag_prefix_norm == group_norm %}
             {% assign has_tag = true %}
             {% break %}
           {% endif %}
         {% endif %}
       {% endfor %}
+
       {% if has_tag %}
-        {% assign any_material_present = true %}
-        {% break %}
-      {% endif %}
-    {% endfor %}
-
-    {%- if any_material_present -%}
-      <div class="filter-group">
-        <h2 class="filter-group">Workpiece Material</h2>
-
-        {% for group in material_groups_order %}
-          {% assign group = group | strip %}
-          {% assign group_lower = group | downcase %}
-
-          {% comment %} Check if this material group is present {% endcomment %}
-          {% assign has_tag = false %}
-          {% for tag in collection.all_tags %}
-            {% if tag contains '_' %}
-              {% assign parts = tag | split: '_' %}
-              {% assign tag_prefix = parts[0] | strip | downcase %}
-              {% if tag_prefix == group_lower %}
-                {% assign has_tag = true %}
-                {% break %}
-              {% endif %}
+        <div class="medium--one-third toogle-filters sidebar-items-{{ group_raw | handle }}">
+          {%- comment -%} Badge letter lookup stays as-is {%- endcomment -%}
+          {% assign prefix = '' %}
+          {% assign group_down = group_raw | downcase %}
+          {% for entry in material_map %}
+            {% assign mp = entry | split: ':' %}
+            {% assign name = mp[0] | strip %}
+            {% assign name_down = name | downcase %}
+            {% assign letter = mp[1] | strip %}
+            {% if group_down == name_down %}
+              {% assign prefix = letter %}
             {% endif %}
           {% endfor %}
 
-          {% if has_tag %}
-            <div class="medium--one-third toogle-filters sidebar-items-{{ group | handle }}">
-              {% assign prefix = '' %}
-              {% assign group_down = group | downcase %}
-              {% for entry in material_map %}
-                {% assign mp = entry | split: ':' %}
-                {% assign name = mp[0] | strip %}
-                {% assign name_down = name | downcase %}
-                {% assign letter = mp[1] | strip %}
-                {% if group_down == name_down %}
-                  {% assign prefix = letter %}
-                {% endif %}
-              {% endfor %}
+          <h2 class="accordion">
+            <div class="material-type">
+              {% if prefix != '' %}<span class="material material-{{ prefix }}">{{ prefix }}</span>{% endif %}
+              {{ group_raw }}
+            </div>
+            <span><i class="fa fa-angle-down"></i></span>
+          </h2>
 
-              <h2 class="accordion">
-                <div class="material-type">
-                  {% if prefix != '' %}
-                    <span class="material material-{{ prefix }}">{{ prefix }}</span>
-                  {% endif %}
-                  {{ group }}
-                </div>
-                <span><i class="fa fa-angle-down"></i></span>
-              </h2>
-
-              <ul id="matchKey-{{ group | handle }}" class="advanced-filters panel_1">
-                <div class="af-panel-body">
-                  <input
-                    type="text"
-                    class="txtInput form-control"
-                    id="searchTheKey-{{ group | handle }}"
-                    placeholder="Search {{ group }}"
-                  >
-                  <span class="af-filter-clear af_filter_clear-{{ group | handle }}" style="display:none;">×</span>
-                </div>
-
-                {% for tag in collection.all_tags %}
-                  {% if tag contains '_' %}
-                    {% assign parts = tag | split: '_' %}
-                    {% assign tag_prefix = parts[0] | strip | downcase %}
-                    {% assign tag_value = parts[1] | strip %}
-                    {% if tag_prefix == group_lower %}
-                      {% if current_tags contains tag %}
-                        <li
-                          class="advanced-filter active-filter"
-                          data-group="{{ group }}"
-                          data-handle="{{ tag | handle }}"
-                        >
-                          {{ tag_value | link_to_remove_tag: tag }}
-                        </li>
-                      {% else %}
-                        <li class="advanced-filter" data-group="{{ group }}" data-handle="{{ tag | handle }}">
-                          {{ tag_value | link_to_add_tag: tag }}
-                        </li>
-                      {% endif %}
-                    {% endif %}
-                  {% endif %}
-                {% endfor %}
-              </ul>
+          <ul id="matchKey-{{ group_raw | handle }}" class="advanced-filters panel_1">
+            <div class="af-panel-body">
+              <input type="text" class="txtInput form-control" id="searchTheKey-{{ group_raw | handle }}" placeholder="Search {{ group_raw }}">
+              <span class="af-filter-clear af_filter_clear-{{ group_raw | handle }}" style="display:none;">×</span>
             </div>
 
-            <script>
-              $('#searchTheKey-{{ group | handle }}').on('keyup', function () {
-                var value = $(this).val().toLowerCase();
-                $('#matchKey-{{ group | handle }} li').each(function () {
-                  if ($(this).text().toLowerCase().indexOf(value) > -1) {
-                    $(this).show();
-                    $('.af_filter_clear-{{ group | handle }}').hide();
-                  } else {
-                    $(this).hide();
-                    $('.af_filter_clear-{{ group | handle }}').show();
-                  }
-                });
-              });
-              $(document).ready(function () {
-                $('.af_filter_clear-{{ group | handle }}').on('click', function () {
-                  $('#matchKey-{{ group | handle }} li').show();
-                  $('#searchTheKey-{{ group | handle }}').val('');
-                  $(this).hide();
-                });
-                if ($('#matchKey-{{ group | handle }}').find('li').length > 19) {
-                  $('#matchKey-{{ group | handle }}').addClass('af_overflow_scroll');
-                }
-                $('#matchKey-{{ group | handle }} li.active-filter').parents('ul').css('display', 'block');
-                $('#matchKey-{{ group | handle }} li.active-filter').parents('ul').prev('h2').addClass('active');
-              });
-            </script>
-          {% endif %}
-        {% endfor %}
-      </div>
-    {%- endif -%}
+            {% for tag in collection.all_tags %}
+              {% if tag contains '_' %}
+                {% assign parts = tag | split: '_' %}
+                {% assign tag_prefix_norm = parts[0] | strip | downcase | replace: '&','and' | replace: '  ',' ' %}
+                {% assign tag_value = parts[1] | strip %}
+                {% if tag_prefix_norm == group_norm %}
+                  {% if current_tags contains tag %}
+                    <li class="advanced-filter active-filter" data-group="{{ group_raw }}" data-handle="{{ tag | handle }}">{{ tag_value | link_to_remove_tag: tag }}</li>
+                  {% else %}
+                    <li class="advanced-filter" data-group="{{ group_raw }}" data-handle="{{ tag | handle }}">{{ tag_value | link_to_add_tag: tag }}</li>
+                  {% endif %}
+                {% endif %}
+              {% endif %}
+            {% endfor %}
+          </ul>
+        </div>
 
-    {%- comment -%}
-      2) Product Specifications. Everything that is NOT one of the above material groups
-         and NOT in excluded_filters goes here. No third section.
-    {%- endcomment -%}
-    {% assign material_prefixes_down = ',' %}
-    {% for g in material_groups_order %}
-      {% assign material_prefixes_down = material_prefixes_down | append: g | downcase | append: ',' %}
+        <script>
+          $('#searchTheKey-{{ group_raw | handle }}').on('keyup', function () {
+            var value = $(this).val().toLowerCase();
+            $('#matchKey-{{ group_raw | handle }} li').each(function () {
+              if ($(this).text().toLowerCase().indexOf(value) > -1) {
+                $(this).show(); $('.af_filter_clear-{{ group_raw | handle }}').hide();
+              } else {
+                $(this).hide(); $('.af_filter_clear-{{ group_raw | handle }}').show();
+              }
+            });
+          });
+          $(document).ready(function () {
+            $('.af_filter_clear-{{ group_raw | handle }}').on('click', function () {
+              $('#matchKey-{{ group_raw | handle }} li').show();
+              $('#searchTheKey-{{ group_raw | handle }}').val(''); $(this).hide();
+            });
+            if ($('#matchKey-{{ group_raw | handle }}').find('li').length > 19) {
+              $('#matchKey-{{ group_raw | handle }}').addClass('af_overflow_scroll');
+            }
+            $('#matchKey-{{ group_raw | handle }} li.active-filter').parents('ul').css('display', 'block')
+              .prev('h2').addClass('active');
+          });
+        </script>
+      {% endif %}
     {% endfor %}
+  </div>
+{% endif %}
 
-    {%- comment -%} Build unique non-material prefixes from collection tags {%- endcomment -%}
-    {% assign seen_prefixes = '' %}
-    {% assign spec_prefixes = '' %}
+{%- comment -%} Gather unique non-material prefixes {%- endcomment -%}
+{% assign seen_prefixes = ',' %}
+{% assign spec_prefixes = '' %}
 
-    {% for tag in collection.all_tags %}
-      {% if tag contains '_' %}
-        {% assign parts = tag | split: '_' %}
-        {% assign pfx_raw = parts[0] | strip %}
-        {% assign pfx = pfx_raw | downcase %}
+{% for tag in collection.all_tags %}
+  {% if tag contains '_' %}
+    {% assign parts = tag | split: '_' %}
+    {% assign pfx_raw = parts[0] | strip %}
+    {% assign pfx_norm = pfx_raw | downcase | replace: '&','and' | replace: '  ',' ' %}
 
-        {% assign is_material = false %}
-        {% assign mat_needle = ',' | append: pfx | append: ',' %}
-        {% if material_prefixes_down contains mat_needle %}
-          {% assign is_material = true %}
-        {% endif %}
-
-        {% assign is_excluded = false %}
-        {% for ex in excluded_filters %}
-          {% assign ex_down = ex | downcase %}
-          {% if pfx == ex_down %}
-            {% assign is_excluded = true %}
-          {% endif %}
-        {% endfor %}
-
-        {% unless is_material or is_excluded %}
-          {% assign needle = ',' | append: pfx | append: ',' %}
-          {% unless seen_prefixes contains needle %}
-            {% assign seen_prefixes = seen_prefixes | append: needle %}
-            {% assign spec_prefixes = spec_prefixes | append: ',' | append: pfx %}
-          {% endunless %}
-        {% endunless %}
+    {%- comment -%} Exclusions (case-insensitive) {%- endcomment -%}
+    {% assign is_excluded = false %}
+    {% for ex in excluded_filters %}
+      {% assign ex_down = ex | downcase %}
+      {% if pfx_norm == ex_down %}
+        {% assign is_excluded = true %}
       {% endif %}
     {% endfor %}
 
-    {% assign spec_prefixes = spec_prefixes | remove_first: ',' | split: ',' %}
+    {% assign mat_needle = ',' | append: pfx_norm | append: ',' %}
+    {% assign is_material = material_keys contains mat_needle %}
 
-    {% if spec_prefixes.size > 0 %}
-      <div class="filter-group">
-        <h2 class="filter-group">Product Specifications</h2>
+    {% unless is_material or is_excluded %}
+      {% assign seen_needle = seen_prefixes | append: pfx_norm | append: ',' %}
+      {% unless seen_prefixes contains (',' | append: pfx_norm | append: ',') %}
+        {% assign seen_prefixes = seen_prefixes | append: pfx_norm | append: ',' %}
+        {% assign spec_prefixes = spec_prefixes | append: ',' | append: pfx_norm %}
+      {% endunless %}
+    {% endunless %}
+  {% endif %}
+{% endfor %}
 
-        {% for group_lower in spec_prefixes %}
-          {% assign group_label = group_lower | replace: '-', ' ' | split: ' ' %}
-          {% assign tmp = '' %}
-          {% for w in group_label %}
-            {% assign tmp = tmp | append: w | capitalize | append: ' ' %}
-          {% endfor %}
-          {% assign group_label = tmp | strip %}
+{% assign spec_prefixes = spec_prefixes | remove_first: ',' | split: ',' %}
 
-          <div class="medium--one-third toogle-filters sidebar-items-{{ group_lower | handle }}">
-            <h2 class="accordion">
-              <div class="material-type">
-                {{ group_label }}
-              </div>
-              <span><i class="fa fa-angle-down"></i></span>
-            </h2>
+{% if spec_prefixes.size > 0 %}
+  <div class="filter-group">
+    <h2 class="filter-group">Product Specifications</h2>
 
-            <ul id="matchKey-{{ group_lower | handle }}" class="advanced-filters panel_1">
-              <div class="af-panel-body">
-                <input
-                  type="text"
-                  class="txtInput form-control"
-                  id="searchTheKey-{{ group_lower | handle }}"
-                  placeholder="Search {{ group_label }}"
-                >
-                <span class="af-filter-clear af_filter_clear-{{ group_lower | handle }}" style="display:none;">×</span>
-              </div>
+    {% for group_lower in spec_prefixes %}
+      {%- comment -%} Pretty label from slug {%- endcomment -%}
+      {% assign words = group_lower | replace: '-', ' ' | split: ' ' %}
+      {% assign label = '' %}
+      {% for w in words %}
+        {% assign label = label | append: w | capitalize | append: ' ' %}
+      {% endfor %}
+      {% assign label = label | strip %}
 
-              {% for tag in collection.all_tags %}
-                {% if tag contains '_' %}
-                  {% assign parts = tag | split: '_' %}
-                  {% assign tag_prefix = parts[0] | strip | downcase %}
-                  {% assign tag_value = parts[1] | strip %}
-                  {% if tag_prefix == group_lower %}
-                    {% if current_tags contains tag %}
-                      <li
-                        class="advanced-filter active-filter"
-                        data-group="{{ group_label }}"
-                        data-handle="{{ tag | handle }}"
-                      >
-                        {{ tag_value | link_to_remove_tag: tag }}
-                      </li>
-                    {% else %}
-                      <li class="advanced-filter" data-group="{{ group_label }}" data-handle="{{ tag | handle }}">
-                        {{ tag_value | link_to_add_tag: tag }}
-                      </li>
-                    {% endif %}
-                  {% endif %}
-                {% endif %}
-              {% endfor %}
-            </ul>
+      <div class="medium--one-third toogle-filters sidebar-items-{{ group_lower | handle }}">
+        <h2 class="accordion">
+          <div class="material-type">{{ label }}</div>
+          <span><i class="fa fa-angle-down"></i></span>
+        </h2>
+
+        <ul id="matchKey-{{ group_lower | handle }}" class="advanced-filters panel_1">
+          <div class="af-panel-body">
+            <input type="text" class="txtInput form-control" id="searchTheKey-{{ group_lower | handle }}" placeholder="Search {{ label }}">
+            <span class="af-filter-clear af_filter_clear-{{ group_lower | handle }}" style="display:none;">×</span>
           </div>
 
-          <script>
-            $('#searchTheKey-{{ group_lower | handle }}').on('keyup', function () {
-              var value = $(this).val().toLowerCase();
-              $('#matchKey-{{ group_lower | handle }} li').each(function () {
-                if ($(this).text().toLowerCase().indexOf(value) > -1) {
-                  $(this).show();
-                  $('.af_filter_clear-{{ group_lower | handle }}').hide();
-                } else {
-                  $(this).hide();
-                  $('.af_filter_clear-{{ group_lower | handle }}').show();
-                }
-              });
-            });
-            $(document).ready(function () {
-              $('.af_filter_clear-{{ group_lower | handle }}').on('click', function () {
-                $('#matchKey-{{ group_lower | handle }} li').show();
-                $('#searchTheKey-{{ group_lower | handle }}').val('');
-                $(this).hide();
-              });
-              if ($('#matchKey-{{ group_lower | handle }}').find('li').length > 19) {
-                $('#matchKey-{{ group_lower | handle }}').addClass('af_overflow_scroll');
-              }
-              $('#matchKey-{{ group_lower | handle }} li.active-filter').parents('ul').css('display', 'block');
-              $('#matchKey-{{ group_lower | handle }} li.active-filter').parents('ul').prev('h2').addClass('active');
-            });
-          </script>
-        {% endfor %}
+          {% for tag in collection.all_tags %}
+            {% if tag contains '_' %}
+              {% assign parts = tag | split: '_' %}
+              {% assign tag_prefix_norm = parts[0] | strip | downcase | replace: '&','and' | replace: '  ',' ' %}
+              {% assign tag_value = parts[1] | strip %}
+              {% if tag_prefix_norm == group_lower %}
+                {% if current_tags contains tag %}
+                  <li class="advanced-filter active-filter" data-group="{{ label }}" data-handle="{{ tag | handle }}">{{ tag_value | link_to_remove_tag: tag }}</li>
+                {% else %}
+                  <li class="advanced-filter" data-group="{{ label }}" data-handle="{{ tag | handle }}">{{ tag_value | link_to_add_tag: tag }}</li>
+                {% endif %}
+              {% endif %}
+            {% endif %}
+          {% endfor %}
+        </ul>
       </div>
-    {% endif %}
-  </div>
-{% else %}
-  {# Fallback to non-grouped filters, if you still need that #}
-{% endif %}
 
-<style>
-  h2.filter-group { margin-bottom:20px; font-family:'Humanist777BT-Bold' !important; font-size:24px; }
-  div.filter-group { margin-bottom:30px; }
-  .material { font-family:'Humanist777BT-Bold'; border-radius:5px; color:#fff; width:30px; height:30px; display:flex; justify-content:center; align-items:center; }
-  .material-P { background:#0069a7; }
-  .material-M { background:#f6b519; }
-  .material-K { background:#e0592a; }
-  .material-N { background:#109954; }
-  .material-S { background:#f88d2b; }
-  .material-H { background:#666666; }
-  div.material-type { display:flex; align-items:center; gap:10px; }
-</style>
+      <script>
+        $('#searchTheKey-{{ group_lower | handle }}').on('keyup', function () {
+          var value = $(this).val().toLowerCase();
+          $('#matchKey-{{ group_lower | handle }} li').each(function () {
+            if ($(this).text().toLowerCase().indexOf(value) > -1) {
+              $(this).show(); $('.af_filter_clear-{{ group_lower | handle }}').hide();
+            } else {
+              $(this).hide(); $('.af_filter_clear-{{ group_lower | handle }}').show();
+            }
+          });
+        });
+        $(document).ready(function () {
+          $('.af_filter_clear-{{ group_lower | handle }}').on('click', function () {
+            $('#matchKey-{{ group_lower | handle }} li').show();
+            $('#searchTheKey-{{ group_lower | handle }}').val(''); $(this).hide();
+          });
+          if ($('#matchKey-{{ group_lower | handle }}').find('li').length > 19) {
+            $('#matchKey-{{ group_lower | handle }}').addClass('af_overflow_scroll');
+          }
+          $('#matchKey-{{ group_lower | handle }} li.active-filter').parents('ul').css('display','block')
+            .prev('h2').addClass('active');
+        });
+      </script>
+    {% endfor %}
+  </div>
+{% endif %}
