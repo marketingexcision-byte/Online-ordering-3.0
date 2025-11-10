@@ -363,40 +363,91 @@
       {% endif %}
     </div>
 
-    {% assign first_opt = product.options_with_values | first %}
-    {% if first_opt %}
-      {% assign vals = first_opt.values | uniq %}
-      {% assign opt_name = first_opt.name | strip %}
+{%- comment -%}
+  SAMPLES VARIANT CHIPS
+  - Shows ONLY the "Mill Diameter" option
+  - Uses the hardcatalog "sw_variants" (id or sku + label + hs_value)
+  - Emits .sw-select-variant buttons with data-variant-id, data-variant-sku, data-hs-prop, data-hs-value
+{%- endcomment -%}
 
-      {% unless vals.size == 1 and vals.first == 'Default Title' %}
-        <div class="card-variants">
-          <div class="card-variants-label">
-            Available in{% if opt_name and opt_name != 'Title' %} {{ opt_name }}{% endif %}
-          </div>
+{%- assign opt_index = 0 -%}
+{%- assign opt_label = '' -%}
+{%- for opt in product.options_with_values -%}
+  {%- assign name = opt.name | strip -%}
+  {%- assign lname = name | downcase -%}
+  {%- if lname contains 'diameter' -%}
+    {%- assign opt_index = forloop.index0 -%}
+    {%- assign opt_label = name -%}
+    {%- break -%}
+  {%- endif -%}
+{%- endfor -%}
+{%- if opt_label == '' and product.options_with_values.size > 0 -%}
+  {%- assign opt_label = product.options_with_values.first.name -%}
+{%- endif -%}
 
-          <div class="card-variants-chips">
-            {% for v in vals limit: 3 %}
-              <span class="variant-chip">{{ v }}</span>
-            {% endfor %}
+<div class="card-variants">
+  <div class="card-variants-label">Available in {{ opt_label }}</div>
+  <div class="card-variants-chips">
+    {%- if sw_variants and sw_variants.size > 0 -%}
+      {%- for vdef in sw_variants -%}
+        {%- assign v = nil -%}
 
-            {% assign extra = vals.size | minus: 3 %}
-            {% if extra > 0 %}
-              <span class="variant-chip variant-chip--more">+{{ extra }}</span>
-            {% endif %}
-          </div>
-        </div>
-      {% endunless %}
-    {% endif %}
+        {%- comment -%} Prefer id if present. Coerce to number so where matches. {%- endcomment -%}
+        {%- if vdef.id -%}
+          {%- assign wanted_id = vdef.id | plus: 0 -%}
+          {%- assign v = product.variants | where: 'id', wanted_id | first -%}
+        {%- endif -%}
 
-    {% comment %}
-      {% if product.variants.first.sku %}
-        <p style="padding-top: 0; font-size: 17px; color: #666666;">{{ product.variants.first.sku }}</p>
-      {% endif %}
-    {% endcomment %}
+        {%- if v == nil and vdef.sku -%}
+          {%- assign v = product.variants | where: 'sku', vdef.sku | first -%}
+        {%- endif -%}
 
-    {% if section.settings.product_reviews_enable %}
-      <span class="shopify-product-reviews-badge" data-id="{{ product.id }}"></span>
-    {% endif %}
+        {%- if v -%}
+          {%- assign this_value = v.options[opt_index] -%}
+          <button
+            type="button"
+            class="variant-chip sw-select-variant"
+            data-hs-prop="{{ cat_key | default: '' }}"
+            data-hs-value="{{ vdef.hs_value | default: this_value | escape }}"
+            data-variant-id="{{ v.id }}"
+            data-variant-sku="{{ v.sku | escape }}"
+          >
+            {{ vdef.label | default: this_value }}
+          </button>
+        {%- else -%}
+          <span class="variant-chip variant-chip--more">Missing {{ vdef.label | default: 'variant' }}</span>
+        {%- endif -%}
+      {%- endfor -%}
+    {%- else -%}
+      {%- comment -%} Fallback: show all distinct values for the diameter option {%- endcomment -%}
+      {%- assign shown = '' -%}
+      {%- for v in product.variants -%}
+        {%- assign val = v.options[opt_index] -%}
+        {%- unless shown contains '|' | append: val | append: '|' -%}
+          <button
+            type="button"
+            class="variant-chip sw-select-variant"
+            data-hs-prop="{{ cat_key | default: '' }}"
+            data-hs-value="{{ val | escape }}"
+            data-variant-id="{{ v.id }}"
+            data-variant-sku="{{ v.sku | escape }}"
+          >
+            {{ val }}
+          </button>
+          {%- assign shown = shown | append: '|' | append: val | append: '|' -%}
+        {%- endunless -%}
+      {%- endfor -%}
+    {%- endif -%}
+  </div>
+</div>
+
+<div class="w-btn-wrapper">
+  <button class="btn btn-outline sw-select-btn" data-category="{{ cat_key | default: '' }}">Confirm selection</button>
+</div>
+
+
+
+
 
     {% assign total_qty = 0 %}
     {% assign any_managed = false %}
