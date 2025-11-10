@@ -56,117 +56,110 @@
 <!-- Step 2 (PLAIN LIQUID – NO parse_json) -->
 <article class="card" data-panel="2" hidden>
   {% assign cat_blocks = 
-    "alu_power_endmill|Alu-Power Endmill|alu-power-1-flute-30-helix-end-mill-e5e47|ALU_ROWS,
-     k_2_carbide_endmill|K-2 Carbide Endmill|k2-carbide-endmill|K2_ROWS,
-     combo_tap|Combo Tap|hss-e-combo-tap|COMBO_ROWS,
-     gold_p_jobber_drill|Gold-P Jobber Drill|gold-p-jobber-drill|GOLDP_ROWS,
-     iso_inserts|ISO Inserts|dnmg-insert|ISO_ROWS" | split: "," %}
+  "alu_power_endmill|Alu-Power Endmill|alu-power-1-flute-30-helix-end-mill-e5e47|ALU1_ROWS,
+   alu_power_endmill|Alu-Power Endmill|alu-power-2-flute-45-helix-long-end-mill-e5522|ALU2_ROWS,
+   alu_power_endmill|Alu-Power Endmill|alu-power-3-flute-45-helix-long-end-mill-e5e49|ALU3_ROWS,
+   k_2_carbide_endmill|K-2 Carbide Endmill|k-2-carbide-2-flute-30-helix-short-end-mill-g9424|K2_2F_ROWS,
+   k_2_carbide_endmill|K-2 Carbide Endmill|k-2-carbide-3-flute-30-helix-short-end-mill-g9425|K2_3F_ROWS,
+   k_2_carbide_endmill|K-2 Carbide Endmill|k-2-carbide-4-flute-30-helix-short-end-mill-g9432|K2_4F_ROWS,
+   combo_tap|Combo Tap|din371-din376-combo-spiral-flute-bright-tc804|TC804_ROWS,
+   combo_tap|Combo Tap|din371-din376-combo-spiral-point-bright-tc814|TC814_ROWS,
+   gold_p_jobber_drill|Gold-P Jobber Drill|gold-p-drills-jobber-din338-dlgp195|GOLDP_ROWS,
+   iso_inserts|ISO Inserts|tnmg-uf-finishing-turning-insert-60-negative|TNMG_ROWS,
+   iso_inserts|ISO Inserts|wnmg-uf-finishing-turning-insert-80-trigonal-negative|WNMG_ROWS,
+   iso_inserts|ISO Inserts|cnmg-uf-finishing-turning-insert-80-negative|CNMG_ROWS,
+   iso_inserts|ISO Inserts|dnmg-uf-finishing-turning-insert-55-negative|DNMG_ROWS" | split: "," %}
 
-{%- capture _hard_catalog_json -%}
-{
-  "alu_power_endmill": [
-    { "handle": "alu-power-1-flute-30-helix-end-mill-e5e47", "diameters": [
-      { "label": "Ø3", "hs_value": "Alu-Power 1 Flute | 30° Helix | 3 x 3 x 12 x 50mm (E5E47030)" },
-      { "label": "Ø4", "hs_value": "Alu-Power 1 Flute | 30° Helix | 4 x 4 x 15 x 60mm (E5E47040)" },
-      { "label": "Ø6", "hs_value": "Alu-Power 1 Flute | 30° Helix | 6 x 6 x 20 x 65mm (E5E47060)" },
-      { "label": "Ø8", "hs_value": "Alu-Power 1 Flute | 30° Helix | 8 x 8 x 22 x 65mm (E5E47080)" }
-    ]},
-    { "handle": "alu-power-2-flute-45-helix-long-end-mill-e5522", "diameters": [
-      { "label": "Ø3", "hs_value": "Alu-Power 2 Flute | 45° Helix | Long | 3 x 6 x 8 x 57mm  (E5522030)" },
-      { "label": "Ø4", "hs_value": "Alu-Power 2 Flute | 45° Helix | Long | 4 x 6 x 11 x 57mm (E5522040)" },
-      { "label": "Ø6", "hs_value": "Alu-Power 2 Flute | 45° Helix | Long | 6 x 6 x 13 x 57mm (E5522060)" },
-      { "label": "Ø8", "hs_value": "Alu-Power 2 Flute | 45° Helix | Long | 8 x 8 x 19 x 63mm (E5522080)" }
-    ]},
-    { "handle": "alu-power-3-flute-45-helix-long-end-mill-e5e49", "diameters": [
-      { "label": "Ø3", "hs_value": "Alu-Power 3 Flute | 45° Helix | Long | 3 x 6 x 12 x 57mm (E5E49030)" },
-      { "label": "Ø4", "hs_value": "Alu-Power 3 Flute | 45° Helix | Long | 4 x 6 x 15 x 57mm (E5E49040)" },
-      { "label": "Ø6", "hs_value": "Alu-Power 3 Flute | 45° Helix | Long | 6 x 6 x 20 x 65mm (E5E49060)" },
-      { "label": "Ø8", "hs_value": "Alu-Power 3 Flute | 45° Helix | Long | 8 x 8 x 22 x 65mm (E5E49080)" }
-    ]}
-  ],
+{%- comment -%} ALU-POWER {%- endcomment -%}
+{% assign ALU1_ROWS =
+  "alu-power-1-flute-30-helix-end-mill-e5e47~3|Ø3.0|Alu-Power 1 Flute | 30° Helix | 3 x 3 x 12 x 50mm (E5E47030),
+   alu-power-1-flute-30-helix-end-mill-e5e47~4|Ø4.0|Alu-Power 1 Flute | 30° Helix | 4 x 4 x 15 x 60mm (E5E47040),
+   alu-power-1-flute-30-helix-end-mill-e5e47~6|Ø6.0|Alu-Power 1 Flute | 30° Helix | 6 x 6 x 20 x 65mm (E5E47060),
+   alu-power-1-flute-30-helix-end-mill-e5e47~8|Ø8.0|Alu-Power 1 Flute | 30° Helix | 8 x 8 x 22 x 65mm (E5E47080)" | split: "," %}
 
-  "k_2_carbide_endmill": [
-    { "handle": "k-2-carbide-2-flute-30-helix-short-end-mill-g9424", "diameters": [
-      { "label": "Ø3", "hs_value": "K-2 Carbide 2 Flute | 30° Helix | Short | 3 x 3 x 12 x 32mm (G9424030)" },
-      { "label": "Ø4", "hs_value": "K-2 Carbide 2 Flute | 30° Helix | Short | 4 x 4 x 12 x 40mm (G9424040)" },
-      { "label": "Ø6", "hs_value": "K-2 Carbide 2 Flute | 30° Helix | Short | 6 x 6 x 16 x 50mm (G9424060)" },
-      { "label": "Ø8", "hs_value": "K-2 Carbide 2 Flute | 30° Helix | Short | 8 x 8 x 20 x 60mm (G9424080)" }
-    ]},
-    { "handle": "k-2-carbide-3-flute-30-helix-short-end-mill-g9425", "diameters": [
-      { "label": "Ø3", "hs_value": "K-2 Carbide 3 Flute | 30° Helix | Short | 3 x 3 x 12 x 32mm (G9425030)" },
-      { "label": "Ø4", "hs_value": "K-2 Carbide 3 Flute | 30° Helix | Short | 4 x 4 x 12 x 40mm (G9425040)" },
-      { "label": "Ø6", "hs_value": "K-2 Carbide 3 Flute | 30° Helix | Short | 6 x 6 x 16 x 50mm (G9425060)" },
-      { "label": "Ø8", "hs_value": "K-2 Carbide 3 Flute | 30° Helix | Short | 8 x 8 x 20 x 60mm (G9425080)" }
-    ]},
-    { "handle": "k-2-carbide-4-flute-30-helix-short-end-mill-g9432", "diameters": [
-      { "label": "Ø3", "hs_value": "K-2 Carbide 4 Flute | 30° Helix | Short | 3 x 3 x 12 x 32mm (G9432030)" },
-      { "label": "Ø4", "hs_value": "K-2 Carbide 4 Flute | 30° Helix | Short | 4 x 4 x 12 x 40mm (G9432040)" },
-      { "label": "Ø6", "hs_value": "K-2 Carbide 4 Flute | 30° Helix | Short | 6 x 6 x 16 x 50mm (G9432060)" },
-      { "label": "Ø8", "hs_value": "K-2 Carbide 4 Flute | 30° Helix | Short | 8 x 8 x 20 x 60mm (G9432080)" }
-    ]}
-  ],
+{% assign ALU2_ROWS =
+  "alu-power-2-flute-45-helix-long-end-mill-e5522~3|Ø3.0|Alu-Power 2 Flute | 45° Helix | Long | 3 x 6 x 8 x 57mm  (E5522030),
+   alu-power-2-flute-45-helix-long-end-mill-e5522~4|Ø4.0|Alu-Power 2 Flute | 45° Helix | Long | 4 x 6 x 11 x 57mm (E5522040),
+   alu-power-2-flute-45-helix-long-end-mill-e5522~6|Ø6.0|Alu-Power 2 Flute | 45° Helix | Long | 6 x 6 x 13 x 57mm (E5522060),
+   alu-power-2-flute-45-helix-long-end-mill-e5522~8|Ø8.0|Alu-Power 2 Flute | 45° Helix | Long | 8 x 8 x 19 x 63mm (E5522080)" | split: "," %}
 
-  "combo_tap": [
-    { "handle": "din371-din376-combo-spiral-flute-bright-tc804", "sizes": [
-      { "label": "M4 x 0.7", "hs_value": "HSS-E Combo Tap | DIN371 | Spiral Flute | M4 x 0.7 6H 63.0L (TC804246)" },
-      { "label": "M5 x 0.8", "hs_value": "HSS-E Combo Tap | DIN371 | Spiral Flute | M5 x 0.8 6H 70.0L (TC804286)" },
-      { "label": "M6 x 1.0", "hs_value": "HSS-E Combo Tap | DIN371 | Spiral Flute | M6 x 1.0 6H 80.0L (TC804316)" },
-      { "label": "M8 x 1.25", "hs_value": "HSS-E Combo Tap | DIN371 | Spiral Flute | M8 x 1.25 6H 90.0L (TC804366)" },
-      { "label": "M10 x 1.5", "hs_value": "HSS-E Combo Tap | DIN371 | Spiral Flute | M10 x 1.5 6H 100.0L (TC804426)" }
-    ]},
-    { "handle": "din371-din376-combo-spiral-point-bright-tc814", "sizes": [
-      { "label": "M4 x 0.7", "hs_value": "HSS-E Combo Tap | DIN371 | Gun Point | M4 x 0.7 6H 63.0L (TC814246)" },
-      { "label": "M5 x 0.8", "hs_value": "HSS-E Combo Tap | DIN371 | Gun Point | M5 x 0.8 6H 70.0L (TC814286)" },
-      { "label": "M6 x 1.0", "hs_value": "HSS-E Combo Tap | DIN371 | Gun Point | M6 x 1.0 6H 80.0L (TC814316)" },
-      { "label": "M8 x 1.25", "hs_value": "HSS-E Combo Tap | DIN371 | Gun Point | M8 x 1.25 6H 90.0L (TC814366)" },
-      { "label": "M10 x 1.5", "hs_value": "HSS-E Combo Tap | DIN371 | Gun Point | M10 x 1.5 6H 100.0L (TC814426)" }
-    ]}
-  ],
+{% assign ALU3_ROWS =
+  "alu-power-3-flute-45-helix-long-end-mill-e5e49~3|Ø3.0|Alu-Power 3 Flute | 45° Helix | Long | 3 x 6 x 12 x 57mm (E5E49030),
+   alu-power-3-flute-45-helix-long-end-mill-e5e49~4|Ø4.0|Alu-Power 3 Flute | 45° Helix | Long | 4 x 6 x 15 x 57mm (E5E49040),
+   alu-power-3-flute-45-helix-long-end-mill-e5e49~6|Ø6.0|Alu-Power 3 Flute | 45° Helix | Long | 6 x 6 x 20 x 65mm (E5E49060),
+   alu-power-3-flute-45-helix-long-end-mill-e5e49~8|Ø8.0|Alu-Power 3 Flute | 45° Helix | Long | 8 x 8 x 22 x 65mm (E5E49080)" | split: "," %}
 
-  "gold_p_jobber_drill": [
-    { "handle": "gold-p-drills-jobber-din338-dlgp195", "diameters": [
-      { "label": "Ø3.3", "hs_value": "Gold-P Jobber Drill | DIN338/N | 3.3 x 36 x 65mm (DLGP195033)" },
-      { "label": "Ø4.2", "hs_value": "Gold-P Jobber Drill | DIN338/N | 4.2 x 43 x 75mm (DLGP195042)" },
-      { "label": "Ø5", "hs_value": "Gold-P Jobber Drill | DIN338/N | 5 x 52 x 86mm (DLGP195050)" },
-      { "label": "Ø6.8", "hs_value": "Gold-P Jobber Drill | DIN338/N | 6.8 x 69 x 109mm (DLGP195068)" },
-      { "label": "Ø8.5", "hs_value": "Gold-P Jobber Drill | DIN338/N | 8.5 x 75 x 117mm (DLGP195085)" }
-    ]}
-  ],
+{%- comment -%} K-2 CARBIDE {%- endcomment -%}
+{% assign K2_2F_ROWS =
+  "k-2-carbide-2-flute-30-helix-short-end-mill-g9424~3|Ø3.0|K-2 Carbide 2 Flute | 30° Helix | Short | 3 x 3 x 12 x 32mm (G9424030),
+   k-2-carbide-2-flute-30-helix-short-end-mill-g9424~4|Ø4.0|K-2 Carbide 2 Flute | 30° Helix | Short | 4 x 4 x 12 x 40mm (G9424040),
+   k-2-carbide-2-flute-30-helix-short-end-mill-g9424~6|Ø6.0|K-2 Carbide 2 Flute | 30° Helix | Short | 6 x 6 x 16 x 50mm (G9424060),
+   k-2-carbide-2-flute-30-helix-short-end-mill-g9424~8|Ø8.0|K-2 Carbide 2 Flute | 30° Helix | Short | 8 x 8 x 20 x 60mm (G9424080)" | split: "," %}
 
-  "iso_inserts": [
-    { "handle": "tnmg-uf-finishing-turning-insert-60-negative", "designations": [
-      { "label": "TNMG160404-UF / YG801", "hs_value": "TNMG160404-UF-YG801/TNMG331-UF (22000039)" },
-      { "label": "TNMG160404-UF / YG3030", "hs_value": "TNMG160404-UF-YG3030/TNMG331-UF (22000272)" },
-      { "label": "TNMG160408-UF / YG3020", "hs_value": "TNMG160408-UF-YG3020/TNMG332-UF (22000277)" },
-      { "label": "TNMG160408-UF / YG3030", "hs_value": "TNMG160408-UF-YG3030/TNMG332-UF (22000278)" },
-      { "label": "TNMG160412-UF / YG3020", "hs_value": "TNMG160412-UF-YG3020/TNMG333-UF (22000588)" }
-    ]},
-    { "handle": "wnmg-uf-finishing-turning-insert-80-trigonal-negative", "designations": [
-      { "label": "WNMG060404-UF / YG801", "hs_value": "WNMG060404-UF-YG801/WNMG331-UF (22000058)" },
-      { "label": "WNMG060404-UF / YG3030", "hs_value": "WNMG060404-UF-YG3030/WNMG331-UF (22000437)" },
-      { "label": "WNMG080404-UF / YG801", "hs_value": "WNMG080404-UF-YG801/WNMG431-UF (22000055)" },
-      { "label": "WNMG080404-UF / YG3030", "hs_value": "WNMG080404-UF-YG3030/WNMG431-UF (22000317)" },
-      { "label": "WNMG080408-UF / YG3020", "hs_value": "WNMG080408-UF-YG3020/WNMG432-UF (22000322)" },
-      { "label": "WNMG080408-UF / YG3030", "hs_value": "WNMG080408-UF-YG3030/WNMG432-UF (22000323)" }
-    ]},
-    { "handle": "cnmg-uf-finishing-turning-insert-80-negative", "designations": [
-      { "label": "CNMG120404-UF / YG801", "hs_value": "CNMG120404-UF-YG801/CNMG431-UF (22000003)" },
-      { "label": "CNMG120404-UF / YG3030", "hs_value": "CNMG120404-UF-YG3030/CNMG431-UF (22000180)" },
-      { "label": "CNMG120408-UF / YG3020", "hs_value": "CNMG120408-UF-YG3020/CNMG432-UF (22000190)" },
-      { "label": "CNMG120408-UF / YG3030", "hs_value": "CNMG120408-UF-YG3030/CNMG432-UF (22000191)" }
-    ]},
-    { "handle": "dnmg-uf-finishing-turning-insert-55-negative", "designations": [
-      { "label": "DNMG150404-UF / YG801", "hs_value": "DNMG150404-UF-YG801/DNMG431-UF (22000016)" },
-      { "label": "DNMG150404-UF / YG3030", "hs_value": "DNMG150404-UF-YG3030/DNMG431-UF (22000365)" },
-      { "label": "DNMG150604-UF / YG801", "hs_value": "DNMG150604-UF-YG801/DNMG441-UF (22000018)" },
-      { "label": "DNMG150604-UF / YG3030", "hs_value": "DNMG150604-UF-YG3030/DNMG441-UF (22000227)" },
-      { "label": "DNMG150608-UF / YG3020", "hs_value": "DNMG150608-UF-YG3020/DNMG442-UF (22000232)" },
-      { "label": "DNMG150608-UF / YG3030", "hs_value": "DNMG150608-UF-YG3030/DNMG442-UF (22000233)" }
-    ]}
-  ]
-}
-{%- endcapture -%}
-{%- assign hard_catalog = _hard_catalog_json | strip | parse_json -%}
+{% assign K2_3F_ROWS =
+  "k-2-carbide-3-flute-30-helix-short-end-mill-g9425~3|Ø3.0|K-2 Carbide 3 Flute | 30° Helix | Short | 3 x 3 x 12 x 32mm (G9425030),
+   k-2-carbide-3-flute-30-helix-short-end-mill-g9425~4|Ø4.0|K-2 Carbide 3 Flute | 30° Helix | Short | 4 x 4 x 12 x 40mm (G9425040),
+   k-2-carbide-3-flute-30-helix-short-end-mill-g9425~6|Ø6.0|K-2 Carbide 3 Flute | 30° Helix | Short | 6 x 6 x 16 x 50mm (G9425060),
+   k-2-carbide-3-flute-30-helix-short-end-mill-g9425~8|Ø8.0|K-2 Carbide 3 Flute | 30° Helix | Short | 8 x 8 x 20 x 60mm (G9425080)" | split: "," %}
+
+{% assign K2_4F_ROWS =
+  "k-2-carbide-4-flute-30-helix-short-end-mill-g9432~3|Ø3.0|K-2 Carbide 4 Flute | 30° Helix | Short | 3 x 3 x 12 x 32mm (G9432030),
+   k-2-carbide-4-flute-30-helix-short-end-mill-g9432~4|Ø4.0|K-2 Carbide 4 Flute | 30° Helix | Short | 4 x 4 x 12 x 40mm (G9432040),
+   k-2-carbide-4-flute-30-helix-short-end-mill-g9432~6|Ø6.0|K-2 Carbide 4 Flute | 30° Helix | Short | 6 x 6 x 16 x 50mm (G9432060),
+   k-2-carbide-4-flute-30-helix-short-end-mill-g9432~8|Ø8.0|K-2 Carbide 4 Flute | 30° Helix | Short | 8 x 8 x 20 x 60mm (G9432080)" | split: "," %}
+
+{%- comment -%} COMBO TAPS {%- endcomment -%}
+{% assign TC804_ROWS =
+  "din371-din376-combo-spiral-flute-bright-tc804~M4x0.7|M4 x 0.7|HSS-E Combo Tap | DIN371 | Spiral Flute | M4 x 0.7 6H 63.0L (TC804246),
+   din371-din376-combo-spiral-flute-bright-tc804~M5x0.8|M5 x 0.8|HSS-E Combo Tap | DIN371 | Spiral Flute | M5 x 0.8 6H 70.0L (TC804286),
+   din371-din376-combo-spiral-flute-bright-tc804~M6x1.0|M6 x 1.0|HSS-E Combo Tap | DIN371 | Spiral Flute | M6 x 1.0 6H 80.0L (TC804316),
+   din371-din376-combo-spiral-flute-bright-tc804~M8x1.25|M8 x 1.25|HSS-E Combo Tap | DIN371 | Spiral Flute | M8 x 1.25 6H 90.0L (TC804366),
+   din371-din376-combo-spiral-flute-bright-tc804~M10x1.5|M10 x 1.5|HSS-E Combo Tap | DIN371 | Spiral Flute | M10 x 1.5 6H 100.0L (TC804426)" | split: "," %}
+
+{% assign TC814_ROWS =
+  "din371-din376-combo-spiral-point-bright-tc814~M4x0.7|M4 x 0.7|HSS-E Combo Tap | DIN371 | Gun Point | M4 x 0.7 6H 63.0L (TC814246),
+   din371-din376-combo-spiral-point-bright-tc814~M5x0.8|M5 x 0.8|HSS-E Combo Tap | DIN371 | Gun Point | M5 x 0.8 6H 70.0L (TC814286),
+   din371-din376-combo-spiral-point-bright-tc814~M6x1.0|M6 x 1.0|HSS-E Combo Tap | DIN371 | Gun Point | M6 x 1.0 6H 80.0L (TC814316),
+   din371-din376-combo-spiral-point-bright-tc814~M8x1.25|M8 x 1.25|HSS-E Combo Tap | DIN371 | Gun Point | M8 x 1.25 6H 90.0L (TC814366),
+   din371-din376-combo-spiral-point-bright-tc814~M10x1.5|M10 x 1.5|HSS-E Combo Tap | DIN371 | Gun Point | M10 x 1.5 6H 100.0L (TC814426)" | split: "," %}
+
+{%- comment -%} GOLD-P DRILLS {%- endcomment -%}
+{% assign GOLDP_ROWS =
+  "gold-p-drills-jobber-din338-dlgp195~3.3|Ø3.3|Gold-P Jobber Drill | DIN338/N | 3.3 x 36 x 65mm (DLGP195033),
+   gold-p-drills-jobber-din338-dlgp195~4.2|Ø4.2|Gold-P Jobber Drill | DIN338/N | 4.2 x 43 x 75mm (DLGP195042),
+   gold-p-drills-jobber-din338-dlgp195~5.0|Ø5.0|Gold-P Jobber Drill | DIN338/N | 5 x 52 x 86mm (DLGP195050),
+   gold-p-drills-jobber-din338-dlgp195~6.8|Ø6.8|Gold-P Jobber Drill | DIN338/N | 6.8 x 69 x 109mm (DLGP195068),
+   gold-p-drills-jobber-din338-dlgp195~8.5|Ø8.5|Gold-P Jobber Drill | DIN338/N | 8.5 x 75 x 117mm (DLGP195085)" | split: "," %}
+
+{%- comment -%} ISO INSERTS {%- endcomment -%}
+{% assign TNMG_ROWS =
+  "tnmg-uf-finishing-turning-insert-60-negative~TNMG160404-UF-YG801|TNMG160404-UF / YG801|TNMG160404-UF-YG801/TNMG331-UF (22000039),
+   tnmg-uf-finishing-turning-insert-60-negative~TNMG160404-UF-YG3030|TNMG160404-UF / YG3030|TNMG160404-UF-YG3030/TNMG331-UF (22000272),
+   tnmg-uf-finishing-turning-insert-60-negative~TNMG160408-UF-YG3020|TNMG160408-UF / YG3020|TNMG160408-UF-YG3020/TNMG332-UF (22000277),
+   tnmg-uf-finishing-turning-insert-60-negative~TNMG160408-UF-YG3030|TNMG160408-UF / YG3030|TNMG160408-UF-YG3030/TNMG332-UF (22000278),
+   tnmg-uf-finishing-turning-insert-60-negative~TNMG160412-UF-YG3020|TNMG160412-UF / YG3020|TNMG160412-UF-YG3020/TNMG333-UF (22000588)" | split: "," %}
+
+{% assign WNMG_ROWS =
+  "wnmg-uf-finishing-turning-insert-80-trigonal-negative~WNMG060404-UF-YG801|WNMG060404-UF / YG801|WNMG060404-UF-YG801/WNMG331-UF (22000058),
+   wnmg-uf-finishing-turning-insert-80-trigonal-negative~WNMG060404-UF-YG3030|WNMG060404-UF / YG3030|WNMG060404-UF-YG3030/WNMG331-UF (22000437),
+   wnmg-uf-finishing-turning-insert-80-trigonal-negative~WNMG080404-UF-YG801|WNMG080404-UF / YG801|WNMG080404-UF-YG801/WNMG431-UF (22000055),
+   wnmg-uf-finishing-turning-insert-80-trigonal-negative~WNMG080404-UF-YG3030|WNMG080404-UF / YG3030|WNMG080404-UF-YG3030/WNMG431-UF (22000317),
+   wnmg-uf-finishing-turning-insert-80-trigonal-negative~WNMG080408-UF-YG3020|WNMG080408-UF / YG3020|WNMG080408-UF-YG3020/WNMG432-UF (22000322),
+   wnmg-uf-finishing-turning-insert-80-trigonal-negative~WNMG080408-UF-YG3030|WNMG080408-UF / YG3030|WNMG080408-UF-YG3030/WNMG432-UF (22000323)" | split: "," %}
+
+{% assign CNMG_ROWS =
+  "cnmg-uf-finishing-turning-insert-80-negative~CNMG120404-UF-YG801|CNMG120404-UF / YG801|CNMG120404-UF-YG801/CNMG431-UF (22000003),
+   cnmg-uf-finishing-turning-insert-80-negative~CNMG120404-UF-YG3030|CNMG120404-UF / YG3030|CNMG120404-UF-YG3030/CNMG431-UF (22000180),
+   cnmg-uf-finishing-turning-insert-80-negative~CNMG120408-UF-YG3020|CNMG120408-UF / YG3020|CNMG120408-UF-YG3020/CNMG432-UF (22000190),
+   cnmg-uf-finishing-turning-insert-80-negative~CNMG120408-UF-YG3030|CNMG120408-UF / YG3030|CNMG120408-UF-YG3030/CNMG432-UF (22000191)" | split: "," %}
+
+{% assign DNMG_ROWS =
+  "dnmg-uf-finishing-turning-insert-55-negative~DNMG150404-UF-YG801|DNMG150404-UF / YG801|DNMG150404-UF-YG801/DNMG431-UF (22000016),
+   dnmg-uf-finishing-turning-insert-55-negative~DNMG150404-UF-YG3030|DNMG150404-UF / YG3030|DNMG150404-UF-YG3030/DNMG431-UF (22000365),
+   dnmg-uf-finishing-turning-insert-55-negative~DNMG150604-UF-YG801|DNMG150604-UF / YG801|DNMG150604-UF-YG801/DNMG441-UF (22000018),
+   dnmg-uf-finishing-turning-insert-55-negative~DNMG150604-UF-YG3030|DNMG150604-UF / YG3030|DNMG150604-UF-YG3030/DNMG441-UF (22000227),
+   dnmg-uf-finishing-turning-insert-55-negative~DNMG150608-UF-YG3020|DNMG150608-UF / YG3020|DNMG150608-UF-YG3020/DNMG442-UF (22000232),
+   dnmg-uf-finishing-turning-insert-55-negative~DNMG150608-UF-YG3030|DNMG150608-UF / YG3030|DNMG150608-UF-YG3030/DNMG442-UF (22000233)" | split: "," %}
 
 
   {% for raw in cat_blocks %}
@@ -185,7 +178,7 @@
           {% render 'product-grid-item-samples', product: p %}
 
           <div class="card-variants">
-            <div class="card-variants-label">Choose variant</div>
+            <div class="card-variants-label">Choose option</div>
             <div class="card-variants-chips">
               {% assign rows = nil %}
               {% case rows_var %}
