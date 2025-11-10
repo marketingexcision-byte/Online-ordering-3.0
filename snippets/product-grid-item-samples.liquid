@@ -425,7 +425,8 @@
       {%- assign shown = '' -%}
       {%- for v in product.variants -%}
         {%- assign val = v.options[opt_index] -%}
-        {%- unless shown contains '|' | append: val | append: '|' -%}
+        {%- assign needle = '|' | append: val | append: '|' -%}
+{%- unless shown contains needle -%}
           <button
             type="button"
             class="variant-chip sw-select-variant"
@@ -436,8 +437,8 @@
           >
             {{ val }}
           </button>
-          {%- assign shown = shown | append: '|' | append: val | append: '|' -%}
-        {%- endunless -%}
+            {%- assign shown = shown | append: needle -%}
+{%- endunless -%}
       {%- endfor -%}
     {%- endif -%}
   </div>
