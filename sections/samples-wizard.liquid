@@ -183,11 +183,6 @@
         {% endfor %}
         {% assign categories = cats_raw | split: '§' %}
 
-        {%- comment -%} Buttons for nav {%- endcomment -%}
-        <div class="w-btn-wrapper" style="display:flex;gap:12px;">
-          <button class="btn btn-outline" id="sw-back-2">Back</button>
-          <button class="btn btn-primary" id="sw-next-2">Review</button>
-        </div>
 
         {%- comment -%} Render grouped categories {%- endcomment -%}
         {% for cat in categories %}
