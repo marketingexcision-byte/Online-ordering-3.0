@@ -1,402 +1,244 @@
-<section id="samples-wizard" class="samples-wizard">
-  <div class="sw-container" aria-live="polite"></div>
-</section>
+{% comment %}
+Samples Wizard – stepper + product selection + HubSpot submit via Worker
+Settings:
+- pick a collection for each category (we render using 'product-grid-item')
+- configure Worker endpoint + thank-you URL
+{% endcomment %}
 
-<style>
-  .samples-wizard { --sw-max: 980px; --sw-gap: 16px; --sw-radius: 14px; --sw-shadow: 0 6px 24px rgba(0,0,0,.08); }
-  .sw-container { max-width: var(--sw-max); margin: 40px auto; padding: 16px; }
-  .sw-card { background: #fff; border: 1px solid #eaeaea; border-radius: var(--sw-radius); box-shadow: var(--sw-shadow); padding: 16px; }
-  .sw-steps { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 16px; }
-  .sw-step { text-align: center; font-weight: 600; padding: 10px; border-radius: 10px; border: 1px solid #eee; background: #fafafa; }
-  .sw-step.active { background: #111; color: #fff; border-color: #111; }
+<section id="samples-wizard" class="section">
+  <div class="container layout-constrained">
+    <div class="section__header">
+      <h2 class="section__title">Free Samples</h2>
+    </div>
 
-  .sw-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: var(--sw-gap); }
-  .sw-col-12 { grid-column: span 12; }
-  .sw-col-6 { grid-column: span 6; }
-  .sw-col-4 { grid-column: span 4; }
-  .sw-col-3 { grid-column: span 3; }
-  @media (max-width: 900px){ .sw-col-6,.sw-col-4,.sw-col-3{ grid-column: span 12; } }
-
-  .sw-field { display: flex; flex-direction: column; gap: 6px; }
-  .sw-field input, .sw-field select, .sw-field textarea { border: 1px solid #dcdcdc; border-radius: 10px; padding: 12px 12px; font-size: 14px; }
-  .sw-row { display: grid; grid-template-columns: repeat(12, 1fr); gap: var(--sw-gap); }
-  .sw-actions { display: flex; justify-content: space-between; margin-top: 24px; }
-  .sw-btn { display: inline-flex; align-items: center; gap:8px; border-radius: 999px; padding: 12px 18px; background: #111; color: #fff; border: 0; cursor: pointer; font-weight: 600; }
-  .sw-btn.secondary { background: #f2f2f2; color: #111; }
-  .sw-btn[disabled] { opacity: .5; cursor: not-allowed; }
-
-  .sw-kicker { color: #6b7280; font-size: 13px; }
-  .sw-h1 { font-size: 28px; line-height: 1.2; margin: 0 0 8px; }
-  .sw-h2 { font-size: 18px; line-height: 1.2; margin: 8px 0 12px; }
-
-  .sw-pills { display:flex; gap:8px; flex-wrap: wrap; margin-bottom: 12px; }
-  .sw-pill { border: 1px solid #eaeaea; border-radius: 999px; padding: 8px 12px; font-size: 13px; background: #fff; cursor:pointer; }
-  .sw-pill.active { background: #111; color:#fff; border-color:#111; }
-
-  .sw-card-grid { display:grid; grid-template-columns: repeat(12,1fr); gap: var(--sw-gap); }
-  .sw-card-item { grid-column: span 3; border:1px solid #eaeaea; border-radius: 12px; overflow: hidden; cursor:pointer; background:#fff; display:flex; flex-direction:column; }
-  .sw-card-item img { width:100%; aspect-ratio: 1.25/1; object-fit: cover; background:#f8f8f8; }
-  .sw-card-item .sw-ci-body { padding: 10px 12px; font-size: 14px; line-height: 1.3; }
-  .sw-card-item .sku { font-size: 12px; color: #6b7280; }
-  .sw-card-item.active { outline: 2px solid #111; border-color:#111; }
-  @media(max-width: 900px){ .sw-card-item{ grid-column: span 12; } }
-
-  .sw-review { background:#fafafa; border:1px dashed #ddd; border-radius: 12px; padding: 12px; }
-  .sw-error { color: #b00020; margin-top: 10px; }
-  .sw-success { background:#ecfdf5; border:1px solid #10b981; color:#064e3b; border-radius:12px; padding: 12px; }
-</style>
-
-<script>
-(function(){
-  // Replace these with your real values.
-  const HUBSPOT = {
-    portalId: "YOUR_PORTAL_ID",
-    formGuid: "YOUR_FORM_GUID",
-    // This is the Cloudflare Worker endpoint you will deploy from the code at the bottom of this file
-    // Set to something like https://samples.yourdomain.com/api/hs-submit
-    workerEndpoint: "https://YOUR-WORKER-DOMAIN/api/hs-submit",
-    redirectUrl: "/pages/thank-you" // optional, keep blank to stay on page
-  };
-
-  // HubSpot property internal names. You must confirm these in HubSpot.
-  const FIELD_MAP = {
-    firstName: "firstname",
-    lastName: "lastname",
-    email: "email",
-    phone: "mobilephone", // or "phone"
-    address: "address",
-    company: "company",
-    numMachines: "number_of_machines",
-    materials: "materials_commonly_machined",
-    // one property per category
-    products: {
-      aluPowerEndmill: "alu_power_endmill",
-      k2CarbideEndmill: "k2_carbide_endmill",
-      comboTap: "combo_tap",
-      goldPJobberDrill: "gold_p_jobber_drill",
-      isoInserts: "iso_inserts"
-    }
-  };
-
-  // You can hardcode this product catalog. Or fetch JSON from your CDN.
-  const CATALOG = [
-    {
-      key: "aluPowerEndmill",
-      title: "Alu-Power Endmill",
-      pickOne: true,
-      items: [
-        { id:"E5E47030", label:"Alu-Power 1 Flute | 30° Helix | 3 x 3 x 12 x 50mm", value:"Alu-Power 1 Flute | 30° Helix | 3 x 3 x 12 x 50mm (E5E47030)", sku:"E5E47030", image:"https://dummyimage.com/600x400/eeeeee/222222&text=E5E47030" },
-        { id:"E5E47040", label:"Alu-Power 1 Flute | 30° Helix | 4 x 4 x 15 x 60mm", value:"Alu-Power 1 Flute | 30° Helix | 4 x 4 x 15 x 60mm (E5E47040)", sku:"E5E47040", image:"https://dummyimage.com/600x400/eeeeee/222222&text=E5E47040" },
-        { id:"E5E47060", label:"Alu-Power 1 Flute | 30° Helix | 6 x 6 x 20 x 65mm", value:"Alu-Power 1 Flute | 30° Helix | 6 x 6 x 20 x 65mm (E5E47060)", sku:"E5E47060", image:"https://dummyimage.com/600x400/eeeeee/222222&text=E5E47060" },
-        { id:"E5E47080", label:"Alu-Power 1 Flute | 30° Helix | 8 x 8 x 22 x 65mm", value:"Alu-Power 1 Flute | 30° Helix | 8 x 8 x 22 x 65mm (E5E47080)", sku:"E5E47080", image:"https://dummyimage.com/600x400/eeeeee/222222&text=E5E47080" }
-      ]
-    },
-    {
-      key: "k2CarbideEndmill",
-      title: "K-2 Carbide Endmill",
-      pickOne: true,
-      items: [
-        { id:"G9424030", label:"K-2 Carbide 2 Flute | 30° | Short | 3 x 3 x 12 x 32mm", value:"K-2 Carbide 2 Flute | 30° | Short | 3 x 3 x 12 x 32mm (G9424030)", sku:"G9424030", image:"https://dummyimage.com/600x400/eeeeee/222222&text=G9424030" },
-        { id:"G9432060", label:"K-2 Carbide 4 Flute | 30° | Short | 6 x 6 x 16 x 50mm", value:"K-2 Carbide 4 Flute | 30° | Short | 6 x 6 x 16 x 50mm (G9432060)", sku:"G9432060", image:"https://dummyimage.com/600x400/eeeeee/222222&text=G9432060" },
-        { id:"G9432080", label:"K-2 Carbide 4 Flute | 30° | Short | 8 x 8 x 20 x 60mm", value:"K-2 Carbide 4 Flute | 30° | Short | 8 x 8 x 20 x 60mm (G9432080)", sku:"G9432080", image:"https://dummyimage.com/600x400/eeeeee/222222&text=G9432080" }
-      ]
-    },
-    {
-      key: "comboTap",
-      title: "HSS-E Combo Tap",
-      pickOne: true,
-      items: [
-        { id:"TC804246", label:"HSS-E Combo Tap | DIN371 | Spiral | M4 x 0.7 6H 63.0L", value:"HSS-E Combo Tap | DIN371 | Spiral Flute | M4 x 0.7 6H 63.0L (TC804246)", sku:"TC804246", image:"https://dummyimage.com/600x400/eeeeee/222222&text=TC804246" },
-        { id:"TC814366", label:"HSS-E Combo Tap | DIN371 | Gun | M8 x 1.25 6H 90.0L", value:"HSS-E Combo Tap | DIN371 | Gun Point | M8 x 1.25 6H 90.0L (TC814366)", sku:"TC814366", image:"https://dummyimage.com/600x400/eeeeee/222222&text=TC814366" }
-      ]
-    },
-    {
-      key: "goldPJobberDrill",
-      title: "Gold‑P Jobber Drill",
-      pickOne: true,
-      items: [
-        { id:"DLGP195033", label:"Gold‑P Jobber | DIN338/N | 3.3 x 36 x 65mm", value:"Gold‑P Jobber Drill | DIN338/N | 3.3 x 36 x 65mm (DLGP195033)", sku:"DLGP195033", image:"https://dummyimage.com/600x400/eeeeee/222222&text=DLGP195033" },
-        { id:"DLGP195068", label:"Gold‑P Jobber | DIN338/N | 6.8 x 69 x 109mm", value:"Gold‑P Jobber Drill | DIN338/N | 6.8 x 69 x 109mm (DLGP195068)", sku:"DLGP195068", image:"https://dummyimage.com/600x400/eeeeee/222222&text=DLGP195068" }
-      ]
-    },
-    {
-      key: "isoInserts",
-      title: "ISO Inserts",
-      pickOne: true,
-      items: [
-        { id:"22000227", label:"DNMG150604‑UF‑YG3030/DNMG441‑UF", value:"DNMG150604‑UF‑YG3030/DNMG441‑UF (22000227)", sku:"22000227", image:"https://dummyimage.com/600x400/eeeeee/222222&text=22000227" }
-      ]
-    }
-  ];
-
-  // -------------------- Wizard --------------------
-  const state = {
-    step: 1,
-    contact: {},
-    selection: {},
-    submitting: false,
-    error: "",
-    success: false,
-  };
-
-  const el = sel => document.querySelector(sel);
-  const html = String.raw;
-
-  function render(){
-    const container = el('#samples-wizard .sw-container');
-    container.innerHTML = `
+    <div id="sw-app">
       <div class="tabs" role="tablist" aria-label="Progress">
-        <button aria-selected="${state.step===1}">1. Your details</button>
-        <button aria-selected="${state.step===2}">2. Pick samples</button>
-        <button aria-selected="${state.step===3}">3. Review & submit</button>
+        <button aria-selected="true" data-step="1">1. Your details</button>
+        <button aria-selected="false" data-step="2">2. Pick samples</button>
+        <button aria-selected="false" data-step="3">3. Review & submit</button>
       </div>
-        <div class="sw-step ${state.step===2?'active':''}" role="tab" aria-selected="${state.step===2}">2. Pick samples</div>
-        <div class="sw-step ${state.step===3?'active':''}" role="tab" aria-selected="${state.step===3}">3. Review & submit</div>
-      </div>
-      ${state.step===1 ? renderStep1() : ''}
-      ${state.step===2 ? renderStep2() : ''}
-      ${state.step===3 ? renderStep3() : ''}
-    `;
-  }
 
-  function renderStep1(){
-    const c = state.contact;
-    return html`
-    <div class="card">
-      <div class="sw-kicker">Step 1</div>
-      <h2 class="sw-h1">Tell us where to send the samples</h2>
-      <div class="sw-row">
-        <div class="sw-col-6 sw-field">
-          <label>First name*</label>
-          <input class="form-input" id="sw-fn" value="${c.firstName||''}" required />
+      <!-- Step 1 -->
+      <article class="card" data-panel="1">
+        <div class="grid" style="display:grid;grid-template-columns:repeat(12,1fr);gap:16px">
+          <div style="grid-column:span 6">
+            <label>First name*</label>
+            <input class="form-input" id="sw-firstname" required>
+          </div>
+          <div style="grid-column:span 6">
+            <label>Last name*</label>
+            <input class="form-input" id="sw-lastname" required>
+          </div>
+          <div style="grid-column:span 6">
+            <label>Email*</label>
+            <input class="form-input" id="sw-email" type="email" required>
+          </div>
+          <div style="grid-column:span 6">
+            <label>Mobile phone number*</label>
+            <input class="form-input" id="sw-mobilephone" required>
+          </div>
+          <div style="grid-column:span 12">
+            <label>Full Street Address*</label>
+            <input class="form-input" id="sw-address" required>
+          </div>
+          <div style="grid-column:span 12">
+            <label>Company name*</label>
+            <input class="form-input" id="sw-company" required>
+          </div>
+          <div style="grid-column:span 12">
+            <label>Number of Machines*</label>
+            <input class="form-input" id="sw-machines" type="number" min="0" required>
+          </div>
+          <div style="grid-column:span 12">
+            <label>Materials Commonly Machined*</label>
+            <textarea class="form-input" id="sw-metals_machining" rows="3"></textarea>
+          </div>
         </div>
-        <div class="sw-col-6 sw-field">
-          <label>Last name*</label>
-          <input class="form-input" id="sw-ln" value="${c.lastName||''}" required />
+        <div class="w-btn-wrapper">
+          <button class="btn btn-primary" id="sw-next-1">Next</button>
         </div>
-        <div class="sw-col-6 sw-field">
-          <label>Email*</label>
-          <input class="form-input" id="sw-email" type="email" value="${c.email||''}" required />
-        </div>
-        <div class="sw-col-6 sw-field">
-          <label>Mobile phone number*</label>
-          <input class="form-input" id="sw-phone" value="${c.phone||''}" required />
-        </div>
-        <div class="sw-col-12 sw-field">
-          <label>Full Street Address*</label>
-          <input class="form-input" id="sw-address" value="${c.address||''}" required />
-        </div>
-        <div class="sw-col-12 sw-field">
-          <label>Company name*</label>
-          <input class="form-input" id="sw-company" value="${c.company||''}" required />
-        </div>
-        <div class="sw-col-12 sw-field">
-          <label>Number of Machines*</label>
-          <input class="form-input" id="sw-num" type="number" min="0" value="${c.numMachines||''}" required />
-        </div>
-        <div class="sw-col-12 sw-field">
-          <label>Materials Commonly Machined*</label>
-          <textarea class="form-input" id="sw-materials" rows="3">${c.materials||''}</textarea>
-        </div>
-      </div>
-      <div class="sw-actions">
-        <button class="btn btn-outline" disabled>Back</button>
-        <button class="btn btn-primary" id="sw-next-1">Next</button>
-      </div>
-      ${state.error?`<div class="sw-error">${state.error}</div>`:''}
-    </div>`;
-  }
+        <div id="sw-error-1" style="color:#b00020"></div>
+      </article>
 
-  function renderStep2(){
-    return html`
-    <div class="card">
-      <div class="sw-kicker">Step 2</div>
-      <h2 class="sw-h1">Pick one sample in each category</h2>
-      ${CATALOG.map(cat => renderCategory(cat)).join('')}
-      <div class="sw-actions">
-        <button class="btn btn-outline" id="sw-back-2">Back</button>
-        <button class="btn btn-primary" id="sw-next-2">Review</button>
-      </div>
-    </div>`
-  }
+      <!-- Step 2 -->
+      <article class="card" data-panel="2" hidden>
+        {% assign cats = 
+          '{ 
+            "alu_power_endmill": "Alu-Power Endmill",
+            "k_2_carbide_endmill": "K-2 Carbide Endmill",
+            "combo_tap": "Combo Tap",
+            "gold_p_jobber_drill": "Gold-P Jobber Drill",
+            "iso_inserts": "ISO Inserts"
+          }' | parse_json %}
 
-  function renderCategory(cat){
-    const selectedId = state.selection[cat.key]?.id;
-    return html`
-      <div class="sw-col-12">
-        <h3 class="sw-h2">${cat.title}</h3>
-        <div class="sw-card-grid">
-          ${cat.items.map(item => html`
-            <div class="sw-card-item ${selectedId===item.id?'active':''}" data-cat="${cat.key}" data-id="${item.id}" tabindex="0" role="button" aria-pressed="${selectedId===item.id}">
-              <img src="${item.image}" alt="${item.label}">
-              <div class="sw-ci-body">
-                <div>${item.label}</div>
-                <div class="sku">${item.sku || ''}</div>
-              </div>
+        {% for key in cats %}
+          {% assign handle = section.settings[key[0]] %}
+          {% if handle %}
+            {% assign catCollection = collections[handle] %}
+            <h3 class="section__title" style="margin:.5rem 0 1rem">{{ key[1] }}</h3>
+            <div class="grid-uniform products-collection rlp_regular" data-category="{{ key[0] }}">
+              {% for product in catCollection.products %}
+                {% assign first_variant = product.selected_or_first_available_variant %}
+                {% comment %} Your shop snippet renders card UI {% endcomment %}
+                <div class="sw-card-wrap" data-product-title="{{ product.title | escape }}" data-variant-sku="{{ first_variant.sku | escape }}">
+                  {% include 'product-grid-item' %}
+                  <div class="w-btn-wrapper">
+                    <button class="btn btn-outline sw-select-btn">Select sample</button>
+                  </div>
+                </div>
+              {% endfor %}
             </div>
-          `).join('')}
-        </div>
-      </div>
-    `;
-  }
+          {% endif %}
+        {% endfor %}
 
-  function renderStep3(){
-    const entries = Object.entries(state.selection);
-    return html`
-      <div class="card">
-        <div class="sw-kicker">Step 3</div>
-        <h2 class="sw-h1">Review your details</h2>
-        <div class="sw-review">
-          <strong>Contact</strong><br/>
-          ${state.contact.firstName||''} ${state.contact.lastName||''}<br/>
-          ${state.contact.email||''} · ${state.contact.phone||''}<br/>
-          ${state.contact.address||''}<br/>
-          ${state.contact.company||''} · Machines: ${state.contact.numMachines||''}<br/>
-          Materials: ${state.contact.materials||''}
+        <div class="w-btn-wrapper" style="display:flex;gap:12px">
+          <button class="btn btn-outline" id="sw-back-2">Back</button>
+          <button class="btn btn-primary" id="sw-next-2">Review</button>
         </div>
-        <div style="height:10px"></div>
-        <div class="sw-review">
-          <strong>Samples</strong>
-          <ul>
-            ${entries.map(([key, v])=>`<li>${CATALOG.find(c=>c.key===key)?.title||key}: ${v?.label||'—'}</li>`).join('')}
-          </ul>
-        </div>
-        <div class="sw-actions">
+      </article>
+
+      <!-- Step 3 -->
+      <article class="card" data-panel="3" hidden>
+        <h3 class="section__title">Review</h3>
+        <div id="sw-review"></div>
+        <div class="w-btn-wrapper">
           <button class="btn btn-outline" id="sw-back-3">Back</button>
-          <button class="btn btn-primary full-width" id="sw-submit" ${state.submitting?'disabled':''}>${state.submitting?'Submitting…':'Submit'}</button>
+          <button class="btn btn-primary full-width" id="sw-submit">Send me samples</button>
         </div>
-        ${state.error?`<div class="sw-error">${state.error}</div>`:''}
-        ${state.success?`<div class="sw-success">Thanks. Your request is in. We will email you a confirmation shortly.</div>`:''}
-      </div>
-    `;
-  }
+        <div id="sw-error-3" style="color:#b00020"></div>
+        <div id="sw-success" class="card" style="display:none;background:#ecfdf5;border-color:#10b981;color:#064e3b">
+          Thanks. we’ve got it.
+        </div>
+      </article>
+    </div>
+  </div>
 
-  // Event delegation
-  document.addEventListener('click', function(e){
-    const t = e.target;
-    if(t.matches('#sw-next-1')){
-      const fn = el('#sw-fn').value.trim();
-      const ln = el('#sw-ln').value.trim();
-      const email = el('#sw-email').value.trim();
-      const phone = el('#sw-phone').value.trim();
-      const address = el('#sw-address').value.trim();
-      const company = el('#sw-company').value.trim();
-      const num = el('#sw-num').value.trim();
-      const materials = el('#sw-materials').value.trim();
-      if(!fn || !ln || !email || !phone || !address || !company || !num){
-        state.error = 'Fill the required fields first.';
-        render();
-        return;
-      }
-      state.error = '';
-      state.contact = { firstName:fn, lastName:ln, email, phone, address, company, numMachines:num, materials };
-      state.step = 2;
-      render();
-    }
-    if(t.matches('#sw-back-2')){ state.step = 1; render(); }
-    if(t.matches('#sw-next-2')){ state.step = 3; render(); }
-    if(t.matches('#sw-back-3')){ state.step = 2; render(); }
-    if(t.closest('.sw-card-item')){
-      const card = t.closest('.sw-card-item');
-      const catKey = card.getAttribute('data-cat');
-      const id = card.getAttribute('data-id');
-      const cat = CATALOG.find(c => c.key===catKey);
-      const item = cat.items.find(i => i.id===id);
-      state.selection[catKey] = item;
-      render();
-    }
-    if(t.matches('#sw-submit')){ submit(); }
-  });
-
-  function buildHubSpotPayload(){
-    // Assemble HS field list
-    const fields = [];
-    const c = state.contact;
-    fields.push({ name: FIELD_MAP.firstName, value: c.firstName });
-    fields.push({ name: FIELD_MAP.lastName, value: c.lastName });
-    fields.push({ name: FIELD_MAP.email, value: c.email });
-    fields.push({ name: FIELD_MAP.phone, value: c.phone });
-    fields.push({ name: FIELD_MAP.address, value: c.address });
-    fields.push({ name: FIELD_MAP.company, value: c.company });
-    fields.push({ name: FIELD_MAP.numMachines, value: String(c.numMachines) });
-    fields.push({ name: FIELD_MAP.materials, value: c.materials || '' });
-
-    // Product selections, one HubSpot property per category
-    for(const cat of CATALOG){
-      const sel = state.selection[cat.key];
-      if(sel){
-        const hsProp = FIELD_MAP.products[cat.key];
-        if(hsProp){ fields.push({ name: hsProp, value: sel.value }); }
-      }
-    }
-
-    // Include the hubspotutk cookie if present
-    const hutk = document.cookie.split('; ').find(c => c.startsWith('hubspotutk='))?.split('=')[1];
-    const context = {
-      hutk: hutk || undefined,
-      pageUri: window.location.href,
-      pageName: document.title
+  <script>
+  (function(){
+    const HUBSPOT = {
+      portalId: "2595431",
+      formGuid: "30c37b27-b6db-444a-9872-19ddb7e78b89",
+      workerEndpoint: "{{ section.settings.worker_endpoint | escape }}",
+      redirectUrl: "{{ section.settings.thankyou_url | escape }}"
     };
 
-    return { portalId: HUBSPOT.portalId, formGuid: HUBSPOT.formGuid, fields, context };
-  }
-
-  async function submit(){
-    try{
-      state.submitting = true; state.error = ''; render();
-      const payload = buildHubSpotPayload();
-      const res = await fetch(HUBSPOT.workerEndpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      if(!res.ok){
-        const txt = await res.text();
-        throw new Error('HubSpot submission failed. ' + txt);
+    const FIELD_MAP = {
+      firstname: "firstname",
+      lastname: "lastname",
+      email: "email",
+      mobilephone: "mobilephone",
+      address: "address",
+      company: "company",
+      machines: "machines",
+      metals_machining: "metals_machining",
+      products: {
+        alu_power_endmill: "alu_power_endmill",
+        k_2_carbide_endmill: "k_2_carbide_endmill",
+        combo_tap: "combo_tap",
+        gold_p_jobber_drill: "gold_p_jobber_drill",
+        iso_inserts: "iso_inserts"
       }
-      state.success = true; state.submitting = false; render();
-      if(HUBSPOT.redirectUrl){ setTimeout(()=>window.location.href = HUBSPOT.redirectUrl, 900); }
-    }catch(err){
-      console.error(err);
-      state.submitting = false; state.error = err.message || 'Something went wrong.'; render();
-    }
-  }
-
-  render();
-})();
-</script>
-
-<!-- ============================
-CLOUDFLARE WORKER. Create a Worker route, for example https://samples.yourdomain.com/api/hs-submit
-Paste the code below. Then update HUBSPOT.workerEndpoint at the top of this file.
-============================ -->
-
-<!--
-export default {
-  async fetch(request) {
-    const cors = {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'content-type',
     };
-    if (request.method === 'OPTIONS') return new Response(null, { headers: cors });
-    if (request.method !== 'POST') return new Response('Method Not Allowed', { status: 405, headers: cors });
 
-    try {
-      const { portalId, formGuid, fields, context } = await request.json();
-      if(!portalId || !formGuid || !Array.isArray(fields)){
-        return new Response('Bad request', { status: 400, headers: cors });
-      }
-      const hsUrl = `https://api.hsforms.com/submissions/v3/integration/submit/${portalId}/${formGuid}`;
-      const hsResp = await fetch(hsUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fields, context })
-      });
-      const text = await hsResp.text();
-      return new Response(text, { status: hsResp.status, headers: cors });
-    } catch (err) {
-      return new Response('Server error', { status: 500, headers: cors });
+    const state = { step:1, contact:{}, selections:{} };
+    const $ = s => document.querySelector(s);
+    const $$ = (s,root=document) => Array.from(root.querySelectorAll(s));
+
+    // Stepper
+    function setStep(n){
+      state.step = n;
+      $$('.tabs button').forEach((b,i)=> b.setAttribute('aria-selected', String(i+1===n)));
+      $$('article.card[data-panel]').forEach(p => p.hidden = (Number(p.dataset.panel)!==n));
+      if(n===3) renderReview();
     }
-  }
-}
+
+    $('#sw-next-1').addEventListener('click', () => {
+      const get = id => $(id).value.trim();
+      const req = ['#sw-firstname','#sw-lastname','#sw-email','#sw-mobilephone','#sw-address','#sw-company','#sw-machines'];
+      if(req.some(sel => !$(sel).value.trim())){ $('#sw-error-1').textContent='Fill the required fields first.'; return; }
+      $('#sw-error-1').textContent='';
+      state.contact = {
+        firstname: get('#sw-firstname'), lastname: get('#sw-lastname'), email: get('#sw-email'),
+        mobilephone: get('#sw-mobilephone'), address: get('#sw-address'), company: get('#sw-company'),
+        machines: get('#sw-machines'), metals_machining: get('#sw-metals_machining')
+      };
+      setStep(2);
+    });
+
+    $('#sw-back-2').addEventListener('click', ()=> setStep(1));
+    $('#sw-next-2').addEventListener('click', ()=> setStep(3));
+    $('#sw-back-3').addEventListener('click', ()=> setStep(2));
+
+    // Selection via product-grid-item wrappers
+    $$('.grid-uniform.products-collection').forEach(section => {
+      section.addEventListener('click', (e)=>{
+        const btn = e.target.closest('.sw-select-btn');
+        if(!btn) return;
+        const wrap = e.target.closest('.sw-card-wrap');
+        const category = section.dataset.category;
+        const title = wrap.dataset.productTitle;
+        const sku = wrap.dataset.variantSku || '';
+        state.selections[category] = { title, sku, value: `${title}${sku ? ' ('+sku+')' : ''}` };
+        // Visual: mark selected card
+        $$('.sw-card-wrap', section).forEach(w => w.style.outline='none');
+        wrap.style.outline = '2px solid var(--color-primary-blue)';
+      });
+    });
+
+    function renderReview(){
+      const c = state.contact;
+      const s = state.selections;
+      $('#sw-review').innerHTML = `
+        <div><strong>Contact</strong><br>
+        ${c.firstname||''} ${c.lastname||''} · ${c.email||''}<br>
+        ${c.mobilephone||''} · ${c.address||''}<br>
+        ${c.company||''} · Machines: ${c.machines||''}<br>
+        Materials: ${c.metals_machining||''}</div>
+        <hr style="margin:12px 0">
+        <div><strong>Samples</strong><ul style="margin:.5rem 0">
+          ${Object.keys(FIELD_MAP.products).map(k => {
+            const v = s[k]?.value || '—';
+            const label = k.replaceAll('_',' ').replace('k 2','K-2');
+            return `<li>${label}: ${v}</li>`;
+          }).join('')}
+        </ul></div>`;
+    }
+
+    function buildPayload(){
+      const fields = [];
+      const c = state.contact;
+      Object.keys(FIELD_MAP).forEach(k=>{
+        if(k==='products') return;
+        fields.push({ name: FIELD_MAP[k], value: String(c[k]||'') });
+      });
+      // product selections
+      Object.entries(FIELD_MAP.products).forEach(([cat, prop])=>{
+        const val = state.selections[cat]?.value || '';
+        fields.push({ name: prop, value: val });
+      });
+      const hutk = document.cookie.split('; ').find(c=>c.startsWith('hubspotutk='))?.split('=')[1];
+      return {
+        portalId: HUBSPOT.portalId,
+        formGuid: HUBSPOT.formGuid,
+        fields,
+        context: { hutk, pageUri: location.href, pageName: document.title }
+      };
+    }
+
+    $('#sw-submit').addEventListener('click', async ()=>{
+      try{
+        $('#sw-error-3').textContent = '';
+        const payload = buildPayload();
+        const res = await fetch(HUBSPOT.workerEndpoint, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+        if(!res.ok) throw new Error(await res.text());
+        $('#sw-success').style.display='block';
+        if(HUBSPOT.redirectUrl) setTimeout(()=> location.href=HUBSPOT.redirectUrl, 900);
+      }catch(err){
+        $('#sw-error-3').textContent = 'Submission failed: ' + (err.message||err);
+      }
+    });
+
+    setStep(1);
+  })();
+  </script>
+</section>
