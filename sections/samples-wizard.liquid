@@ -13,46 +13,58 @@
       </div>
 
       <!-- Step 1 -->
-      <article class="card" data-panel="1">
-        <div style="display:grid;grid-template-columns:repeat(12,1fr);gap:16px">
-          <div style="grid-column:span 6">
-            <label>First name*</label>
-            <input class="form-input" id="sw-firstname" required>
-          </div>
-          <div style="grid-column:span 6">
-            <label>Last name*</label>
-            <input class="form-input" id="sw-lastname" required>
-          </div>
-          <div style="grid-column:span 6">
-            <label>Email*</label>
-            <input class="form-input" id="sw-email" type="email" required>
-          </div>
-          <div style="grid-column:span 6">
-            <label>Mobile phone number*</label>
-            <input class="form-input" id="sw-mobilephone" required>
-          </div>
-          <div style="grid-column:span 12">
-            <label>Full Street Address*</label>
-            <input class="form-input" id="sw-address" required>
-          </div>
-          <div style="grid-column:span 12">
-            <label>Company name*</label>
-            <input class="form-input" id="sw-company" required>
-          </div>
-          <div style="grid-column:span 12">
-            <label>Number of Machines*</label>
-            <input class="form-input" id="sw-machines" type="number" min="0" required>
-          </div>
-          <div style="grid-column:span 12">
-            <label>Materials Commonly Machined*</label>
-            <textarea class="form-input" id="sw-metals_machining" rows="3"></textarea>
-          </div>
-        </div>
-        <div class="w-btn-wrapper">
-          <button class="btn btn-primary" id="sw-next-1">Next</button>
-        </div>
-        <div id="sw-error-1" style="color:#b00020"></div>
-      </article>
+<article class="card" data-panel="1">
+  <div class="sw-grid">
+    <div class="sw-field">
+      <label class="visually-hidden" for="sw-firstname">First name</label>
+      <input class="form-input" id="sw-firstname" name="firstname" placeholder="First name*" autocomplete="given-name" required>
+    </div>
+
+    <div class="sw-field">
+      <label class="visually-hidden" for="sw-lastname">Last name</label>
+      <input class="form-input" id="sw-lastname" name="lastname" placeholder="Last name*" autocomplete="family-name" required>
+    </div>
+
+    <div class="sw-field">
+      <label class="visually-hidden" for="sw-email">Email</label>
+      <input class="form-input" id="sw-email" name="email" type="email" placeholder="Email*" autocomplete="email" required>
+    </div>
+
+    <div class="sw-field">
+      <label class="visually-hidden" for="sw-mobilephone">Mobile phone number</label>
+      <input class="form-input" id="sw-mobilephone" name="mobilephone" type="tel" inputmode="tel"
+             placeholder="Mobile phone number*" autocomplete="tel" required>
+    </div>
+
+    <div class="sw-field">
+      <label class="visually-hidden" for="sw-address">Full Street Address</label>
+      <input class="form-input" id="sw-address" name="address" placeholder="Full Street Address*" autocomplete="street-address" required>
+    </div>
+
+    <div class="sw-field">
+      <label class="visually-hidden" for="sw-company">Company name</label>
+      <input class="form-input" id="sw-company" name="company" placeholder="Company name*" autocomplete="organization" required>
+    </div>
+
+    <div class="sw-field">
+      <label class="visually-hidden" for="sw-machines">Number of Machines</label>
+      <input class="form-input" id="sw-machines" name="machines" type="number" min="0" inputmode="numeric"
+             placeholder="Number of machines*" required>
+    </div>
+
+    <div class="sw-field sw-field--full">
+      <label class="visually-hidden" for="sw-metals_machining">Materials Commonly Machined</label>
+      <textarea class="form-input" id="sw-metals_machining" name="metals_machining" rows="3"
+                placeholder="Materials commonly machined"></textarea>
+    </div>
+  </div>
+
+  <div class="w-btn-wrapper">
+    <button class="btn btn-primary" id="sw-next-1">Next</button>
+  </div>
+  <div id="sw-error-1" style="color:#b00020"></div>
+</article>
+
 
       <!-- Step 2 (grouped by category . one pick per category) -->
       <article class="card" data-panel="2" hidden>
@@ -567,6 +579,42 @@ button {
 .tabs {
     margin-bottom: var(--space-6);
 }
+
+/* 2-column tidy grid */
+.sw-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+/* make textarea span the full width */
+.sw-field--full {
+  grid-column: 1 / -1;
+}
+
+/* mobile: stack to one column */
+@media (max-width: 749px) {
+  .sw-grid { grid-template-columns: 1fr; }
+}
+
+/* hide labels but keep them for screen readers */
+.visually-hidden {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0; border: 0;
+  overflow: hidden; clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+}
+
+/* optional polish. keeps inputs consistent height */
+.form-input {
+  height: 44px;
+  padding: 10px 12px;
+  font-size: 16px;
+  line-height: 1.2;
+}
+textarea.form-input { height: auto; }
+
 </style>
 
 {% schema %}
