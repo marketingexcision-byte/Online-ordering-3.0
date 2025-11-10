@@ -112,73 +112,97 @@ Samples Wizard – stepper + product selection + HubSpot submit via Cloudflare W
         <div id="sw-error-1" style="color:#b00020"></div>
       </article>
 
-<!-- Step 2 (HARDCODED + VARIANTS) -->
+<!-- Step 2 (PLAIN LIQUID – NO parse_json) -->
 <article class="card" data-panel="2" hidden>
-  {% assign cat_keys = "alu_power_endmill|k_2_carbide_endmill|combo_tap|gold_p_jobber_drill|iso_inserts" | split: "|" %}
-  {% assign cat_labels = 
-    '{
-      "alu_power_endmill":"Alu-Power Endmill",
-      "k_2_carbide_endmill":"K-2 Carbide Endmill",
-      "combo_tap":"Combo Tap",
-      "gold_p_jobber_drill":"Gold-P Jobber Drill",
-      "iso_inserts":"ISO Inserts"
-    }' | parse_json
-  %}
+  {% assign cat_blocks = 
+    "alu_power_endmill|Alu-Power Endmill|alu-power-1-flute-30-helix-end-mill-e5e47|ALU_ROWS,
+     k_2_carbide_endmill|K-2 Carbide Endmill|k2-carbide-endmill|K2_ROWS,
+     combo_tap|Combo Tap|hss-e-combo-tap|COMBO_ROWS,
+     gold_p_jobber_drill|Gold-P Jobber Drill|gold-p-jobber-drill|GOLDP_ROWS,
+     iso_inserts|ISO Inserts|dnmg-insert|ISO_ROWS" | split: "," %}
 
-  {% for cat_key in cat_keys %}
-    <h3 class="section__title" style="margin:.5rem 0 1rem">{{ cat_labels[cat_key] }}</h3>
+  {%- comment -%}
+    Define rows per category. Each row is "variantId|chipLabel|hs_value"
+  {%- endcomment -%}
+  {% assign ALU_ROWS = 
+    "47931053801701|Ø3.0|Alu-Power 1 Flute | 30° Helix | 3 x 3 x 12 x 50mm (E5E47030),
+     47931053834469|Ø4.0|Alu-Power 1 Flute | 30° Helix | 4 x 4 x 15 x 60mm (E5E47040),
+     47931053900005|Ø6.0|Alu-Power 1 Flute | 30° Helix | 6 x 6 x 20 x 65mm (E5E47060),
+     47931053932773|Ø8.0|Alu-Power 1 Flute | 30° Helix | 8 x 8 x 22 x 65mm (E5E47080)" | split: "," %}
 
-    <div class="grid-uniform products-collection rlp_regular" data-category="{{ cat_key }}">
-      {% assign entries = hard_catalog[cat_key] %}
-      {% if entries and entries.size > 0 %}
-        {% for entry in entries %}
+  {% assign K2_ROWS = 
+    "55555555555555|Ø3.0|K-2 Carbide 2 Flute | 30° | Short | 3 x 3 x 12 x 32mm (G9424030),
+     66666666666666|Ø6.0|K-2 Carbide 4 Flute | 30° | Short | 6 x 6 x 16 x 50mm (G9432060),
+     77777777777777|Ø8.0|K-2 Carbide 4 Flute | 30° | Short | 8 x 8 x 20 x 60mm (G9432080)" | split: "," %}
 
-            <p style="font-size:12px;opacity:.7">
-  Test: {{ all_products['alu-power-1-flute-30-helix-end-mill-e5e47'] | default: 'NO PRODUCT FOR THAT HANDLE' | json }}
-</p>
+  {% assign COMBO_ROWS = 
+    "88888888888888|M4 x 0.7|HSS-E Combo Tap | DIN371 | Spiral Flute | M4 x 0.7 6H 63.0L (TC804246),
+     99999999999999|M8 x 1.25|HSS-E Combo Tap | DIN371 | Gun Point | M8 x 1.25 6H 90.0L (TC814366)" | split: "," %}
 
+  {% assign GOLDP_ROWS =
+    "12312312312312|Ø3.3|Gold-P Jobber Drill | DIN338/N | 3.3 x 36 x 65mm (DLGP195033),
+     12412412412412|Ø6.8|Gold-P Jobber Drill | DIN338/N | 6.8 x 69 x 109mm (DLGP195068)" | split: "," %}
 
-          {% assign p = all_products[entry.handle] %}
+  {% assign ISO_ROWS =
+    "13513513513513|DNMG150604-UF-YG3030|DNMG150604-UF-YG3030/DNMG441-UF (22000227)" | split: "," %}
 
-          {% if p %}
-            <div class="sw-card-wrap" data-product-handle="{{ p.handle }}">
-              {% render 'product-grid-item', product: p %}  {# pass product explicitly #}
+  {% for raw in cat_blocks %}
+    {% assign parts = raw | strip | split: "|" %}
+    {% assign cat_key = parts[0] %}
+    {% assign cat_label = parts[1] %}
+    {% assign handle = parts[2] %}
+    {% assign rows_var = parts[3] %}
 
-              <div class="card-variants">
-                <div class="card-variants-label">Choose variant</div>
-                <div class="card-variants-chips">
-                  {% for vdef in entry.variants %}
-                    {% assign v = p.variants | where: 'id', vdef.id | first %}
-                    {% if v %}
-                      <button type="button"
-                              class="variant-chip sw-select-variant"
-                              data-hs-prop="{{ cat_key }}"
-                              data-hs-value="{{ vdef.hs_value | escape }}"
-                              data-variant-id="{{ v.id }}"
-                              data-variant-sku="{{ v.sku | escape }}">
-                        {{ vdef.label }}
-                      </button>
-                    {% else %}
-                      <span class="variant-chip variant-chip--more">Missing variant {{ vdef.label }}</span>
-                    {% endif %}
-                  {% endfor %}
-                </div>
-              </div>
+    <h3 class="section__title" style="margin:.5rem 0 1rem">{{ cat_label }}</h3>
 
-              <div class="w-btn-wrapper">
-                <button class="btn btn-outline sw-select-btn" data-category="{{ cat_key }}">Confirm selection</button>
-              </div>
+    {% assign p = all_products[handle] %}
+    {% if p %}
+      <div class="grid-uniform products-collection rlp_regular" data-category="{{ cat_key }}">
+        <div class="sw-card-wrap" data-product-handle="{{ p.handle }}">
+          {% render 'product-grid-item', product: p %}
+
+          <div class="card-variants">
+            <div class="card-variants-label">Choose variant</div>
+            <div class="card-variants-chips">
+              {% assign rows = nil %}
+              {% case rows_var %}
+                {% when 'ALU_ROWS' %}{% assign rows = ALU_ROWS %}
+                {% when 'K2_ROWS' %}{% assign rows = K2_ROWS %}
+                {% when 'COMBO_ROWS' %}{% assign rows = COMBO_ROWS %}
+                {% when 'GOLDP_ROWS' %}{% assign rows = GOLDP_ROWS %}
+                {% when 'ISO_ROWS' %}{% assign rows = ISO_ROWS %}
+              {% endcase %}
+
+              {% for r in rows %}
+                {% assign cols = r | strip | split: "|" %}
+                {% assign vid  = cols[0] | strip %}
+                {% assign lab  = cols[1] | strip %}
+                {% assign hs   = cols[2] | strip %}
+                {% assign v = p.variants | where: 'id', vid | first %}
+                {% if v %}
+                  <button type="button"
+                          class="variant-chip sw-select-variant"
+                          data-hs-prop="{{ cat_key }}"
+                          data-hs-value="{{ hs | escape }}"
+                          data-variant-id="{{ v.id }}"
+                          data-variant-sku="{{ v.sku | escape }}">
+                    {{ lab }}
+                  </button>
+                {% else %}
+                  <span class="variant-chip variant-chip--more">Missing variant {{ lab }}</span>
+                {% endif %}
+              {% endfor %}
             </div>
-          {% else %}
-            <div class="sw-card-wrap">
-              <div class="card">Missing product handle: <code>{{ entry.handle }}</code></div>
-            </div>
-          {% endif %}
-        {% endfor %}
-      {% else %}
-        <div class="card">No entries for {{ cat_labels[cat_key] }}</div>
-      {% endif %}
-    </div>
+          </div>
+
+          <div class="w-btn-wrapper">
+            <button class="btn btn-outline sw-select-btn" data-category="{{ cat_key }}">Confirm selection</button>
+          </div>
+        </div>
+      </div>
+    {% else %}
+      <div class="card">Missing product handle: <code>{{ handle }}</code></div>
+    {% endif %}
   {% endfor %}
 
   <div class="w-btn-wrapper" style="display:flex;gap:12px">
@@ -186,7 +210,6 @@ Samples Wizard – stepper + product selection + HubSpot submit via Cloudflare W
     <button class="btn btn-primary" id="sw-next-2">Review</button>
   </div>
 </article>
-
 
 
       <!-- Step 3 -->
