@@ -217,9 +217,9 @@ High Hardened Steels(HRc55~70)
       2) Product Specifications. Everything that is NOT one of the above material groups
          and NOT in excluded_filters goes here. No third section.
     {%- endcomment -%}
-    {% assign material_prefixes_down = '' %}
+    {% assign material_prefixes_down = ',' %}
     {% for g in material_groups_order %}
-      {% assign material_prefixes_down = material_prefixes_down | append: ',' | append: g | downcase %}
+      {% assign material_prefixes_down = material_prefixes_down | append: g | downcase | append: ',' %}
     {% endfor %}
 
     {%- comment -%} Build unique non-material prefixes from collection tags {%- endcomment -%}
@@ -233,7 +233,8 @@ High Hardened Steels(HRc55~70)
         {% assign pfx = pfx_raw | downcase %}
 
         {% assign is_material = false %}
-        {% if material_prefixes_down contains pfx %}
+        {% assign mat_needle = ',' | append: pfx | append: ',' %}
+        {% if material_prefixes_down contains mat_needle %}
           {% assign is_material = true %}
         {% endif %}
 
