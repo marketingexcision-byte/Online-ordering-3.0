@@ -132,6 +132,12 @@ Samples Wizard – stepper + product selection + HubSpot submit via Cloudflare W
       {% assign entries = hard_catalog[cat_key] %}
       {% if entries and entries.size > 0 %}
         {% for entry in entries %}
+
+            <p style="font-size:12px;opacity:.7">
+  Test: {{ all_products['alu-power-1-flute-30-helix-end-mill-e5e47'] | default: 'NO PRODUCT FOR THAT HANDLE' | json }}
+</p>
+
+
           {% assign p = all_products[entry.handle] %}
 
           {% if p %}
