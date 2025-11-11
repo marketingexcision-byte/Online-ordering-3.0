@@ -1,0 +1,70 @@
+{%- comment -%}
+Shows "NN% discount applied at checkout" for a logged-in customer.
+It checks product tags against customer metafields in the "custom" namespace.
+Order of resolution.
+1) Category match using the map below.
+2) Fallback to store_wide_discount.
+Edit the tag-to-metafield map to match your taxonomy exactly.
+{%- endcomment -%}
+
+{%- assign show_pct = nil -%}
+
+{%- if customer and product -%}
+  {%- comment -%} Tag → customer metafield key map {%- endcomment -%}
+  {%- assign discount_map = 
+    "ISO Inserts:insert_discount|
+     etc:taps_discount|
+     drills:drills_discount|
+     end mills:end_mills_discount|
+     coldsaw machines:coldsaw_machines_discount|
+     punch dies:punch_dies_discount|
+     core drills acc:core_drills_acc_discount|
+     magnetic drills:magnetic_drills_discount|
+     coolant:coolant_discount|
+     tct circular blade:tct_circular_blade_discount|
+     coldsaw blade:coldsaw_blade_discount|
+     bandsaw blade:bandsaw_blade_discount|
+     bandsaw machines:bandsaw_machines_discount" | strip -%}
+
+  {%- assign mapping_pairs = discount_map | split: "|" -%}
+
+  {%- assign product_tags_downcased = product.tags | join: "||" | downcase | split: "||" -%}
+
+  {%- for pair in mapping_pairs -%}
+    {%- assign parts = pair | strip | split: ":" -%}
+    {%- assign tag_label = parts[0] | strip | downcase -%}
+    {%- assign meta_key  = parts[1] | strip -%}
+
+    {%- if product_tags_downcased contains tag_label -%}
+      {%- assign raw_val = customer.metafields['custom'][meta_key] -%}
+      {%- assign pct = raw_val | default: 0 | plus: 0 -%}
+      {%- if pct > 0 -%}
+        {%- assign show_pct = pct -%}
+        {%- break -%}
+      {%- endif -%}
+    {%- endif -%}
+  {%- endfor -%}
+
+  {%- if show_pct == nil or show_pct == 0 -%}
+    {%- assign storewide_raw = customer.metafields['custom']['store_wide_discount'] -%}
+    {%- assign storewide_pct = storewide_raw | default: 0 | plus: 0 -%}
+    {%- if storewide_pct > 0 -%}
+      {%- assign show_pct = storewide_pct -%}
+    {%- endif -%}
+  {%- endif -%}
+{%- endif -%}
+
+{%- if show_pct and show_pct > 0 -%}
+  <div class="auto-discount-note" role="status" aria-live="polite">
+    {{ show_pct }}% discount applied at checkout
+  </div>
+  <style>
+    .auto-discount-note {
+      margin-top: 0.5rem;
+      font-size: 0.9rem;
+      padding: 0.5rem 0.625rem;
+      border-radius: 6px;
+      background: color-mix(in srgb, currentColor 10%, transparent);
+    }
+  </style>
+{%- endif -%}
