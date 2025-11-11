@@ -56,8 +56,7 @@
   {%- endif -%}
 {%- endif -%}
 
-{%- if show_pct and show_pct > 0 -%}
-{%- if customer and max_pct > 0 -%}
+{%- if customer and show_pct > 0 -%}
   <div class="auto-discount-note" role="status" aria-live="polite">
     <span class="auto-discount-note__icon" aria-hidden="true">
       <!-- Inline tag icon. Scales with text. Uses currentColor. -->
@@ -65,7 +64,7 @@
         <path fill="currentColor" d="M20.59 13.41l-7.18 7.18a2 2 0 0 1-2.83 0l-7.17-7.17A2 2 0 0 1 3 12.17V5a2 2 0 0 1 2-2h7.17a2 2 0 0 1 1.41.59l7.01 7.01a2 2 0 0 1 0 2.81ZM7.5 7A1.5 1.5 0 1 0 9 8.5A1.5 1.5 0 0 0 7.5 7Z"/>
       </svg>
     </span>
-    <span class="auto-discount-note__text">{{ max_pct }}% discount applied at checkout</span>
+    <span class="auto-discount-note__text">{{ show_pct }}% discount applied at checkout</span>
   </div>
   <style>
     .auto-discount-note {
@@ -89,6 +88,4 @@
       height: 1em;
     }
   </style>
-{%- endif -%}
-
 {%- endif -%}
