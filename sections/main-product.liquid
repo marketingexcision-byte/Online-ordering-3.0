@@ -110,6 +110,8 @@
               </li>
             {% endif %}
           </ul>
+          {% render 'auto-discount-note', product: product %}
+
       </div>
     </div>
     <div class="grid-item large--two-fifths productImages {% if product.images.size > 1 %} productThumbImages{% endif %} lazyload-element">
