@@ -300,7 +300,6 @@
   </span>
 </span>
 
-{% render 'auto-discount-note', product: product %}
 
 
 
@@ -346,6 +345,9 @@
   {% endif %}
 
 </ul>
+
+{% render 'auto-discount-note', product: product %}
+
 
 {% assign current_variant = product.selected_or_first_available_variant %}
       <p style="color: #666666; font-size: 16px;">
