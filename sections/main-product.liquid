@@ -110,7 +110,7 @@
               </li>
             {% endif %}
           </ul>
-          {% render 'auto-discount-note', product: product %}
+        
 
       </div>
     </div>
@@ -299,6 +299,9 @@
     {%- endif -%}
   </span>
 </span>
+
+{% render 'auto-discount-note', product: product %}
+
 
 
   {% unless product.tags contains 'Custom Length' %}
