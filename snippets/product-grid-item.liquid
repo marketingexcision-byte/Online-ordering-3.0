@@ -211,10 +211,6 @@
   </div>
 {% endif %}
 
-{% render 'auto-discount-note', product: product %}
-
-
-
     </span>
   {%- else -%}
     <span class="ex-price ex-price--stack from-price">
@@ -347,6 +343,9 @@
         {% render 'product-unit-price', variant: product.selected_or_first_available_variant %}
       {% endif %}
     </div>
+
+{% render 'auto-discount-note', product: product %}
+
 
     {% assign first_opt = product.options_with_values | first %}
     {% if first_opt %}
