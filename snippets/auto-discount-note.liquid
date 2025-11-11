@@ -56,6 +56,7 @@
   {%- endif -%}
 {%- endif -%}
 
+{%- if show_pct and show_pct > 0 -%}
 {%- if customer and max_pct > 0 -%}
   <div class="auto-discount-note" role="status" aria-live="polite">
     <span class="auto-discount-note__icon" aria-hidden="true">
@@ -90,3 +91,4 @@
   </style>
 {%- endif -%}
 
+{%- endif -%}
