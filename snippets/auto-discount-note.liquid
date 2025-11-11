@@ -11,19 +11,20 @@
 
 {%- if customer and product -%}
   {%- comment -%} Tag → customer metafield key map {%- endcomment -%}
-  {%- assign discount_map = 'ISO Inserts:insert_discount|
-     Taps:taps_discount|
-     drills:drills_discount|
-     end mills:end_mills_discount|
-     coldsaw machines:coldsaw_machines_discount|
-     punch dies:punch_dies_discount|
-     core drills acc:core_drills_acc_discount|
-     magnetic drills:magnetic_drills_discount|
-     coolant:coolant_discount|
-     tct circular blade:tct_circular_blade_discount|
-     coldsaw blade:coldsaw_blade_discount|
-     bandsaw blade:bandsaw_blade_discount|
-     bandsaw machines:bandsaw_machines_discount'
+  {%- assign discount_map = '
+    ISO Inserts:insert_discount|
+    Taps:taps_discount|
+    drills:drills_discount|
+    end mills:end_mills_discount|
+    coldsaw machines:coldsaw_machines_discount|
+    punch dies:punch_dies_discount|
+    core drills acc:core_drills_acc_discount|
+    magnetic drills:magnetic_drills_discount|
+    coolant:coolant_discount|
+    tct circular blade:tct_circular_blade_discount|
+    coldsaw blade:coldsaw_blade_discount|
+    bandsaw blade:bandsaw_blade_discount|
+    bandsaw machines:bandsaw_machines_discount'
     | strip
   -%}
 
