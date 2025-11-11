@@ -1,18 +1,17 @@
 {%- comment -%}
-Shows "NN% discount applied at checkout" for a logged-in customer.
-It checks product tags against customer metafields in the "custom" namespace.
-Order of resolution.
-1) Category match using the map below.
-2) Fallback to store_wide_discount.
-Edit the tag-to-metafield map to match your taxonomy exactly.
+  Shows "NN% discount applied at checkout" for a logged-in customer.
+  It checks product tags against customer metafields in the "custom" namespace.
+  Order of resolution.
+  1) Category match using the map below.
+  2) Fallback to store_wide_discount.
+  Edit the tag-to-metafield map to match your taxonomy exactly.
 {%- endcomment -%}
 
-{%- assign show_pct = nil -%}
+{%- assign show_pct = null -%}
 
 {%- if customer and product -%}
   {%- comment -%} Tag → customer metafield key map {%- endcomment -%}
-  {%- assign discount_map = 
-    "ISO Inserts:insert_discount|
+  {%- assign discount_map = 'ISO Inserts:insert_discount|
      Taps:taps_discount|
      drills:drills_discount|
      end mills:end_mills_discount|
@@ -24,19 +23,21 @@ Edit the tag-to-metafield map to match your taxonomy exactly.
      tct circular blade:tct_circular_blade_discount|
      coldsaw blade:coldsaw_blade_discount|
      bandsaw blade:bandsaw_blade_discount|
-     bandsaw machines:bandsaw_machines_discount" | strip -%}
+     bandsaw machines:bandsaw_machines_discount'
+    | strip
+  -%}
 
-  {%- assign mapping_pairs = discount_map | split: "|" -%}
+  {%- assign mapping_pairs = discount_map | split: '|' -%}
 
-  {%- assign product_tags_downcased = product.tags | join: "||" | downcase | split: "||" -%}
+  {%- assign product_tags_downcased = product.tags | join: '||' | downcase | split: '||' -%}
 
   {%- for pair in mapping_pairs -%}
-    {%- assign parts = pair | strip | split: ":" -%}
+    {%- assign parts = pair | strip | split: ':' -%}
     {%- assign tag_label = parts[0] | strip | downcase -%}
-    {%- assign meta_key  = parts[1] | strip -%}
+    {%- assign meta_key = parts[1] | strip -%}
 
     {%- if product_tags_downcased contains tag_label -%}
-      {%- assign raw_val = customer.metafields['custom'][meta_key] -%}
+      {%- assign raw_val = customer.metafields.custom[meta_key] -%}
       {%- assign pct = raw_val | default: 0 | plus: 0 -%}
       {%- if pct > 0 -%}
         {%- assign show_pct = pct -%}
@@ -45,8 +46,8 @@ Edit the tag-to-metafield map to match your taxonomy exactly.
     {%- endif -%}
   {%- endfor -%}
 
-  {%- if show_pct == nil or show_pct == 0 -%}
-    {%- assign storewide_raw = customer.metafields['custom']['store_wide_discount'] -%}
+  {%- if show_pct == null or show_pct == 0 -%}
+    {%- assign storewide_raw = customer.metafields.custom.store_wide_discount -%}
     {%- assign storewide_pct = storewide_raw | default: 0 | plus: 0 -%}
     {%- if storewide_pct > 0 -%}
       {%- assign show_pct = storewide_pct -%}
@@ -55,9 +56,7 @@ Edit the tag-to-metafield map to match your taxonomy exactly.
 {%- endif -%}
 
 {%- if show_pct and show_pct > 0 -%}
-  <div class="auto-discount-note" role="status" aria-live="polite">
-    {{ show_pct }}% discount applied at checkout
-  </div>
+  <div class="auto-discount-note" role="status" aria-live="polite">{{ show_pct }}% discount applied at checkout</div>
   <style>
     .auto-discount-note {
       margin-top: 0.5rem;
