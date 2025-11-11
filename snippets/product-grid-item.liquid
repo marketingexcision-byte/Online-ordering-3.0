@@ -213,6 +213,13 @@
 
 {% render 'auto-discount-note', product: product %}
 
+{% if request.design_mode and customer %}
+  <small style="opacity:.6">
+    tags: {{ (card_product | default: product | default: item.product).tags | join: ', ' }} .
+    storewide={{ customer.metafields.custom.store_wide_discount }} .
+  </small>
+{% endif %}
+
 
     </span>
   {%- else -%}
