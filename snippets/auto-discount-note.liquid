@@ -6,10 +6,16 @@
   2) Fallback to store_wide_discount.
   Edit the tag-to-metafield map to match your taxonomy exactly.
 {%- endcomment -%}
+ 
+{%- comment -%} Resolve product object for PDP and cards {%- endcomment -%}
+{%- assign p = product | default: card_product | default: item | default: item_product | default: nil -%}
+{%- if p and p.object_type == blank and p.product -%}
+  {%- assign p = p.product -%}
+{%- endif -%}
 
 {%- assign show_pct = null -%}
 
-{%- if customer and product -%}
+{%- if customer and p -%}
   {%- comment -%} Tag → customer metafield key map {%- endcomment -%}
   {%- assign discount_map = '
     ISO Inserts:insert_discount|
@@ -30,7 +36,7 @@
 
   {%- assign mapping_pairs = discount_map | split: '|' -%}
 
-  {%- assign product_tags_downcased = product.tags | join: '||' | downcase | split: '||' -%}
+  {%- assign product_tags_downcased = p.tags | join: '||' | downcase | split: '||' -%}
 
   {%- for pair in mapping_pairs -%}
     {%- assign parts = pair | strip | split: ':' -%}
