@@ -510,7 +510,8 @@ function matchesProduct(p){
       el('#es-chips').style.display = 'flex';
     }
 
-    const matches = PRODUCT_DATA.filter(matchesProduct);
+    const matches = DATASET.filter(matchesProduct);
+
 
 if (window.ES_DEBUG) {
   debug('Selected filters', selected);
