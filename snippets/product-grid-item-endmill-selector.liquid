@@ -344,6 +344,161 @@ based on data-variant-id + data-product-json set by the selector.
   </div>
 </div>
 
+<script>
+(function(){
+  function selectBy(t, sel){ return (t && t.querySelector(sel)) || null; }
+  function showRow(scope, key, text){
+    const row = selectBy(scope, `[data-vqs-${key}]`);
+    const cell = selectBy(scope, `[data-vqs__${key}]`);
+    if (!row || !cell) return;
+    if (text == null || String(text).trim() === '' || text === '—') {
+      row.hidden = true;
+      cell.textContent = '';
+    } else {
+      row.hidden = false;
+      cell.textContent = text;
+    }
+  }
+  function badgeTextForVariant(v, isYG1){
+    let status = 'grey', text = 'Quantity unavailable';
+    if (v.inventory_management){
+      const q = Number(v.inventory_quantity || 0);
+      if (q > 5){ status='green'; text='In stock'; }
+      else if (q > 0){ status='orange'; text='Low stock'; }
+      else{
+        if (v.incoming && v.next_incoming_date){ status='blue'; text='Restocking'; }
+        else if (v.inventory_policy === 'continue'){ status = isYG1 ? 'yellow' : 'red'; text = isYG1 ? '5 days' : 'Order in'; }
+        else { status='red'; text='No stock'; }
+      }
+    }
+    return {status, text};
+  }
+  function opsFromTags(tags){
+    const out = [];
+    (tags||[]).forEach(t=>{
+      if (typeof t !== 'string') return;
+      if (t.slice(0,10).toLowerCase() === 'operation_'){
+        out.push(t.replace(/^Operation_/, '').replace(/_/g, ' '));
+      }
+    });
+    return out.join(', ');
+  }
+  function chamferFromTags(tags){
+    const t = (tags||[]).find(x => typeof x==='string' && x.slice(0,14).toLowerCase()==='chamfer angle_');
+    if (!t) return '';
+    const raw = t.replace(/^Chamfer Angle_/i,'').trim();
+    if (raw==='') return '';
+    return raw + '°';
+  }
+  function flutesFromTags(tags){
+    const t = (tags||[]).find(x => typeof x==='string' && x.slice(0,12).toLowerCase()==='no. flutes_');
+    if (!t) return '';
+    return t.replace(/^No\. Flutes_/i,'').trim();
+  }
+  function matsFromVDI(p){
+    // p.vdi_good/excellent may be strings or arrays. Normalize here.
+    function parseList(val){
+      if (!val) return [];
+      if (Array.isArray(val)) return val.map(Number).filter(n=>!isNaN(n));
+      if (typeof val === 'string'){
+        return val.replace(/^\[|\]$/g,'').split(/[,|;]/).map(s=>parseFloat(s)).filter(n=>!isNaN(n));
+      }
+      return [];
+    }
+    const nums = [...parseList(p.vdi_good), ...parseList(p.vdi_excellent)];
+    const set = new Set();
+    nums.forEach(n=>{
+      if (n>=1 && n<=11) set.add('P');
+      else if (n>=12 && n<=14) set.add('M');
+      else if (n>=15 && n<=20) set.add('K');
+      else if (n>=21 && n<=30) set.add('N');
+      else if (n>=31 && n<=37) set.add('S');
+      else if (n>=38 && n<=41) set.add('H');
+    });
+    return Array.from(set);
+  }
+
+  function hydrateCard(root){
+    if (!root) return;
+    const scope = root.closest('.grid-item') || root;
+    // source of truth: product JSON + desired variant id
+    const dataJson = root.getAttribute('data-product-json');
+    let P = null;
+    try { P = dataJson ? JSON.parse(dataJson) : null; } catch(e){}
+    if (!P) return;
+
+    const vid = root.getAttribute('data-variant-id');
+    const V = (P.variants||[]).find(v => String(v.id) === String(vid)) || (P.variants||[])[0];
+    if (!V) return;
+
+    // product-level flags
+    const isYG1 = (P.tags||[]).includes('YG-1');
+
+    // SKU
+    showRow(scope, 'sku', V.sku || '');
+
+    // Diameter
+    showRow(scope, 'dia', V.dia_mm ? (V.dia_mm + ' mm') : '');
+
+    // Shank: prefer MF, else option
+    const shank = (V.shank_diameter_mm_mf && String(V.shank_diameter_mm_mf).trim()!=='') ? V.shank_diameter_mm_mf : V.shank_diameter_mm_opt;
+    showRow(scope, 'shank', shank ? (shank + ' mm') : '');
+
+    // Corner radius
+    showRow(scope, 'cr', V.corner_radius_mm ? (V.corner_radius_mm + ' mm') : '');
+
+    // Length of cut
+    showRow(scope, 'loc', V.length_of_cut_mm ? (V.length_of_cut_mm + ' mm') : '');
+
+    // Chamfer angle + Flutes from tags
+    showRow(scope, 'chamfer', chamferFromTags(P.tags));
+    showRow(scope, 'flutes', flutesFromTags(P.tags));
+
+    // Operations
+    showRow(scope, 'ops', opsFromTags(P.tags));
+
+    // Materials
+    const mats = matsFromVDI(P);
+    const matsWrap = selectBy(scope, '[data-vqs__mats]');
+    if (matsWrap){
+      matsWrap.innerHTML = '';
+      mats.forEach(m=>{
+        const s = document.createElement('span');
+        s.className = 'material material-' + m;
+        s.textContent = m;
+        matsWrap.appendChild(s);
+      });
+      const row = selectBy(scope, '[data-vqs-mats]');
+      if (row) row.hidden = mats.length === 0;
+    }
+
+    // Stock badge
+    const badge = selectBy(scope, '[data-vqs__stock]');
+    if (badge){
+      const {status, text} = badgeTextForVariant(V, isYG1);
+      badge.textContent = text;
+      badge.setAttribute('data-status', status);
+    }
+
+    // Also fix the Add to Cart button variant id so it matches
+    const atc = (scope || document).querySelector('.add-to-cart-btn');
+    if (atc) atc.setAttribute('data-variant-id', String(V.id));
+  }
+
+  // hydrate when the grid tells us
+  document.addEventListener('es:hydrate-card', function(e){
+    const root = e.target && e.target.classList && e.target.classList.contains('product-grid-item') ? e.target : null;
+    if (root) hydrateCard(root);
+  });
+
+  // also hydrate on DOM ready for SSR fallbacks
+  document.addEventListener('DOMContentLoaded', function(){
+    document.querySelectorAll('.product-grid-item[data-product-json]').forEach(hydrateCard);
+  });
+})();
+</script>
+
+
   <style>
     /* Ensure the hover effect only applies to the image container */
     .product-image-wrapper {
