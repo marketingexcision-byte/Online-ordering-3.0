@@ -251,15 +251,48 @@
           {%- endfor -%}
 
           {
-            "id": {{ product.id }},
-            "handle": {{ product.handle | json }},
-            "title": {{ product.title | json }},
-            "url": {{ product.url | json }},
-            "tags": {{ product.tags | json }},
-            "vdi_good": {{ vdi_good | default: '[]' | json | replace: '\"[', '[' | replace: ']\"', ']' }}, 
-            "vdi_excellent": {{ vdi_exc  | default: '[]' | json | replace: '\"[', '[' | replace: ']\"', ']' }},
-            "diameters": [{{ dlist }}]
-          }{% unless forloop.last %},{% endunless %}
+  "id": {{ product.id }},
+  "handle": {{ product.handle | json }},
+  "title": {{ product.title | json }},
+  "url": {{ product.url | json }},
+  "tags": {{ product.tags | json }},
+  "vdi_good": {{ vdi_good | default: '[]' | json | replace: '\"[', '[' | replace: ']\"', ']' }},
+  "vdi_excellent": {{ vdi_exc  | default: '[]' | json | replace: '\"[', '[' | replace: ']\"', ']' }},
+  "option_names": {{ product.options_with_values | map: 'name' | json }},
+  "variants": [
+    {%- for v in product.variants -%}
+      {%- assign _dia = '' -%}
+      {%- assign _rad = '' -%}
+      {%- assign _shank_opt = '' -%}
+      {%- for opt in product.options_with_values -%}
+        {%- assign nm = opt.name | strip -%}
+        {%- assign val = v.options[forloop.index0] | default: '' -%}
+        {%- if nm == 'Mill Diameter (mm)' -%}{%- assign _dia = val -%}{%- endif -%}
+        {%- if nm == 'Corner Radius (mm)' -%}{%- assign _rad = val -%}{%- endif -%}
+        {%- if nm == 'Shank Diameter (mm)' -%}{%- assign _shank_opt = val -%}{%- endif -%}
+      {%- endfor -%}
+      {
+        "id": {{ v.id }},
+        "sku": {{ v.sku | json }},
+        "price": {{ v.price | default: 0 }},
+        "compare_at_price": {{ v.compare_at_price | default: 0 }},
+        "available": {{ v.available | json }},
+        "inventory_management": {{ v.inventory_management | json }},
+        "inventory_quantity": {{ v.inventory_quantity | default: 0 }},
+        "inventory_policy": {{ v.inventory_policy | json }},
+        "incoming": {{ v.incoming | json }},
+        "next_incoming_date": {{ v.next_incoming_date | json }},
+        "options": {{ v.options | json }},
+        "dia_mm": {{ _dia | json }},
+        "corner_radius_mm": {{ _rad | json }},
+        "shank_diameter_mm_opt": {{ _shank_opt | json }},
+        "shank_diameter_mm_mf": {{ v.metafields.filter.shank_diameter_mm | default: v.metafields.filter['shank_diameter_mm'] | json }},
+        "length_of_cut_mm": {{ v.metafields.custom.length_of_cut_mm | default: v.metafields.custom['length_of_cut_mm'] | json }}
+      }{%- unless forloop.last -%},{%- endunless -%}
+    {%- endfor -%}
+  ]
+}
+{% unless forloop.last %},{% endunless %}
         {% endfor %}
       ]
     </template>
@@ -691,21 +724,48 @@ if (selected.lengthTag) {
         return 0;
       });
 
-      const frag = document.createDocumentFragment();
-      matches.forEach(p => {
-        const tpl = el(`#tpl-${p.id}`);
-        if (tpl && 'content' in tpl){
-          frag.appendChild(tpl.content.cloneNode(true));
-        }else{
-          // Fallback. link only
-          const a = document.createElement('a');
-          a.href = p.url; a.textContent = p.title;
-          a.className = 'collection-card';
-          frag.appendChild(a);
-        }
-      });
-      grid.appendChild(frag);
+     const frag = document.createDocumentFragment();
+matches.forEach(p => {
+  const tpl = el(`#tpl-${p.id}`);
+  if (!(tpl && 'content' in tpl)) return;
+  const node = tpl.content.cloneNode(true);
+
+  // pick exact variant by diameter if provided
+  let matchVid = null;
+  if (selected.diameter != null) {
+    const want = Number(selected.diameter);
+    // tolerate 0.01 mm
+    const v = (p.variants || []).find(vv => {
+      const d = Number(String(vv.dia_mm || '').replace(',', '.'));
+      return !isNaN(d) && Math.abs(d - want) < 0.01;
+    });
+    if (v) matchVid = String(v.id);
+  }
+  // fallback: first available
+  if (!matchVid && p.variants && p.variants.length) {
+    const avail = p.variants.find(vv => vv.available) || p.variants[0];
+    matchVid = String(avail.id);
+  }
+
+  // annotate card root so the snippet script can hydrate
+  const root = node.querySelector('.product-grid-item');
+  if (root) {
+    root.setAttribute('data-variant-id', matchVid || '');
+    // stash product JSON for the card hydrator
+    root.setAttribute('data-product-json', JSON.stringify(p));
+  }
+
+  frag.appendChild(node);
+});
+grid.appendChild(frag);
+
+// tell cards to hydrate themselves now that attributes are set
+grid.querySelectorAll('.product-grid-item').forEach(el => {
+  el.dispatchEvent(new CustomEvent('es:hydrate-card', { bubbles: true }));
+});
+
       hydrateVariantCards(selected.diameter);
+
       el('#es-chips').style.display = 'flex';
     }
 
