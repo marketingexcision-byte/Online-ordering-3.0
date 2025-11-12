@@ -272,7 +272,7 @@
 {%- assign flutes = '' -%}
 {%- for t in product.tags -%}
   {%- assign tdown = t | downcase -%}
-  {%- assign pref  = tdown | slice: 0, 11 -%} {# 'no. flutes_' length 11 #}
+  {%- assign pref  = tdown | slice: 0, 11 -%}
   {%- if pref == 'no. flutes_' -%}
     {%- assign flutes = t | remove_first: 'No. Flutes_' -%}
     {%- break -%}
