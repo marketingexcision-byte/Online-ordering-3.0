@@ -1,0 +1,20 @@
+{% comment %}
+  Standalone Endmill Selector Page Template
+  Renders the wizard and results inside a page, using the section internally.
+{% endcomment %}
+
+{% layout none %}
+<!doctype html>
+<html lang="{{ request.locale.iso_code }}">
+  <head>
+    {{ content_for_header }}
+    <title>Endmill Selector</title>
+    {{ 'theme.css' | asset_url | stylesheet_tag }}
+    {{ 'global.css' | asset_url | stylesheet_tag }}
+  </head>
+  <body>
+    {% section 'endmill-selector' %}
+    {{ content_for_footer }}
+    {{ 'theme.js' | asset_url | script_tag }}
+  </body>
+</html>
