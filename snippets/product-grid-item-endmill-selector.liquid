@@ -494,6 +494,27 @@ if (matsWrap){
     if (root) hydrateCard(root);
   });
 
+  // Update the price UI to the chosen variant
+const priceInc = selectBy(scope, '.ex-price__inc');
+const priceEx  = selectBy(scope, '.ex-price__ex');
+if (priceInc) {
+  const taxable = true; // your Liquid used v.taxable|default:true. adjust if needed
+  let inc = V.price, ex = V.price;
+  if (taxable) {
+    if ({{ shop.taxes_included | json }}) {
+      inc = V.price;
+      ex  = Math.round(V.price * 10 / 11);
+    } else {
+      ex  = V.price;
+      inc = Math.round(V.price * 11 / 10);
+    }
+  }
+  function fmt(c){ return (Number(c||0)/100).toLocaleString(undefined,{style:'currency',currency:'AUD'}); }
+  priceInc.childNodes[0].nodeValue = fmt(inc); // keep “INC GST” span
+  if (priceEx) priceEx.childNodes[0].nodeValue  = fmt(ex) + ' ';
+}
+
+
   // also hydrate on DOM ready for SSR fallbacks
   document.addEventListener('DOMContentLoaded', function(){
     document.querySelectorAll('.product-grid-item[data-product-json]').forEach(hydrateCard);
