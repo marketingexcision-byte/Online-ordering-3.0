@@ -36,7 +36,7 @@
           {% assign ops = "Profiling|Chamfering|Side Milling|Small Part|Slotting|Die Sinking|Facing|Corner|Helical-Interpol|Trochoidal|Side Taper" | split: "|" %}
           {% for op in ops %}
             {% assign tag = op | replace: ' ', '_' %}
-            <button type="button" class="rc-item es-op" p.tagdata-tag="Operation_{{ op }}"s aria-selected="false">
+            <button type="button" class="rc-item es-op" data-tag="Operation_{{ op }}" aria-selected="false">
               <div class="rc-item__label h5">{{ op }}</div>
               <div class="rc-item__text">Tag: Operation_{{ tag }}</div>
             </button>
@@ -387,44 +387,60 @@ debug('Sample product', PRODUCT_DATA[0]);
 
 
     // Normalize metafields. They may arrive as strings. Try to coerce.
-    PRODUCT_DATA.forEach(p => {
-      p.vdi_good = tryParseArray(p.vdi_good);
-p.vdi_excellent = tryParseArray(p.vdi_excellent);
-      p.diameters = (p.diameters || []).map(x => Number(String(x).replace(',','.')));
-    });
-    function tryParseArray(v){
+PRODUCT_DATA.forEach(p => {
+  p.vdi_good = tryParseArray(p.vdi_good);
+  p.vdi_excellent = tryParseArray(p.vdi_excellent);
+  p.diameters = (p.diameters || []).map(x => Number(String(x).replace(',','.')));
+});
+
+function tryParseArray(v){
   if (!v) return [];
   if (Array.isArray(v)) return v.map(Number);
   if (typeof v === 'string') {
-    // strip quotes/brackets like "[21,22]" or "21,22"
     v = v.replace(/^\[|\]$/g,'');
-    const nums = v.split(/[,|;]/).map(x => parseFloat(x)).filter(x => !isNaN(x));
-    return nums;
+    return v.split(/[,|;]/).map(x => parseFloat(x)).filter(x => !isNaN(x));
   }
   return [];
 }
 
-    // Filtering
-    function matchesProduct(p){
-      // Operation tag
-      if (selected.operationTag && !p.tags.includes(selected.operationTag)) return false;
-      // Shape tag
-      if (selected.shapeTag && !p.tags.includes(selected.shapeTag)) return false;
-      // Material VDI — if picked. match if product marks that VDI in good/excellent
-      if (selected.vdi != null){
-        const vd = Number(selected.vdi);
-        const good = (p.vdi_good || []).map(Number);
-        const exc  = (p.vdi_excellent || []).map(Number);
-        if (![...good, ...exc].includes(vd)) return false;
-      }
-      // Diameter — allow small tolerance 0.01
-      if (selected.diameter != null){
-        const want = Number(selected.diameter);
-        const has = (p.diameters || []).some(d => Math.abs(d - want) < 0.01);
-        if (!has) return false;
-      }
-      return true;
-    }
+
+function normalizeTag(t) {
+  return t.toLowerCase().replace(/\s+/g, '').replace(/_/g, '');
+}
+
+function matchesProduct(p){
+  // Operation tag
+  if (selected.operationTag) {
+    const opNorm = normalizeTag(selected.operationTag);
+    const tagsNorm = p.tags.map(normalizeTag);
+    if (!tagsNorm.includes(opNorm)) return false;
+  }
+
+  // Shape tag
+  if (selected.shapeTag) {
+    const shapeNorm = normalizeTag(selected.shapeTag);
+    const tagsNorm = p.tags.map(normalizeTag);
+    if (!tagsNorm.includes(shapeNorm)) return false;
+  }
+
+  // Material VDI
+  if (selected.vdi != null){
+    const vd = Number(selected.vdi);
+    const good = (p.vdi_good || []).map(Number);
+    const exc  = (p.vdi_excellent || []).map(Number);
+    if (![...good, ...exc].includes(vd)) return false;
+  }
+
+  // Diameter
+  if (selected.diameter != null){
+    const want = Number(selected.diameter);
+    const has = (p.diameters || []).some(d => Math.abs(d - want) < 0.01);
+    if (!has) return false;
+  }
+
+  return true;
+}
+
 
     // Render results
     function renderResults(){
