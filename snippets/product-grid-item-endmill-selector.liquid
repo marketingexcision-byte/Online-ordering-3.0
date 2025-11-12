@@ -1,5 +1,10 @@
 {% render 'wcp_discount' with product %}
-{% assign current_variant = product.selected_or_first_available_variant %}
+{%- comment -%}
+We’ll default to first available, but a JS hydrator will overwrite DOM to the exact variant
+based on data-variant-id + data-product-json set by the selector.
+{%- endcomment -%}
+{% assign current_variant = product.selected_or_first_available_variant | default: product.variants.first %}
+
 {% render 'wcp_variant' with current_variant %}
 
 {% assign temp_wcp_v_price = wcp_v_price %}
@@ -220,168 +225,52 @@
 
 {% render 'auto-discount-note', product: product %}
 
-{%- comment -%} ==== VARIANT QUICK GLANCE (variant-scoped) ==== {%- endcomment -%}
-{%- assign v = current_variant -%}
-
-{%- comment -%} Resolve option indexes robustly {%- endcomment -%}
-{%- assign idx_dia  = nil -%}
-{%- assign idx_rad  = nil -%}
-{%- assign idx_shnk = nil -%}
-{%- for opt in product.options_with_values -%}
-  {%- assign nm = opt.name | strip -%}
-  {%- if nm == 'Mill Diameter (mm)'    -%}{%- assign idx_dia  = forloop.index0 -%}{%- endif -%}
-  {%- if nm == 'Corner Radius (mm)'    -%}{%- assign idx_rad  = forloop.index0 -%}{%- endif -%}
-  {%- if nm == 'Shank Diameter (mm)'   -%}{%- assign idx_shnk = forloop.index0 -%}{%- endif -%}
-{%- endfor -%}
-
-{%- assign val_dia = v.options[idx_dia]  | default: blank -%}
-{%- assign val_rad = '' -%}{%- if idx_rad  != nil -%}{%- assign val_rad  = v.options[idx_rad]  | default: '' -%}{%- endif -%}
-{%- assign val_sho = '' -%}{%- if idx_shnk != nil -%}{%- assign val_sho = v.options[idx_shnk] | default: '' -%}{%- endif -%}
-
-{%- comment -%} Variant metafields {%- endcomment -%}
-{%- assign mf_shank = v.metafields.filter.shank_diameter_mm | default: v.metafields.filter['shank_diameter_mm'] -%}
-{%- assign mf_loc   = v.metafields.custom.length_of_cut_mm    | default: v.metafields.custom['length_of_cut_mm'] -%}
-
-{%- comment -%} Effective shank: prefer metafield. fall back to option value {%- endcomment -%}
-{%- assign val_shank = mf_shank | default: val_sho -%}
-
-{%- comment -%} Operation tags → human list {%- endcomment -%}
-{%- assign ops_human = '' -%}
-{%- for t in product.tags -%}
-  {%- assign tdown  = t | downcase -%}
-  {%- assign prefix = tdown | slice: 0, 10 -%}
-  {%- if prefix == 'operation_' -%}
-    {%- assign nice = t | replace_first: 'Operation_', '' | replace: '_', ' ' -%}
-    {%- if ops_human != '' -%}{%- assign ops_human = ops_human | append: ', ' -%}{%- endif -%}
-    {%- assign ops_human = ops_human | append: nice -%}
-  {%- endif -%}
-{%- endfor -%}
-
-{%- comment -%} Chamfer Angle from tag Chamfer Angle_<val> → show with ° {%- endcomment -%}
-{%- assign chamfer_angle = '' -%}
-{%- for t in product.tags -%}
-  {%- assign tdown = t | downcase -%}
-  {%- assign pref  = tdown | slice: 0, 14 -%}
-  {%- if pref == 'chamfer angle_' -%}
-    {%- assign chamfer_angle = t | remove_first: 'Chamfer Angle_' -%}
-    {%- break -%}
-  {%- endif -%}
-{%- endfor -%}
-
-{%- comment -%} Flutes from tag No. Flutes_<val> {%- endcomment -%}
-{%- assign flutes = '' -%}
-{%- for t in product.tags -%}
-  {%- assign tdown = t | downcase -%}
-  {%- assign pref  = tdown | slice: 0, 11 -%}
-  {%- if pref == 'no. flutes_' -%}
-    {%- assign flutes = t | remove_first: 'No. Flutes_' -%}
-    {%- break -%}
-  {%- endif -%}
-{%- endfor -%}
-
-{%- comment -%} Workpiece materials via VDI good/excellent → ISO letters P M K N S H {%- endcomment -%}
-{%- assign vdi_g_raw = product.metafields.custom.vdi_good      | default: '' -%}
-{%- assign vdi_x_raw = product.metafields.custom.vdi_excellent | default: '' -%}
-{%- assign vdi_s = vdi_g_raw | append: ',' | append: vdi_x_raw
-  | replace: '[', '' | replace: ']', '' | replace: '"', '' | replace: ' ', '' -%}
-{%- assign vdi_list = vdi_s | split: ',' -%}
-
-{%- assign seen_str = '' -%}
-{%- assign letters_pipes = '' -%}
-{%- for raw in vdi_list -%}
-  {%- assign n = raw | strip | plus: 0 -%}
-  {%- assign iso = '' -%}
-  {%- if n >=  1 and n <= 11 -%}{%- assign iso = 'P' -%}{%- endif -%}
-  {%- if n >= 12 and n <= 14 -%}{%- assign iso = 'M' -%}{%- endif -%}
-  {%- if n >= 15 and n <= 20 -%}{%- assign iso = 'K' -%}{%- endif -%}
-  {%- if n >= 21 and n <= 30 -%}{%- assign iso = 'N' -%}{%- endif -%}
-  {%- if n >= 31 and n <= 37 -%}{%- assign iso = 'S' -%}{%- endif -%}
-  {%- if n >= 38 and n <= 41 -%}{%- assign iso = 'H' -%}{%- endif -%}
-
-  {%- if iso != '' -%}
-    {%- unless seen_str contains iso -%}
-      {%- assign seen_str = seen_str | append: iso -%}
-      {%- if letters_pipes != '' -%}
-        {%- assign letters_pipes = letters_pipes | append: '|' -%}
-      {%- endif -%}
-      {%- assign letters_pipes = letters_pipes | append: iso -%}
-    {%- endunless -%}
-  {%- endif -%}
-{%- endfor -%}
-{%- assign mats = letters_pipes | split: '|' -%}
-
-
-<div class="variant-quick-specs">
+{%- comment -%} ==== VARIANT QUICK GLANCE (variant-scoped; DOM will be hydrated by JS) ==== {%- endcomment -%}
+<div class="variant-quick-specs" data-vqs>
   <div class="vqs-row">
-    {%- if v.sku != blank -%}
-      <div class="vqs-col"><small>Product Code</small><div class="vqs-val">{{ v.sku }}</div></div>
-    {%- endif -%}
+    <div class="vqs-col" data-vqs-sku>
+      <small>Product Code</small><div class="vqs-val" data-vqs__sku>—</div>
+    </div>
 
-    {%- if val_dia != blank -%}
-      <div class="vqs-col"><small>Mill Diameter</small><div class="vqs-val">{{ val_dia }} mm</div></div>
-    {%- endif -%}
+    <div class="vqs-col" data-vqs-dia>
+      <small>Mill Diameter</small><div class="vqs-val" data-vqs__dia>—</div>
+    </div>
 
-    {%- if val_shank != blank -%}
-      <div class="vqs-col"><small>Shank Diameter</small><div class="vqs-val">{{ val_shank }} mm</div></div>
-    {%- endif -%}
+    <div class="vqs-col" data-vqs-shank>
+      <small>Shank Diameter</small><div class="vqs-val" data-vqs__shank>—</div>
+    </div>
 
-    {%- if val_rad != blank -%}
-      <div class="vqs-col"><small>Corner Radius</small><div class="vqs-val">{{ val_rad }} mm</div></div>
-    {%- endif -%}
+    <div class="vqs-col" data-vqs-cr>
+      <small>Corner Radius</small><div class="vqs-val" data-vqs__cr>—</div>
+    </div>
 
-    {%- if mf_loc != blank -%}
-      <div class="vqs-col"><small>Length of Cut</small><div class="vqs-val">{{ mf_loc }} mm</div></div>
-    {%- endif -%}
+    <div class="vqs-col" data-vqs-loc>
+      <small>Length of Cut</small><div class="vqs-val" data-vqs__loc>—</div>
+    </div>
 
-    {%- if chamfer_angle != blank -%}
-      <div class="vqs-col"><small>Chamfer Angle</small><div class="vqs-val">{{ chamfer_angle }}°</div></div>
-    {%- endif -%}
+    <div class="vqs-col" data-vqs-chamfer>
+      <small>Chamfer Angle</small><div class="vqs-val" data-vqs__chamfer>—</div>
+    </div>
 
-    {%- if flutes != blank -%}
-      <div class="vqs-col"><small>Flutes</small><div class="vqs-val">{{ flutes }}</div></div>
-    {%- endif -%}
+    <div class="vqs-col" data-vqs-flutes>
+      <small>Flutes</small><div class="vqs-val" data-vqs__flutes>—</div>
+    </div>
 
-    {%- if ops_human != blank -%}
-      <div class="vqs-col vqs-ops"><small>Operation</small><div class="vqs-val">{{ ops_human }}</div></div>
-    {%- endif -%}
+    <div class="vqs-col vqs-ops" data-vqs-ops>
+      <small>Operation</small><div class="vqs-val" data-vqs__ops>—</div>
+    </div>
 
-    {%- if mats.size > 0 and mats.first != '' -%}
-      <div class="vqs-col"><small>Workpiece Materials</small>
-        <div class="vqs-val vqs-mats">
-          {%- for m in mats -%}
-            <span class="material material-{{ m }}">{{ m }}</span>
-          {%- endfor -%}
-        </div>
-      </div>
-    {%- endif -%}
+    <div class="vqs-col" data-vqs-mats>
+      <small>Workpiece Materials</small>
+      <div class="vqs-val vqs-mats" data-vqs__mats></div>
+    </div>
 
-    <div class="vqs-col"><small>Stock</small>
-      <div class="vqs-val">
-        {%- assign status = '' -%}
-        {%- capture status_text -%}
-          {%- if v.inventory_management -%}
-            {%- assign qty = v.inventory_quantity | default: 0 -%}
-            {%- if qty > 5 -%}{%- assign status = 'green' -%}In stock
-            {%- elsif qty > 0 -%}{%- assign status = 'orange' -%}Low stock
-            {%- else -%}
-              {%- if v.incoming and v.next_incoming_date -%}
-                {%- assign status = 'blue' -%}Restocking
-              {%- elsif v.inventory_policy == 'continue' -%}
-                {%- if product.tags contains 'YG-1' -%}{%- assign status = 'yellow' -%}5 days
-                {%- else -%}{%- assign status = 'red' -%}Order in{%- endif -%}
-              {%- else -%}
-                {%- assign status = 'red' -%}No stock
-              {%- endif -%}
-            {%- endif -%}
-          {%- else -%}
-            {%- assign status = 'grey' -%}Quantity unavailable
-          {%- endif -%}
-        {%- endcapture -%}
-        <span class="ex-card-badge" data-status="{{ status | strip }}">{{ status_text | strip }}</span>
-      </div>
+    <div class="vqs-col" data-vqs-stock>
+      <small>Stock</small><div class="vqs-val"><span class="ex-card-badge" data-vqs__stock data-status=""></span></div>
     </div>
   </div>
 </div>
+
 
 
 {%- comment -%} Per-variant payload for client hydration {%- endcomment -%}
