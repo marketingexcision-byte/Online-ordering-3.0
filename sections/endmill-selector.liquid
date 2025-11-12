@@ -259,6 +259,7 @@
   "vdi_good": {{ vdi_good | default: '[]' | json | replace: '\"[', '[' | replace: ']\"', ']' }},
   "vdi_excellent": {{ vdi_exc  | default: '[]' | json | replace: '\"[', '[' | replace: ']\"', ']' }},
   "option_names": {{ product.options_with_values | map: 'name' | json }},
+  "diameters": [{{ dlist }}],
   "variants": [
     {%- for v in product.variants -%}
       {%- assign _dia = '' -%}
