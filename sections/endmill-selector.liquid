@@ -77,14 +77,14 @@
       <article class="card es-step" data-step="3" aria-hidden="true" style="position:absolute;inset:0;opacity:0;pointer-events:none;">
         <h3 class="h3" style="margin-top:0;">What cutting shape?</h3>
         <div class="rc-row" role="listbox" aria-label="Cutting shape">
-          {% assign shapes = "Square|Ball Nose|Corner Radius|Ripper / Rougher" | split: "|" %}
-          {% for s in shapes %}
-            {% assign t = s | replace: ' ', '_' | replace: '/', 'Rougher' %}
-            <button type="button" class="rc-item es-shape" data-tag="Cutting Shape_{{ s }}" aria-selected="false">
-              <div class="rc-item__label h5">{{ s }}</div>
-              <div class="rc-item__text">Tag: Cutting Shape_{{ t }}</div>
-            </button>
-          {% endfor %}
+          {% assign shapes = "Square End|Ball Nose|Corner Radius|Ripper / Rougher" | split: "|" %}
+{% for s in shapes %}
+  <button type="button" class="rc-item es-shape" data-tag="Cutting Shape_{{ s }}" aria-selected="false">
+    <div class="rc-item__label h5">{{ s }}</div>
+    <div class="rc-item__text">Tag: Cutting Shape_{{ s }}</div>
+  </button>
+{% endfor %}
+
         </div>
 
         <div style="display:flex;gap:12px;justify-content:space-between;align-items:center;margin-top:var(--space-6);">
@@ -126,7 +126,7 @@
       {%- comment -%} Editable summary controls shown on results {%- endcomment -%}
 {% assign iso_tabs = "P|M|K|N|S|H" | split: "|" %}
 {% assign ops = "Profiling|Chamfering|Side Milling|Small Part|Slotting|Die Sinking|Facing|Corner|Helical-Interpol|Trochoidal|Side Taper" | split: "|" %}
-{% assign shapes = "Square End|Ball Nose|Corner Radius|Ripper / Rougher" | split: "|" %}
+{% assign shapes = "Square|Ball Nose|Corner Radius|Ripper / Rougher" | split: "|" %}
 
 <div id="es-editable-summary" class="card" style="display:none;margin:16px 0 22px;">
   <h4 class="h4" style="margin-top:0;">Your selections</h4>
@@ -164,8 +164,7 @@
       <select id="es-sel-shape" class="form-input">
         <option value="">Any</option>
         {% for s in shapes %}
-          {% assign t = s | replace: ' ', '_' | replace: '/', 'Rougher' %}
-          <option value="Cutting Shape_{{ t }}">{{ s }}</option>
+          <option value="Cutting Shape_{{ s }}">{{ s }}</option>
         {% endfor %}
       </select>
     </label>
@@ -693,6 +692,14 @@ div#es-material-grid {
 }
 button.rc-item.es-mat [data-iso="P"] {
     background: #0069a720;
+}
+.grid-item.large--one-quarter.medium-down--one-half{
+width: 100%;
+}
+.product-grid-image--centered {
+    background: #f1f1f1;
+    border-radius: 15px;
+    margin-bottom: var(--space-5);
 }
   </style>
 </section>
