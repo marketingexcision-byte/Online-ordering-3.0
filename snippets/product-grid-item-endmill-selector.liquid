@@ -97,6 +97,18 @@
       {{ product.title }}
     </p>
 
+{%- comment -%} Clean ops list for JS hydration {%- endcomment -%}
+{%- assign ops_human = '' -%}
+{%- for t in product.tags -%}
+  {%- assign tdown = t | downcase -%}
+  {%- if tdown | starts_with: 'operation_' -%}
+    {%- assign nice = t | remove_first: 'Operation_' | replace: '_', ' ' -%}
+    {%- assign ops_human = ops_human | append: (ops_human != '' ? ', ' : '') | append: nice -%}
+  {%- endif -%}
+{%- endfor -%}
+<span data-vqs-source="ops" data-ops="{{ ops_human | escape }}" style="display:none;"></span>
+
+    
     <div class="product-item--price">
       <span class="medium--left">
 {% if on_sale %}
@@ -345,10 +357,10 @@
 
 {% render 'auto-discount-note', product: product %}
 
-{%- comment -%} ==== VARIANT QUICK GLANCE (variant-scoped) ==== {%- endcomment -%}
-{%- assign v = current_variant -%}
+{%- comment -%} ==== VARIANT QUICK GLANCE (variant-scoped. JS hydrated) ==== {%- endcomment -%}
+{%- assign v = product.selected_or_first_available_variant -%}
 
-{%- comment -%} Option lookups by name — robust to option reordering {%- endcomment -%}
+{%- comment -%} Option indexes. Robust if options are reordered {%- endcomment -%}
 {%- assign idx_dia = nil -%}
 {%- assign idx_rad = nil -%}
 {%- for opt in product.options_with_values -%}
@@ -357,132 +369,67 @@
   {%- if nm == 'Corner Radius (mm)' -%}{%- assign idx_rad = forloop.index0 -%}{%- endif -%}
 {%- endfor -%}
 {%- if idx_dia == nil -%}{%- assign idx_dia = 0 -%}{%- endif -%}
-{%- assign val_dia = v.options[idx_dia] | default: blank -%}
-{%- assign val_rad = '' -%}
-{%- if idx_rad != nil -%}{%- assign val_rad = v.options[idx_rad] | default: '' -%}{%- endif -%}
 
-{%- comment -%} Variant metafields {%- endcomment -%}
-{%- assign mf_shank = v.metafields.filter.shank_diameter_mm | default: v.metafields.filter['shank_diameter_mm'] -%}
-{%- assign mf_loc   = v.metafields.custom.length_of_cut_mm    | default: v.metafields.custom['length_of_cut_mm'] -%}
+<div class="variant-quick-specs"
+     data-product-id="{{ product.id }}"
+     data-idx-dia="{{ idx_dia }}"
+     data-idx-rad="{{ idx_rad }}">
 
-{%- comment -%} Operation tags → human list {%- endcomment -%}
-{%- assign ops = '' -%}
-{%- for t in product.tags -%}
-  {%- assign prefix = t | slice: 0, 10 -%}
-  {%- if prefix == 'Operation_' -%}
-    {%- assign nice = t | remove_first: 'Operation_' | replace: '_', ' ' -%}
-    {%- if ops != '' -%}{%- assign ops = ops | append: ', ' -%}{%- endif -%}
-    {%- assign ops = ops | append: nice -%}
-  {%- endif -%}
-{%- endfor -%}
-
-
-{%- comment -%} Workpiece materials letters via VDI ranges (union of good + excellent) {%- endcomment -%}
-{%- assign vg = product.metafields.custom.vdi_good -%}
-{%- assign vx = product.metafields.custom.vdi_excellent -%}
-
-{%- comment -%} Normalize to a flat comma list whether array or string {%- endcomment -%}
-{%- assign vg_s = vg | json | replace: '[','' | replace: ']','' | replace: ' ',''
--%}
-{%- assign vx_s = vx | json | replace: '[','' | replace: ']','' | replace: ' ',''
--%}
-{%- assign vdi_list = vg_s | append: ',' | append: vx_s | split: ',' -%}
-
-{%- assign seen = '' -%}
-{%- assign letters = '' -%}
-
-{%- for raw in vdi_list -%}
-  {%- assign n = raw | plus: 0 -%}
-  {%- assign iso = '' -%}
-  {%- if n >=  1 and n <= 11 -%}{%- assign iso = 'P' -%}{%- endif -%}
-  {%- if n >= 12 and n <= 14 -%}{%- assign iso = 'M' -%}{%- endif -%}
-  {%- if n >= 15 and n <= 20 -%}{%- assign iso = 'K' -%}{%- endif -%}
-  {%- if n >= 21 and n <= 30 -%}{%- assign iso = 'N' -%}{%- endif -%}
-  {%- if n >= 31 and n <= 37 -%}{%- assign iso = 'S' -%}{%- endif -%}
-  {%- if n >= 38 and n <= 41 -%}{%- assign iso = 'H' -%}{%- endif -%}
-
-  {%- if iso != '' -%}
-    {%- unless seen contains iso -%}
-      {%- assign seen = seen | append: iso -%}
-      {%- if letters != '' -%}{%- assign letters = letters | append: '|' -%}{%- endif -%}
-      {%- assign letters = letters | append: iso -%}
-    {%- endunless -%}
-  {%- endif -%}
-{%- endfor -%}
-
-{%- assign mats = letters | split: '|' -%}
-
-
-
-<div class="variant-quick-specs">
   <div class="vqs-row">
-
-    <div class="vqs-col"><small>Product Code</small><div class="vqs-val">{{ v.sku | default: '—' }}</div></div>
-
-    <div class="vqs-col"><small>Mill Diameter</small><div class="vqs-val">
-      {%- if val_dia != blank -%}{{ val_dia }} mm{%- else -%}—{%- endif -%}
-    </div></div>
-
-    <div class="vqs-col"><small>Shank Diameter</small><div class="vqs-val">
-      {%- if mf_shank != blank -%}{{ mf_shank }} mm{%- else -%}—{%- endif -%}
-    </div></div>
-
-    <div class="vqs-col"><small>Corner Radius</small><div class="vqs-val">
-      {%- if val_rad != blank -%}{{ val_rad }} mm{%- else -%}—{%- endif -%}
-    </div></div>
-
-    <div class="vqs-col"><small>Length of Cut</small><div class="vqs-val">
-      {%- if mf_loc != blank -%}{{ mf_loc }} mm{%- else -%}—{%- endif -%}
-    </div></div>
-
-    <div class="vqs-col vqs-ops"><small>Operation</small><div class="vqs-val">{{ ops | default: '—' }}</div></div>
-
-    <div class="vqs-col"><small>Workpiece Materials</small>
-      <div class="vqs-val vqs-mats">
-        {%- for m in mats -%}
-          <span class="material material-{{ m }}">{{ m }}</span>
-        {%- else -%}
-          —
-        {%- endfor -%}
+    <div class="vqs-col vqs-price"  style="display:none;">
+      <small>Price</small>
+      <div class="vqs-val">
+        <span data-vqs="price"></span>
+        <s class="vqs-compare" data-vqs="compare" style="display:none;"></s>
       </div>
     </div>
 
-    <div class="vqs-col"><small>Stock</small>
+    <div class="vqs-col vqs-sku"    style="display:none;"><small>Product Code</small><div class="vqs-val" data-vqs="sku"></div></div>
+    <div class="vqs-col vqs-dia"    style="display:none;"><small>Mill Diameter</small><div class="vqs-val" data-vqs="dia"></div></div>
+    <div class="vqs-col vqs-shank"  style="display:none;"><small>Shank Diameter</small><div class="vqs-val" data-vqs="shank"></div></div>
+    <div class="vqs-col vqs-radius" style="display:none;"><small>Corner Radius</small><div class="vqs-val" data-vqs="radius"></div></div>
+    <div class="vqs-col vqs-loc"    style="display:none;"><small>Length of Cut</small><div class="vqs-val" data-vqs="loc"></div></div>
+    <div class="vqs-col vqs-ops"    style="display:none;"><small>Operation</small><div class="vqs-val" data-vqs="ops"></div></div>
+
+    <div class="vqs-col vqs-mats"   style="display:none;">
+      <small>Workpiece Materials</small>
+      <div class="vqs-val" data-vqs="mats"></div>
+    </div>
+
+    <div class="vqs-col vqs-stock"  style="display:none;">
+      <small>Stock</small>
       <div class="vqs-val">
-        {%- comment -%} VARIANT-ONLY stock logic {%- endcomment -%}
-        {%- assign status = '' -%}
-        {%- capture status_text -%}
-          {%- if v.inventory_management -%}
-            {%- assign qty = v.inventory_quantity | default: 0 -%}
-            {%- if qty > 5 -%}{%- assign status = 'green' -%}In stock
-            {%- elsif qty > 0 -%}{%- assign status = 'orange' -%}Low stock
-            {%- else -%}
-              {%- if v.incoming and v.next_incoming_date -%}
-                {%- assign status = 'blue' -%}Restocking
-              {%- elsif v.inventory_policy == 'continue' -%}
-                {%- if product.tags contains 'YG-1' -%}{%- assign status = 'yellow' -%}5 days
-                {%- else -%}{%- assign status = 'red' -%}Order in{%- endif -%}
-              {%- else -%}
-                {%- assign status = 'red' -%}No stock
-              {%- endif -%}
-            {%- endif -%}
-          {%- else -%}
-            {%- assign status = 'grey' -%}Quantity unavailable
-          {%- endif -%}
-        {%- endcapture -%}
-        <span class="ex-card-badge" data-status="{{ status | strip }}">{{ status_text | strip }}</span>
+        <span class="ex-card-badge" data-vqs="stockBadge"></span>
       </div>
     </div>
   </div>
 </div>
 
+{%- comment -%} Per-variant payload for client hydration {%- endcomment -%}
+<script type="application/json" class="vmap">
+[
+  {%- for v in product.variants -%}
+  {
+    "id": {{ v.id }},
+    "sku": {{ v.sku | json }},
+    "price": {{ v.price | default: 0 }},
+    "compare": {{ v.compare_at_price | default: 0 }},
+    "available": {{ v.available | json }},
+    "inventory_management": {{ v.inventory_management | json }},
+    "inventory_quantity": {{ v.inventory_quantity | default: 0 }},
+    "inventory_policy": {{ v.inventory_policy | json }},
+    "incoming": {{ v.incoming | json }},
+    "next_incoming_date": {{ v.next_incoming_date | date: "%s" | default: 'null' }},
+    "options": [{% for o in v.options %}{{ o | json }}{% unless forloop.last %},{% endunless %}{% endfor %}],
+    "mf": {
+      "shank": {{ v.metafields.filter.shank_diameter_mm | default: v.metafields.filter['shank_diameter_mm'] | json }},
+      "loc":   {{ v.metafields.custom.length_of_cut_mm  | default: v.metafields.custom['length_of_cut_mm']  | json }}
+    }
+  }{% unless forloop.last %},{% endunless %}
+  {%- endfor -%}
+]
+</script>
 
-
-    {% comment %}
-      {% if product.variants.first.sku %}
-        <p style="padding-top: 0; font-size: 17px; color: #666666;">{{ product.variants.first.sku }}</p>
-      {% endif %}
-    {% endcomment %}
 
     {% if section.settings.product_reviews_enable %}
       <span class="shopify-product-reviews-badge" data-id="{{ product.id }}"></span>
