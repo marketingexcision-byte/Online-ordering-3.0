@@ -408,8 +408,21 @@ function tryParseArray(v){
 
 
 function normalizeTag(t) {
-  return t.toLowerCase().replace(/\s+/g, '').replace(/_/g, '');
+  return String(t).toLowerCase().replace(/[^a-z0-9]/g, '');
 }
+
+function isEndmill(p){
+  return p.tags.some(t => /^Cutting Shape_/i.test(t));
+}
+
+function hasExcludedTag(p){
+  const t = p.tags.map(normalizeTag);
+  return t.includes('operationblinddrilling') || t.includes('operationthroughdrilling');
+}
+
+// Work on endmills only. not drills
+const DATASET = PRODUCT_DATA.filter(p => isEndmill(p) && !hasExcludedTag(p));
+
 
 function hasExcludedTag(p){
   const t = p.tags.map(normalizeTag);
