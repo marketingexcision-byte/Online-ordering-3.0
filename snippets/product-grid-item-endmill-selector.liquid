@@ -460,17 +460,20 @@ based on data-variant-id + data-product-json set by the selector.
     // Materials
     const mats = matsFromVDI(P);
     const matsWrap = selectBy(scope, '[data-vqs__mats]');
-    if (matsWrap){
-      matsWrap.innerHTML = '';
-      mats.forEach(m=>{
-        const s = document.createElement('span');
-        s.className = 'material material-' + m;
-        s.textContent = m;
-        matsWrap.appendChild(s);
-      });
-      const row = selectBy(scope, '[data-vqs-mats]');
-      if (row) row.hidden = mats.length === 0;
-    }
+if (matsWrap){
+  matsWrap.innerHTML = '';
+  mats.forEach(m=>{
+    const s = document.createElement('span');
+    s.className = 'material material-' + m;
+    s.textContent = m;
+    matsWrap.appendChild(s);
+  });
+  // ensure visibility
+  matsWrap.style.display = mats.length ? '' : 'none';
+  const row = selectBy(scope, '[data-vqs-mats]');
+  if (row) row.hidden = mats.length === 0;
+}
+
 
     // Stock badge
     const badge = selectBy(scope, '[data-vqs__stock]');
