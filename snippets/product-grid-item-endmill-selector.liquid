@@ -114,177 +114,36 @@
 
     
     <div class="product-item--price">
-      <span class="medium--left">
-{% if on_sale %}
-  <span class="visually-hidden">{{ 'products.general.sale_price' | t }}</span>
-{% else %}
-  <span class="visually-hidden">{{ 'products.general.regular_price' | t }}</span>
-{% endif %}
+<span class="medium--left">
+  {%- assign v = current_variant -%}
+  {%- assign taxable = v.taxable | default: true -%}
 
-{%- comment -%} === PRICE BLOCK (INC dominant + small EX) === {%- endcomment -%}
-{%- assign is_matrix = false -%}
-{%- if product.metafields.custom.price_matrix.value != blank or product.metafields.custom.price_matrix != blank -%}
-  {%- assign is_matrix = true -%}
-{%- endif -%}
-
-{%- assign taxable  = product.selected_or_first_available_variant.taxable | default: true -%}
-
-{%- if is_matrix -%}
-{%- comment -%} Parse minimum price from the matrix text (robust) {%- endcomment -%}
-{%- assign raw = product.metafields.custom.price_matrix.value | default: product.metafields.custom.price_matrix -%}
-{%- assign text = raw | strip | replace: '\r\n', '\n' | replace: '\r', '\n' -%}
-{%- assign lines = text | split: '\n' -%}
-{%- assign header = lines.first | default: '' -%}
-
-{%- capture tab %}	{% endcapture %}{% comment %} real tab {% endcomment %}
-{%- assign comma_cols = header | split: ',' | size -%}
-{%- assign tab_cols   = header | split: tab | size -%}
-{%- assign delim = ',' -%}
-{%- if tab_cols > comma_cols -%}{%- assign delim = tab -%}{%- endif -%}
-
-{%- assign cols = header | split: delim -%}
-{%- assign price_col = -1 -%}
-{%- for c in cols -%}
-  {%- assign k = c | strip | downcase -%}
-  {%- if price_col < 0 -%}
-    {%- if k == 'price' or k contains 'web price' or k contains 'price 1+' or k contains 'inc gst' or k contains 'ex gst' or k contains 'price inc' or k contains 'price ex' -%}
-      {%- assign price_col = forloop.index0 -%}
-    {%- endif -%}
-  {%- endif -%}
-{%- endfor -%}
-
-{%- assign min_price_cents = blank -%}
-{%- if price_col >= 0 -%}
-  {%- for l in lines offset:1 -%}
-    {%- assign parts = l | split: delim -%}
-    {%- if parts.size != cols.size -%}{% continue %}{%- endif -%}{% comment %} skip malformed rows {% endcomment %}
-
-    {%- assign rawp = parts[price_col] | default: '' -%}
-    {%- assign p = rawp | strip | remove: 'AU$' | remove: '$' | replace: ',', '' -%}
-    {%- if p == '' -%}{% continue %}{%- endif -%}{% comment %} empty price cell {% endcomment %}
-
-    {%- assign cents = p | plus: 0 | times: 100 | round -%}
-    {%- if cents > 0 -%}
-      {%- if min_price_cents == blank or cents < min_price_cents -%}
-        {%- assign min_price_cents = cents -%}
-      {%- endif -%}
-    {%- endif -%}
-  {%- endfor -%}
-{%- endif -%}
-
-
-
-  {%- if min_price_cents != blank -%}   {# or: if min_price_cents > 0 #}
-    {%- assign from_ex  = min_price_cents -%}
-    {%- assign from_inc = min_price_cents -%}
+  {%- if v.price > 0 -%}
+    {%- assign inc = v.price -%}
+    {%- assign ex  = v.price -%}
     {%- if taxable -%}
       {%- if shop.taxes_included -%}
-        {%- assign from_inc = min_price_cents -%}
-        {%- assign from_ex  = min_price_cents | times: 10 | divided_by: 11 -%}
+        {%- assign inc = v.price -%}
+        {%- assign ex  = v.price | times: 10 | divided_by: 11 -%}
       {%- else -%}
-        {%- assign from_ex  = min_price_cents -%}
-        {%- assign from_inc = min_price_cents | times: 11 | divided_by: 10 -%}
+        {%- assign ex  = v.price -%}
+        {%- assign inc = v.price | times: 11 | divided_by: 10 -%}
       {%- endif -%}
     {%- endif -%}
 
-    <span class="ex-price ex-price--stack from-price">
-      <strong class="ex-price__inc">
-  &nbsp;{{ from_inc | money }}<span class="inc-price__label">INC GST</span>
-</strong>
-{% if taxable %}
-  <div class="ex-price__ex">
-    &nbsp;{{ from_ex | money }} <span class="ex-price__label">EX GST</span>
-  </div>
-{% endif %}
-
-    </span>
-{%- else -%}
-  {%- comment -%} Fallback if matrix couldn’t be parsed — find lowest non-zero variant price instead of $0 {%- endcomment -%}
-  {%- assign safe_min = blank -%}
-  {%- for v in product.variants -%}
-    {%- if v.price > 0 -%}
-      {%- if safe_min == blank or v.price < safe_min -%}{%- assign safe_min = v.price -%}{%- endif -%}
-    {%- endif -%}
-  {%- endfor -%}
-  {%- if safe_min != blank -%}
-    {%- assign ex_cents  = safe_min -%}
-    {%- assign inc_cents = safe_min -%}
-    {%- if taxable -%}
-      {%- if shop.taxes_included -%}
-        {%- assign ex_cents  = safe_min | times: 10 | divided_by: 11 -%}
-      {%- else -%}
-        {%- assign inc_cents = safe_min | times: 11 | divided_by: 10 -%}
+    <span class="ex-price ex-price--stack">
+      <strong class="ex-price__inc">{{ inc | money }}<span class="inc-price__label">INC GST</span></strong>
+      {%- if taxable -%}
+        <div class="ex-price__ex">{{ ex | money }} <span class="ex-price__label">EX GST</span></div>
       {%- endif -%}
-    {%- endif -%}
-    <span class="ex-price ex-price--stack from-price">
-      <strong class="ex-price__inc">
-  From&nbsp;{{ inc_cents | money }}<span class="inc-price__label">INC GST</span>
-</strong>
-{% if taxable %}
-  <div class="ex-price__ex">
-    From&nbsp;{{ ex_cents | money }} <span class="ex-price__label">EX GST</span>
-  </div>
-{% endif %}
-
     </span>
   {%- else -%}
     <span class="ex-price ex-price--stack from-price">
-      <strong class="ex-price__inc">Select your blade</strong>
+      <strong class="ex-price__inc">Pricing available on request</strong>
     </span>
   {%- endif -%}
-{%- endif -%}
-
-
-{%- else -%}
-  {%- comment -%} Normal products — min/max across variants {%- endcomment -%}
-  {%- assign min_price_cents = nil -%}
-  {%- assign max_price_cents = nil -%}
-  {%- for v in product.variants -%}
-    {%- if v.price > 0 -%}
-      {%- if min_price_cents == nil or v.price < min_price_cents -%}{%- assign min_price_cents = v.price -%}{%- endif -%}
-      {%- if max_price_cents == nil or v.price > max_price_cents -%}{%- assign max_price_cents = v.price -%}{%- endif -%}
-    {%- endif -%}
-  {%- endfor -%}
-
-  {%- if min_price_cents -%}
-    {% assign show_from = false %}
-{% if product.variants.size > 1 and min_price_cents != max_price_cents %}
-  {% assign show_from = true %}
-{% endif %}
-
-
-    {%- assign ex_cents  = min_price_cents -%}
-    {%- assign inc_cents = min_price_cents -%}
-    {%- if taxable -%}
-      {%- if shop.taxes_included -%}
-        {%- assign inc_cents = min_price_cents -%}
-        {%- assign ex_cents  = min_price_cents | times: 10 | divided_by: 11 -%}
-      {%- else -%}
-        {%- assign ex_cents  = min_price_cents -%}
-        {%- assign inc_cents = min_price_cents | times: 11 | divided_by: 10 -%}
-      {%- endif -%}
-    {%- endif -%}
-
-    <span class="ex-price ex-price--stack {%- if show_from -%}from-price{%- endif -%}">
-      <strong class="ex-price__inc">
-  {%- if show_from -%}From&nbsp;{%- endif -%}{{ inc_cents | money }}<span class="inc-price__label">INC GST</span>
-</strong>
-{% if taxable %}
-  <div class="ex-price__ex">
-    {%- if show_from -%}From&nbsp;{%- endif -%}{{ ex_cents | money }} <span class="ex-price__label">EX GST</span>
-  </div>
-{% endif %}
-
-    </span>
-{%- else -%}
-  {%- comment -%} No non-zero variant prices → show a request label instead of $0.00 {%- endcomment -%}
-  <span class="ex-price ex-price--stack from-price">
-    <strong class="ex-price__inc">Pricing available on request</strong>
-  </span>
-{%- endif -%}
-{%- endif -%}
-
 </span>
+
 
       <style>
                   .product-item--price small {
@@ -361,53 +220,164 @@
 
 {% render 'auto-discount-note', product: product %}
 
-{%- comment -%} ==== VARIANT QUICK GLANCE (variant-scoped. JS hydrated) ==== {%- endcomment -%}
-{%- assign v = product.selected_or_first_available_variant -%}
+{%- comment -%} ==== VARIANT QUICK GLANCE (variant-scoped) ==== {%- endcomment -%}
+{%- assign v = current_variant -%}
 
-{%- comment -%} Option indexes. Robust if options are reordered {%- endcomment -%}
-{%- assign idx_dia = nil -%}
-{%- assign idx_rad = nil -%}
+{%- comment -%} Resolve option indexes robustly {%- endcomment -%}
+{%- assign idx_dia  = nil -%}
+{%- assign idx_rad  = nil -%}
+{%- assign idx_shnk = nil -%}
 {%- for opt in product.options_with_values -%}
   {%- assign nm = opt.name | strip -%}
-  {%- if nm == 'Mill Diameter (mm)' -%}{%- assign idx_dia = forloop.index0 -%}{%- endif -%}
-  {%- if nm == 'Corner Radius (mm)' -%}{%- assign idx_rad = forloop.index0 -%}{%- endif -%}
+  {%- if nm == 'Mill Diameter (mm)'    -%}{%- assign idx_dia  = forloop.index0 -%}{%- endif -%}
+  {%- if nm == 'Corner Radius (mm)'    -%}{%- assign idx_rad  = forloop.index0 -%}{%- endif -%}
+  {%- if nm == 'Shank Diameter (mm)'   -%}{%- assign idx_shnk = forloop.index0 -%}{%- endif -%}
 {%- endfor -%}
-{%- if idx_dia == nil -%}{%- assign idx_dia = 0 -%}{%- endif -%}
 
-<div class="variant-quick-specs"
-     data-product-id="{{ product.id }}"
-     data-idx-dia="{{ idx_dia }}"
-     data-idx-rad="{{ idx_rad }}">
+{%- assign val_dia = v.options[idx_dia]  | default: blank -%}
+{%- assign val_rad = '' -%}{%- if idx_rad  != nil -%}{%- assign val_rad  = v.options[idx_rad]  | default: '' -%}{%- endif -%}
+{%- assign val_sho = '' -%}{%- if idx_shnk != nil -%}{%- assign val_sho = v.options[idx_shnk] | default: '' -%}{%- endif -%}
 
+{%- comment -%} Variant metafields {%- endcomment -%}
+{%- assign mf_shank = v.metafields.filter.shank_diameter_mm | default: v.metafields.filter['shank_diameter_mm'] -%}
+{%- assign mf_loc   = v.metafields.custom.length_of_cut_mm    | default: v.metafields.custom['length_of_cut_mm'] -%}
+
+{%- comment -%} Effective shank: prefer metafield. fall back to option value {%- endcomment -%}
+{%- assign val_shank = mf_shank | default: val_sho -%}
+
+{%- comment -%} Operation tags → human list {%- endcomment -%}
+{%- assign ops_human = '' -%}
+{%- for t in product.tags -%}
+  {%- assign tdown  = t | downcase -%}
+  {%- assign prefix = tdown | slice: 0, 10 -%}
+  {%- if prefix == 'operation_' -%}
+    {%- assign nice = t | replace_first: 'Operation_', '' | replace: '_', ' ' -%}
+    {%- if ops_human != '' -%}{%- assign ops_human = ops_human | append: ', ' -%}{%- endif -%}
+    {%- assign ops_human = ops_human | append: nice -%}
+  {%- endif -%}
+{%- endfor -%}
+
+{%- comment -%} Chamfer Angle from tag Chamfer Angle_<val> → show with ° {%- endcomment -%}
+{%- assign chamfer_angle = '' -%}
+{%- for t in product.tags -%}
+  {%- assign tdown = t | downcase -%}
+  {%- assign pref  = tdown | slice: 0, 14 -%} {# 'chamfer angle_' length 14 #}
+  {%- if pref == 'chamfer angle_' -%}
+    {%- assign chamfer_angle = t | remove_first: 'Chamfer Angle_' -%}
+    {%- break -%}
+  {%- endif -%}
+{%- endfor -%}
+
+{%- comment -%} Flutes from tag No. Flutes_<val> {%- endcomment -%}
+{%- assign flutes = '' -%}
+{%- for t in product.tags -%}
+  {%- assign tdown = t | downcase -%}
+  {%- assign pref  = tdown | slice: 0, 11 -%} {# 'no. flutes_' length 11 #}
+  {%- if pref == 'no. flutes_' -%}
+    {%- assign flutes = t | remove_first: 'No. Flutes_' -%}
+    {%- break -%}
+  {%- endif -%}
+{%- endfor -%}
+
+{%- comment -%} Workpiece materials via VDI good/excellent → ISO letters P M K N S H {%- endcomment -%}
+{%- assign vdi_g_raw = product.metafields.custom.vdi_good      | default: '' -%}
+{%- assign vdi_x_raw = product.metafields.custom.vdi_excellent | default: '' -%}
+{%- assign vdi_s = vdi_g_raw | append: ',' | append: vdi_x_raw
+  | replace: '[', '' | replace: ']', '' | replace: '"', '' | replace: ' ', '' -%}
+{%- assign vdi_list = vdi_s | split: ',' -%}
+
+{%- assign seen_str = '' -%}
+{%- assign letters_pipes = '' -%}
+{%- for raw in vdi_list -%}
+  {%- assign n = raw | strip | plus: 0 -%}
+  {%- assign iso = '' -%}
+  {%- if n >=  1 and n <= 11 -%}{%- assign iso = 'P' -%}{%- endif -%}
+  {%- if n >= 12 and n <= 14 -%}{%- assign iso = 'M' -%}{%- endif -%}
+  {%- if n >= 15 and n <= 20 -%}{%- assign iso = 'K' -%}{%- endif -%}
+  {%- if n >= 21 and n <= 30 -%}{%- assign iso = 'N' -%}{%- endif -%}
+  {%- if n >= 31 and n <= 37 -%}{%- assign iso = 'S' -%}{%- endif -%}
+  {%- if n >= 38 and n <= 41 -%}{%- assign iso = 'H' -%}{%- endif -%}
+  {%- if iso != '' -%}
+    {%- unless seen_str contains iso -%}
+      {%- assign seen_str = seen_str | append: iso -%}
+      {%- assign letters_pipes = letters_pipes | append: (letters_pipes != '' ? '|' : '') | append: iso -%}
+    {%- endunless -%}
+  {%- endif -%}
+{%- endfor -%}
+{%- assign mats = letters_pipes | split: '|' -%}
+
+<div class="variant-quick-specs">
   <div class="vqs-row">
-    <div class="vqs-col vqs-price"  style="display:none;">
-      <small>Price</small>
-      <div class="vqs-val">
-        <span data-vqs="price"></span>
-        <s class="vqs-compare" data-vqs="compare" style="display:none;"></s>
+    {%- if v.sku != blank -%}
+      <div class="vqs-col"><small>Product Code</small><div class="vqs-val">{{ v.sku }}</div></div>
+    {%- endif -%}
+
+    {%- if val_dia != blank -%}
+      <div class="vqs-col"><small>Mill Diameter</small><div class="vqs-val">{{ val_dia }} mm</div></div>
+    {%- endif -%}
+
+    {%- if val_shank != blank -%}
+      <div class="vqs-col"><small>Shank Diameter</small><div class="vqs-val">{{ val_shank }} mm</div></div>
+    {%- endif -%}
+
+    {%- if val_rad != blank -%}
+      <div class="vqs-col"><small>Corner Radius</small><div class="vqs-val">{{ val_rad }} mm</div></div>
+    {%- endif -%}
+
+    {%- if mf_loc != blank -%}
+      <div class="vqs-col"><small>Length of Cut</small><div class="vqs-val">{{ mf_loc }} mm</div></div>
+    {%- endif -%}
+
+    {%- if chamfer_angle != blank -%}
+      <div class="vqs-col"><small>Chamfer Angle</small><div class="vqs-val">{{ chamfer_angle }}°</div></div>
+    {%- endif -%}
+
+    {%- if flutes != blank -%}
+      <div class="vqs-col"><small>Flutes</small><div class="vqs-val">{{ flutes }}</div></div>
+    {%- endif -%}
+
+    {%- if ops_human != blank -%}
+      <div class="vqs-col vqs-ops"><small>Operation</small><div class="vqs-val">{{ ops_human }}</div></div>
+    {%- endif -%}
+
+    {%- if mats.size > 0 and mats.first != '' -%}
+      <div class="vqs-col"><small>Workpiece Materials</small>
+        <div class="vqs-val vqs-mats">
+          {%- for m in mats -%}
+            <span class="material material-{{ m }}">{{ m }}</span>
+          {%- endfor -%}
+        </div>
       </div>
-    </div>
+    {%- endif -%}
 
-    <div class="vqs-col vqs-sku"    style="display:none;"><small>Product Code</small><div class="vqs-val" data-vqs="sku"></div></div>
-    <div class="vqs-col vqs-dia"    style="display:none;"><small>Mill Diameter</small><div class="vqs-val" data-vqs="dia"></div></div>
-    <div class="vqs-col vqs-shank"  style="display:none;"><small>Shank Diameter</small><div class="vqs-val" data-vqs="shank"></div></div>
-    <div class="vqs-col vqs-radius" style="display:none;"><small>Corner Radius</small><div class="vqs-val" data-vqs="radius"></div></div>
-    <div class="vqs-col vqs-loc"    style="display:none;"><small>Length of Cut</small><div class="vqs-val" data-vqs="loc"></div></div>
-    <div class="vqs-col vqs-ops"    style="display:none;"><small>Operation</small><div class="vqs-val" data-vqs="ops"></div></div>
-
-    <div class="vqs-col vqs-mats"   style="display:none;">
-      <small>Workpiece Materials</small>
-      <div class="vqs-val" data-vqs="mats"></div>
-    </div>
-
-    <div class="vqs-col vqs-stock"  style="display:none;">
-      <small>Stock</small>
+    <div class="vqs-col"><small>Stock</small>
       <div class="vqs-val">
-        <span class="ex-card-badge" data-vqs="stockBadge"></span>
+        {%- assign status = '' -%}
+        {%- capture status_text -%}
+          {%- if v.inventory_management -%}
+            {%- assign qty = v.inventory_quantity | default: 0 -%}
+            {%- if qty > 5 -%}{%- assign status = 'green' -%}In stock
+            {%- elsif qty > 0 -%}{%- assign status = 'orange' -%}Low stock
+            {%- else -%}
+              {%- if v.incoming and v.next_incoming_date -%}
+                {%- assign status = 'blue' -%}Restocking
+              {%- elsif v.inventory_policy == 'continue' -%}
+                {%- if product.tags contains 'YG-1' -%}{%- assign status = 'yellow' -%}5 days
+                {%- else -%}{%- assign status = 'red' -%}Order in{%- endif -%}
+              {%- else -%}
+                {%- assign status = 'red' -%}No stock
+              {%- endif -%}
+            {%- endif -%}
+          {%- else -%}
+            {%- assign status = 'grey' -%}Quantity unavailable
+          {%- endif -%}
+        {%- endcapture -%}
+        <span class="ex-card-badge" data-status="{{ status | strip }}">{{ status_text | strip }}</span>
       </div>
     </div>
   </div>
 </div>
+
 
 {%- comment -%} Per-variant payload for client hydration {%- endcomment -%}
 <script type="application/json" class="vmap">
