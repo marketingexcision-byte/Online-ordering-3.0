@@ -297,14 +297,19 @@
   {%- if n >= 21 and n <= 30 -%}{%- assign iso = 'N' -%}{%- endif -%}
   {%- if n >= 31 and n <= 37 -%}{%- assign iso = 'S' -%}{%- endif -%}
   {%- if n >= 38 and n <= 41 -%}{%- assign iso = 'H' -%}{%- endif -%}
+
   {%- if iso != '' -%}
     {%- unless seen_str contains iso -%}
       {%- assign seen_str = seen_str | append: iso -%}
-      {%- assign letters_pipes = letters_pipes | append: (letters_pipes != '' ? '|' : '') | append: iso -%}
+      {%- if letters_pipes != '' -%}
+        {%- assign letters_pipes = letters_pipes | append: '|' -%}
+      {%- endif -%}
+      {%- assign letters_pipes = letters_pipes | append: iso -%}
     {%- endunless -%}
   {%- endif -%}
 {%- endfor -%}
 {%- assign mats = letters_pipes | split: '|' -%}
+
 
 <div class="variant-quick-specs">
   <div class="vqs-row">
