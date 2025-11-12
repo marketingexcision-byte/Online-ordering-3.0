@@ -268,7 +268,7 @@
     <div style="display:none;">
       {% for product in coll.products %}
         <template id="tpl-{{ product.id }}">
-          {% render 'product-grid-item', product: product %}
+          {% render 'product-grid-item-endmill-selector', product: product %}
         </template>
       {% endfor %}
     </div>
