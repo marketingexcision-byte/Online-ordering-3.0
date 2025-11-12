@@ -381,10 +381,16 @@
 
 
 {%- comment -%} Workpiece materials letters via VDI ranges (union of good + excellent) {%- endcomment -%}
-{%- assign vdi_g = product.metafields.custom.vdi_good | default: '[]' -%}
-{%- assign vdi_x = product.metafields.custom.vdi_excellent | default: '[]' -%}
-{%- assign vdi_s = vdi_g | append: ',' | append: vdi_x | replace: '[', '' | replace: ']', '' | replace: ' ', '' -%}
-{%- assign vdi_list = vdi_s | split: ',' -%}
+{%- assign vg = product.metafields.custom.vdi_good | default: '[]' -%}
+{%- assign vx = product.metafields.custom.vdi_excellent | default: '[]' -%}
+
+{%- comment -%} Normalize arrays/strings to a flat CSV {%- endcomment -%}
+{%- assign vg_s = vg | json | replace: '[','' | replace: ']','' | replace: ' ',''
+-%}
+{%- assign vx_s = vx | json | replace: '[','' | replace: ']','' | replace: ' ',''
+-%}
+{%- assign vdi_list = vg_s | append: ',' | append: vx_s | split: ',' -%}
+
 {%- assign seen = '' -%}
 {%- assign letters = '' -%}
 {%- for raw in vdi_list -%}
@@ -396,12 +402,16 @@
   {%- if n >= 21 and n <= 30 -%}{%- assign iso = 'N' -%}{%- endif -%}
   {%- if n >= 31 and n <= 37 -%}{%- assign iso = 'S' -%}{%- endif -%}
   {%- if n >= 38 and n <= 41 -%}{%- assign iso = 'H' -%}{%- endif -%}
-  {%- if iso != '' and seen contains iso == false -%}
-    {%- assign seen = seen | append: iso -%}
-    {%- assign letters = letters | append: (letters != '' ? '|' : '') | append: iso -%}
+
+  {%- if iso != '' -%}
+    {%- unless seen contains iso -%}
+      {%- assign seen = seen | append: iso -%}
+      {%- assign letters = letters | append: (letters != '' ? '|' : '') | append: iso -%}
+    {%- endunless -%}
   {%- endif -%}
 {%- endfor -%}
 {%- assign mats = letters | split: '|' -%}
+
 
 <div class="variant-quick-specs">
   <div class="vqs-row">
