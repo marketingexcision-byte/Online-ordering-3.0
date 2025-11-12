@@ -38,7 +38,6 @@
             {% assign tag = op | replace: ' ', '_' %}
             <button type="button" class="rc-item es-op" data-tag="Operation_{{ op }}" aria-selected="false">
               <div class="rc-item__label h5">{{ op }}</div>
-              <div class="rc-item__text">Tag: Operation_{{ tag }}</div>
             </button>
           {% endfor %}
         </div>
