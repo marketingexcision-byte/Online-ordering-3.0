@@ -705,6 +705,7 @@ if (selected.lengthTag) {
         }
       });
       grid.appendChild(frag);
+      hydrateVariantCards(selected.diameter);
       el('#es-chips').style.display = 'flex';
     }
 
@@ -730,6 +731,148 @@ if (selected.lengthTag) {
     setStep(1);
   })();
   </script>
+
+  <script>
+/* helper: show value or hide its column */
+function setVQS(el, key, val, suffix=''){
+  const col = el.querySelector('.vqs-' + key);
+  const target = el.querySelector('[data-vqs="'+key+'"]');
+  if (!col || !target) return;
+  if (val === null || val === undefined || val === '' || (Array.isArray(val) && !val.length)) {
+    col.style.display = 'none';
+    target.textContent = '';
+  } else {
+    col.style.display = '';
+    target.textContent = suffix ? (val + suffix) : val;
+  }
+}
+
+function stockBadgeForVariant(v, isYG1){
+  let status = '', label = '';
+  if (v.inventory_management){
+    const q = Number(v.inventory_quantity||0);
+    if (q > 5){ status='green'; label='In stock'; }
+    else if (q > 0){ status='orange'; label='Low stock'; }
+    else {
+      if (v.incoming && v.next_incoming_date){ status='blue'; label='Restocking'; }
+      else if (v.inventory_policy === 'continue'){
+        status = isYG1 ? 'yellow' : 'red';
+        label  = isYG1 ? '5 days' : 'Order in';
+      } else { status='red'; label='No stock'; }
+    }
+  } else { status='grey'; label='Quantity unavailable'; }
+  return {status, label};
+}
+
+/* main: choose variant by diameter and populate fields */
+function hydrateVariantCards(wantDia){
+  const cards = Array.from(document.querySelectorAll('#es-grid .product-grid-item'));
+  cards.forEach(card => {
+    const wrap = card.closest('.grid-item') || card;
+    const spec = wrap.querySelector('.variant-quick-specs');
+    if (!spec) return;
+
+    const idxDia = Number(spec.dataset.idxDia || 0);
+    const idxRad = Number(spec.dataset.idxRad || -1);
+    const vmapEl = wrap.querySelector('script.vmap');
+    if (!vmapEl) return;
+
+    let vmap;
+    try { vmap = JSON.parse(vmapEl.textContent.trim()); } catch(e){ return; }
+
+    // find the best variant. exact diameter match if provided, else first available, else first
+    let chosen = null;
+    if (wantDia != null){
+      const tol = 0.01;
+      chosen = vmap.find(v => {
+        const raw = v.options[idxDia];
+        const d   = raw==null ? NaN : Number(String(raw).replace(',','.'));
+        return !isNaN(d) && Math.abs(d - Number(wantDia)) < tol;
+      }) || null;
+    }
+    if (!chosen) chosen = vmap.find(v => v.available) || vmap[0];
+
+    // money rendering. let Liquid format server-side if you prefer, but quick format works for now
+    const priceCents   = Number(chosen.price || 0);
+    const compareCents = Number(chosen.compare || 0);
+    const priceStr     = (priceCents>0) ? (priceCents/100).toLocaleString(undefined,{style:'currency',currency:'AUD'}) : '';
+
+    setVQS(spec,'price', priceStr);
+    const cmp = spec.querySelector('[data-vqs="compare"]');
+    if (cmp){
+      if (compareCents>priceCents){
+        cmp.style.display='';
+        cmp.textContent = (compareCents/100).toLocaleString(undefined,{style:'currency',currency:'AUD'});
+      } else { cmp.style.display='none'; cmp.textContent=''; }
+    }
+
+    setVQS(spec,'sku', chosen.sku || '');
+
+    // diameter, radius, shank, loc with units
+    const rawDia = chosen.options[idxDia];
+    const diaNum = rawDia!=null ? Number(String(rawDia).replace(',','.')) : NaN;
+    setVQS(spec,'dia', isNaN(diaNum) ? '' : (diaNum + ' mm'));
+    const rawRad = (idxRad>=0) ? chosen.options[idxRad] : '';
+    const radNum = rawRad!=null ? Number(String(rawRad).replace(',','.')) : NaN;
+    setVQS(spec,'radius', isNaN(radNum) ? '' : (radNum + ' mm'));
+
+    const shank = chosen.mf?.shank;
+    const loc   = chosen.mf?.loc;
+    setVQS(spec,'shank', (shank!=null && shank!=='') ? (shank + ' mm') : '');
+    setVQS(spec,'loc',   (loc!=null   && loc!=='')   ? (loc   + ' mm') : '');
+
+    // operations (already precomputed server-side into data-ops)
+    const opsSrc = wrap.querySelector('[data-vqs-source="ops"]');
+    setVQS(spec,'ops', opsSrc ? opsSrc.dataset.ops : '');
+
+    // materials letters from global PRODUCT_DATA (already loaded earlier)
+    const pid = Number(spec.dataset.productId);
+    const pd  = (window.PRODUCT_DATA || []).find(p => p.id === pid);
+    if (pd){
+      const set = new Set([...(pd.vdi_good||[]), ...(pd.vdi_excellent||[])]);
+      const letters = [];
+      for (const n of set){
+        if      (n>=1 && n<=11)  letters.push('P');
+        else if (n>=12&& n<=14)  letters.push('M');
+        else if (n>=15&& n<=20)  letters.push('K');
+        else if (n>=21&& n<=30)  letters.push('N');
+        else if (n>=31&& n<=37)  letters.push('S');
+        else if (n>=38&& n<=41)  letters.push('H');
+      }
+      const uniq = Array.from(new Set(letters));
+      const matsHost = spec.querySelector('[data-vqs="mats"]');
+      if (matsHost){
+        matsHost.innerHTML = '';
+        uniq.forEach(L => {
+          const span = document.createElement('span');
+          span.className = 'material material-' + L;
+          span.textContent = L;
+          matsHost.appendChild(span);
+        });
+        spec.querySelector('.vqs-mats').style.display = uniq.length ? '' : 'none';
+      }
+    } else {
+      spec.querySelector('.vqs-mats').style.display = 'none';
+    }
+
+    // stock badge per chosen variant
+    const isYG1 = (card.textContent || '').indexOf('YG-1') !== -1 || ({{ product.tags | json }} || []).includes('YG-1');
+    const badge = stockBadgeForVariant(chosen, isYG1);
+    const badgeEl = spec.querySelector('[data-vqs="stockBadge"]');
+    if (badgeEl){
+      if (badge.label){
+        badgeEl.parentElement.parentElement.style.display = '';
+        badgeEl.textContent = badge.label;
+        badgeEl.setAttribute('data-status', badge.status);
+      } else {
+        badgeEl.parentElement.parentElement.style.display = 'none';
+        badgeEl.textContent = '';
+      }
+    }
+  });
+}
+</script>
+
 
   <style>
 
