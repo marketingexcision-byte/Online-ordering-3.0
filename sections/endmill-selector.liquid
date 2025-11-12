@@ -78,7 +78,7 @@
       <article class="card es-step" data-step="3" aria-hidden="true" style="position:absolute;inset:0;opacity:0;pointer-events:none;">
         <h3 class="h3" style="margin-top:0;">What cutting shape?</h3>
         <div class="rc-row" role="listbox" aria-label="Cutting shape">
-          {% assign shapes = "Square End|Ball Nose|Corner Radius|Ripper / Rougher" | split: "|" %}
+          {% assign shapes = "Square|Ball Nose|Corner Radius|Ripper / Rougher" | split: "|" %}
           {% for s in shapes %}
             {% assign t = s | replace: ' ', '_' | replace: '/', 'Rougher' %}
             <button type="button" class="rc-item es-shape" data-tag="Cutting Shape_{{ s }}" aria-selected="false">
