@@ -363,6 +363,29 @@
 
     // Data load
     const PRODUCT_DATA = JSON.parse(el('#es-products-json').innerHTML.trim());
+
+// === DEBUG ===
+window.ES_DEBUG = true;
+function debug(msg, obj) {
+  if (!window.ES_DEBUG) return;
+  const wrap = document.querySelector('#es-debug') || (() => {
+    const w = document.createElement('pre');
+    w.id = 'es-debug';
+    w.style.cssText = 'position:fixed;bottom:0;left:0;width:100%;max-height:40vh;overflow:auto;background:#111;color:#0f0;font-size:12px;z-index:9999;padding:8px;margin:0;white-space:pre-wrap;';
+    document.body.appendChild(w);
+    return w;
+  })();
+  const line = (obj !== undefined)
+    ? `${msg}:\n${JSON.stringify(obj, null, 2)}\n\n`
+    : `${msg}\n`;
+  wrap.textContent += line;
+}
+
+// check what Liquid actually gave you
+debug('Loaded product count', PRODUCT_DATA.length);
+debug('Sample product', PRODUCT_DATA[0]);
+
+
     // Normalize metafields. They may arrive as strings. Try to coerce.
     PRODUCT_DATA.forEach(p => {
       p.vdi_good = Array.isArray(p.vdi_good) ? p.vdi_good : tryParseArray(p.vdi_good);
@@ -437,6 +460,13 @@
       grid.appendChild(frag);
       el('#es-chips').style.display = 'flex';
     }
+
+    if (window.ES_DEBUG) {
+  debug('Selected filters', selected);
+  debug('Matches count', matches.length);
+  debug('First 3 products after filtering', matches.slice(0,3));
+}
+
 
     // Chips summary
     function renderChips(){
