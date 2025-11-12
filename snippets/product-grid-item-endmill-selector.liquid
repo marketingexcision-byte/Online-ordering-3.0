@@ -371,11 +371,14 @@
 {%- comment -%} Operation tags → human list {%- endcomment -%}
 {%- assign ops = '' -%}
 {%- for t in product.tags -%}
-  {%- if t startswith 'Operation_' -%}
+  {%- assign prefix = t | slice: 0, 10 -%}
+  {%- if prefix == 'Operation_' -%}
     {%- assign nice = t | remove_first: 'Operation_' | replace: '_', ' ' -%}
-    {%- assign ops = ops | append: (ops != '' ? ', ' : '') | append: nice -%}
+    {%- if ops != '' -%}{%- assign ops = ops | append: ', ' -%}{%- endif -%}
+    {%- assign ops = ops | append: nice -%}
   {%- endif -%}
 {%- endfor -%}
+
 
 {%- comment -%} Workpiece materials letters via VDI ranges (union of good + excellent) {%- endcomment -%}
 {%- assign vdi_g = product.metafields.custom.vdi_good | default: '[]' -%}
@@ -480,12 +483,6 @@
       <span class="shopify-product-reviews-badge" data-id="{{ product.id }}"></span>
     {% endif %}
 
-
-
-
-    <div class="ex-card-badge" data-status="{{ status | strip }}">
-      {{ status_text | strip }}
-    </div>
   </a>
 
   <div class="payment-buttons payment-buttons--medium form-payment-buttons">
