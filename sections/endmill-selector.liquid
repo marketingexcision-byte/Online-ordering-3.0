@@ -409,17 +409,22 @@ function normalizeTag(t) {
 }
 
 function matchesProduct(p){
+  const tagsNorm = p.tags.map(normalizeTag);
+
+  // Exclude all Blind / Through drilling operations
+  if (tagsNorm.includes('operationblinddrilling') || tagsNorm.includes('operationthroughdrilling')) {
+    return false;
+  }
+
   // Operation tag
   if (selected.operationTag) {
     const opNorm = normalizeTag(selected.operationTag);
-    const tagsNorm = p.tags.map(normalizeTag);
     if (!tagsNorm.includes(opNorm)) return false;
   }
 
   // Shape tag
   if (selected.shapeTag) {
     const shapeNorm = normalizeTag(selected.shapeTag);
-    const tagsNorm = p.tags.map(normalizeTag);
     if (!tagsNorm.includes(shapeNorm)) return false;
   }
 
@@ -440,6 +445,7 @@ function matchesProduct(p){
 
   return true;
 }
+
 
 
     // Render results
