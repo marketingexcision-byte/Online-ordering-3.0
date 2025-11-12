@@ -381,10 +381,10 @@
 
 
 {%- comment -%} Workpiece materials letters via VDI ranges (union of good + excellent) {%- endcomment -%}
-{%- assign vg = product.metafields.custom.vdi_good | default: '[]' -%}
-{%- assign vx = product.metafields.custom.vdi_excellent | default: '[]' -%}
+{%- assign vg = product.metafields.custom.vdi_good -%}
+{%- assign vx = product.metafields.custom.vdi_excellent -%}
 
-{%- comment -%} Normalize arrays/strings to a flat CSV {%- endcomment -%}
+{%- comment -%} Normalize to a flat comma list whether array or string {%- endcomment -%}
 {%- assign vg_s = vg | json | replace: '[','' | replace: ']','' | replace: ' ',''
 -%}
 {%- assign vx_s = vx | json | replace: '[','' | replace: ']','' | replace: ' ',''
@@ -393,6 +393,7 @@
 
 {%- assign seen = '' -%}
 {%- assign letters = '' -%}
+
 {%- for raw in vdi_list -%}
   {%- assign n = raw | plus: 0 -%}
   {%- assign iso = '' -%}
@@ -406,11 +407,14 @@
   {%- if iso != '' -%}
     {%- unless seen contains iso -%}
       {%- assign seen = seen | append: iso -%}
-      {%- assign letters = letters | append: (letters != '' ? '|' : '') | append: iso -%}
+      {%- if letters != '' -%}{%- assign letters = letters | append: '|' -%}{%- endif -%}
+      {%- assign letters = letters | append: iso -%}
     {%- endunless -%}
   {%- endif -%}
 {%- endfor -%}
+
 {%- assign mats = letters | split: '|' -%}
+
 
 
 <div class="variant-quick-specs">
