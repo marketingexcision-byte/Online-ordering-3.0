@@ -1,0 +1,488 @@
+{% comment %}
+  Endmill Product Selector — 4-step wizard with smooth transitions
+  Requirements
+  - Products carry Operation_* and Cutting Shape_* tags.
+  - Products have metafields:
+      - custom.vdi_good      (list of integers)
+      - custom.vdi_excellent (list of integers)
+  - Variant option named exactly: "Mill Diameter (mm)"
+  - Uses your existing snippet: product-grid-item
+{% endcomment %}
+
+<section class="section" id="endmill-selector"
+  data-section-id="{{ section.id }}"
+  data-collection="{{ section.settings.collection | default: blank }}"
+>
+  <div class="container layout-constrained">
+    <header class="section__header">
+      <h2 class="section__title h2">Find the right endmill</h2>
+      <p class="section__intro">Answer four quick questions. We’ll show endmills that match.</p>
+    </header>
+
+    <!-- Progress -->
+    <div class="w-btn-wrapper" style="display:flex;gap:10px;align-items:center;">
+      <div id="es-progress" style="flex:1;height:6px;background:#eee;border-radius:999px;overflow:hidden;">
+        <div id="es-progress-bar" style="width:0%;height:100%;background:var(--color-primary-orange);transition:width .35s ease;"></div>
+      </div>
+      <span id="es-step-label" style="min-width:90px;text-align:right;font-variant-numeric:tabular-nums;">Step 1 of 4</span>
+    </div>
+
+    <!-- Wizard -->
+    <div class="es-steps" style="position:relative;">
+      <!-- 1. Operation -->
+      <article class="card es-step" data-step="1" aria-hidden="false">
+        <h3 class="h3" style="margin-top:0;">What operation are you doing?</h3>
+        <div class="rc-row" role="listbox" aria-label="Operation">
+          {% assign ops = "Profiling|Chamfering|Side Milling|Small Part|Slotting|Die Sinking|Facing|Corner|Helical-Interpol|Trochoidal|Side Taper" | split: "|" %}
+          {% for op in ops %}
+            {% assign tag = op | replace: ' ', '_' %}
+            <button type="button" class="rc-item es-op" data-tag="Operation_{{ tag }}" aria-selected="false">
+              <div class="rc-item__label h5">{{ op }}</div>
+              <div class="rc-item__text">Tag: Operation_{{ tag }}</div>
+            </button>
+          {% endfor %}
+        </div>
+
+        <div style="display:flex;gap:12px;justify-content:space-between;align-items:center;margin-top:var(--space-6);">
+          <span class="rc-item__text">Pick one</span>
+          <button type="button" class="btn btn-primary es-next" disabled>Next</button>
+        </div>
+      </article>
+
+      <!-- 2. Material -->
+      <article class="card es-step" data-step="2" aria-hidden="true" style="position:absolute;inset:0;opacity:0;pointer-events:none;">
+        <h3 class="h3" style="margin-top:0;">What material?</h3>
+
+        <!-- Tabs for ISO letters -->
+        <div class="tabs" role="tablist" aria-label="ISO">
+          {% assign iso_tabs = "P|M|K|N|S|H" | split: "|" %}
+          {% for i in iso_tabs %}
+            <button type="button" class="es-iso-tab" role="tab" data-iso="{{ i }}" aria-selected="{{ forloop.first }}">{{ i }}</button>
+          {% endfor %}
+        </div>
+
+        <!-- Material list populated by JS from VDI table below -->
+        <div class="rc-row" id="es-material-grid" style="margin-top:var(--space-6);" role="listbox" aria-label="Material"></div>
+
+        <div class="rc-item__text" style="margin-top:var(--space-4);">
+          Tip. We rank Excellent first if your product metafields mark a VDI as excellent.
+        </div>
+
+        <div style="display:flex;gap:12px;justify-content:space-between;align-items:center;margin-top:var(--space-6);">
+          <button type="button" class="btn btn-outline es-prev">Back</button>
+          <button type="button" class="btn btn-primary es-next" disabled>Next</button>
+        </div>
+      </article>
+
+      <!-- 3. Cutting shape -->
+      <article class="card es-step" data-step="3" aria-hidden="true" style="position:absolute;inset:0;opacity:0;pointer-events:none;">
+        <h3 class="h3" style="margin-top:0;">What cutting shape?</h3>
+        <div class="rc-row" role="listbox" aria-label="Cutting shape">
+          {% assign shapes = "Square End|Ball Nose|Corner Radius|Ripper / Rougher" | split: "|" %}
+          {% for s in shapes %}
+            {% assign t = s | replace: ' ', '_' | replace: '/', 'Rougher' %}
+            <button type="button" class="rc-item es-shape" data-tag="Cutting Shape_{{ t }}" aria-selected="false">
+              <div class="rc-item__label h5">{{ s }}</div>
+              <div class="rc-item__text">Tag: Cutting Shape_{{ t }}</div>
+            </button>
+          {% endfor %}
+        </div>
+
+        <div style="display:flex;gap:12px;justify-content:space-between;align-items:center;margin-top:var(--space-6);">
+          <button type="button" class="btn btn-outline es-prev">Back</button>
+          <button type="button" class="btn btn-primary es-next" disabled>Next</button>
+        </div>
+      </article>
+
+      <!-- 4. Diameter -->
+      <article class="card es-step" data-step="4" aria-hidden="true" style="position:absolute;inset:0;opacity:0;pointer-events:none;">
+        <h3 class="h3" style="margin-top:0;">Diameter</h3>
+
+        <div style="display:grid;gap:14px;max-width:520px;">
+          <label class="rc-item__label" for="es-dia">Mill Diameter (mm)</label>
+          <input id="es-dia" type="number" class="form-input" step="0.01" min="0"
+                 placeholder="Optional. e.g. 6 or 6.35">
+          <div class="rc-item__text">Leave blank if you’re flexible.</div>
+        </div>
+
+        <div style="display:flex;gap:12px;justify-content:space-between;align-items:center;margin-top:var(--space-6);">
+          <button type="button" class="btn btn-outline es-prev">Back</button>
+          <button type="button" class="btn btn-primary es-finish">Show results</button>
+        </div>
+      </article>
+    </div>
+
+    <!-- Active filters summary -->
+    <div id="es-chips" style="display:none;gap:8px;flex-wrap:wrap;margin:22px 0;">
+      <span class="wm-chip-group">
+        <span class="wm-chip work-mat__chip" id="chip-iso" data-m="P" style="display:none;">ISO</span>
+      </span>
+      <button class="btn btn-outline" id="es-reset" type="button">Reset</button>
+    </div>
+
+    <!-- Results -->
+    <div id="es-results">
+      <h3 class="h3" style="margin-top:0;">Results</h3>
+      <div id="es-empty" class="collection-card__description" style="display:none;">
+        No matching products. Loosen a filter or clear Diameter.
+      </div>
+      <div id="es-grid" class="collection-grid"></div>
+    </div>
+  </div>
+
+  {% comment %} ====== DATA PRELOAD ====== {% endcomment %}
+  {% assign coll = section.settings.collection %}
+  {% if coll == blank %}
+    {% assign coll = collections['all'] %}
+  {% endif %}
+
+  {% paginate coll.products by 1000 %}
+    <template id="es-products-json">
+      [
+        {% for product in coll.products %}
+          {% assign vdi_good = product.metafields.custom.vdi_good.value | default: product.metafields.custom.vdi_good | default: blank %}
+          {% assign vdi_exc  = product.metafields.custom.vdi_excellent.value | default: product.metafields.custom.vdi_excellent | default: blank %}
+
+          {%- comment -%} gather diameters from variants by option name {%- endcomment -%}
+          {%- assign dia_values = '' -%}
+          {%- assign dia_index = nil -%}
+          {%- for opt in product.options_with_values -%}
+            {%- if opt.name == 'Mill Diameter (mm)' -%}{%- assign dia_index = forloop.index0 -%}{%- endif -%}
+          {%- endfor -%}
+          {%- if dia_index == nil -%}{%- assign dia_index = 0 -%}{%- endif -%}
+          {%- assign dlist = '' -%}
+          {%- for v in product.variants -%}
+            {%- assign d = v.options[dia_index] | strip -%}
+            {%- if d and d != '' -%}
+              {%- capture dlist -%}{{ dlist }}{% if dlist != '' %},{% endif %}"{{ d | replace: '"','\"' }}"{%- endcapture -%}
+            {%- endif -%}
+          {%- endfor -%}
+
+          {
+            "id": {{ product.id }},
+            "handle": {{ product.handle | json }},
+            "title": {{ product.title | json }},
+            "url": {{ product.url | json }},
+            "tags": {{ product.tags | json }},
+            "vdi_good": {{ vdi_good | default: '[]' | json | replace: '\"[', '[' | replace: ']\"', ']' }}, 
+            "vdi_excellent": {{ vdi_exc  | default: '[]' | json | replace: '\"[', '[' | replace: ']\"', ']' }},
+            "diameters": [{{ dlist }}]
+          }{% unless forloop.last %},{% endunless %}
+        {% endfor %}
+      ]
+    </template>
+
+    {% comment %} Pre-render card templates so we keep your complex price logic. {% endcomment %}
+    <div style="display:none;">
+      {% for product in coll.products %}
+        <template id="tpl-{{ product.id }}">
+          {% render 'product-grid-item', product: product %}
+        </template>
+      {% endfor %}
+    </div>
+  {% endpaginate %}
+
+  {% comment %} ====== MATERIAL TABLE (VDI → ISO + Label) ====== {% endcomment %}
+  <script type="application/json" id="es-vdi-table">
+  [
+    {"vdi":1,"iso":"P","desc":"Non-alloy steel · ~0.15% C · Annealed","hrc":9,"user":"Mild Steel (Low Carbon)"},
+    {"vdi":2,"iso":"P","desc":"Non-alloy steel · ~0.45% C · Annealed","hrc":13,"user":"Medium Carbon Steel"},
+    {"vdi":3,"iso":"P","desc":"Non-alloy steel · ~0.45% C · Quenched & Tempered","hrc":25,"user":"Medium Carbon Steel (Q&T)"},
+    {"vdi":4,"iso":"P","desc":"Non-alloy steel · ~0.75% C · Annealed","hrc":28,"user":"High Carbon Steel"},
+    {"vdi":5,"iso":"P","desc":"Non-alloy steel · ~0.75% C · Quenched & Tempered","hrc":32,"user":"High Carbon Steel (Q&T)"},
+    {"vdi":6,"iso":"P","desc":"Low alloy steel · Annealed","hrc":10,"user":"Low Alloy Steel"},
+    {"vdi":7,"iso":"P","desc":"Low alloy steel · Quenched & Tempered","hrc":29,"user":"Alloy Steel (Q&T)"},
+    {"vdi":8,"iso":"P","desc":"Low alloy steel · Quenched & Tempered","hrc":32,"user":"Alloy Steel (Toughened)"},
+    {"vdi":9,"iso":"P","desc":"Low alloy steel · Quenched & Tempered","hrc":38,"user":"High Strength Steel / Wear Plate"},
+    {"vdi":10,"iso":"P","desc":"High alloyed steel, tool steel · Annealed","hrc":15,"user":"Tool Steel (Annealed)"},
+    {"vdi":11,"iso":"P","desc":"High alloyed steel, tool steel · Quenched & Tempered","hrc":35,"user":"Tool Steel (Hardened)"},
+    {"vdi":12,"iso":"M","desc":"Stainless steel · Ferritic/Martensitic · Annealed","hrc":15,"user":"Stainless Steel (Hard Grades)"},
+    {"vdi":13,"iso":"M","desc":"Stainless steel · Martensitic · Quenched & Tempered","hrc":23,"user":"Stainless Steel (Hardened)"},
+    {"vdi":14,"iso":"M","desc":"Stainless steel · Austenitic","hrc":10,"user":"Stainless Steel (Austenitic 304/316)"},
+    {"vdi":15,"iso":"K","desc":"Grey cast iron · Pearlitic/Ferritic","hrc":10,"user":"Cast Iron (Soft)"},
+    {"vdi":16,"iso":"K","desc":"Grey cast iron · Pearlitic (Martensitic)","hrc":26,"user":"Cast Iron (Hard)"},
+    {"vdi":17,"iso":"K","desc":"Nodular cast iron · Ferritic","hrc":3,"user":"Ductile Iron (Soft)"},
+    {"vdi":18,"iso":"K","desc":"Nodular cast iron · Pearlitic","hrc":25,"user":"Ductile Iron (Hard)"},
+    {"vdi":19,"iso":"K","desc":"Malleable cast iron · Ferritic","hrc":0,"user":"Malleable Iron (Soft)"},
+    {"vdi":20,"iso":"K","desc":"Malleable cast iron · Pearlitic","hrc":21,"user":"Malleable Iron (Hard)"},
+    {"vdi":21,"iso":"N","desc":"Aluminum-wrought alloy · Not curable","hrc":0,"user":"Aluminium (Soft Wrought)"},
+    {"vdi":22,"iso":"N","desc":"Aluminum-wrought alloy · Curable · Hardened","hrc":0,"user":"Aluminium (Heat-Treated 6061/7075)"},
+    {"vdi":23,"iso":"N","desc":"Aluminum-cast, alloyed ≤12% Si · Not Curable","hrc":0,"user":"Cast Aluminium (Low Si)"},
+    {"vdi":24,"iso":"N","desc":"Aluminum-cast, alloyed ≤12% Si · Curable · Hardened","hrc":0,"user":"Cast Aluminium (Treated)"},
+    {"vdi":25,"iso":"N","desc":"Aluminum-cast, alloyed >12% Si · Not Curable","hrc":0,"user":"Cast Aluminium (High Si)"},
+    {"vdi":26,"iso":"N","desc":"Copper and Copper Alloys · Cutting alloys · Pb>1%","hrc":0,"user":"Free-Cutting Brass / Bronze"},
+    {"vdi":27,"iso":"N","desc":"Copper and Copper Alloys (Bronze/Brass) · CuZn, CuSnZn","hrc":0,"user":"Brass & Bronze (General)"},
+    {"vdi":28,"iso":"N","desc":"Copper and Copper Alloys · CuSn, lead-free copper","hrc":0,"user":"Copper (Pure & Lead-Free)"},
+    {"vdi":29,"iso":"N","desc":"Non Metallic Materials · Durolastic, Fiber Reinforced Plastic","hrc":null,"user":"Composites (FRP / Reinforced Plastics)"},
+    {"vdi":30,"iso":"N","desc":"Non Metallic Materials · Rubber, Wood, etc.","hrc":null,"user":"Non-Metallic (Plastics / Rubber / Wood)"},
+    {"vdi":31,"iso":"S","desc":"Heat Resistant Super Alloys · Fe Based · Annealed","hrc":15,"user":"Iron-Based Super Alloys"},
+    {"vdi":32,"iso":"S","desc":"Heat Resistant Super Alloys · Fe Based · Cured","hrc":30,"user":"Iron-Based Super Alloys (Treated)"},
+    {"vdi":33,"iso":"S","desc":"Heat Resistant Super Alloys · Ni or Co Based · Annealed","hrc":25,"user":"Nickel & Cobalt Alloys"},
+    {"vdi":34,"iso":"S","desc":"Heat Resistant Super Alloys · Ni or Co Based · Cured","hrc":38,"user":"Nickel & Cobalt Alloys (Hardened)"},
+    {"vdi":35,"iso":"S","desc":"Heat Resistant Super Alloys · Ni or Co Based · Cast","hrc":34,"user":"Nickel & Cobalt Alloys (Cast)"},
+    {"vdi":36,"iso":"S","desc":"Titanium Alloys · Pure Titanium","hrc":null,"user":"Titanium (Commercially Pure)"},
+    {"vdi":37,"iso":"S","desc":"Titanium Alloys · Alpha + Beta Alloys · Hardened","hrc":null,"user":"Titanium (Alloyed / Hardened)"},
+    {"vdi":38,"iso":"H","desc":"Hardened steel · Hardened","hrc":55,"user":"Hardened Steel (≈55 HRC)"},
+    {"vdi":39,"iso":"H","desc":"Hardened steel · Hardened","hrc":60,"user":"Hardened Steel (≈60 HRC)"},
+    {"vdi":40,"iso":"H","desc":"Chilled Cast Iron · Cast","hrc":42,"user":"Chilled Cast Iron"},
+    {"vdi":41,"iso":"H","desc":"Hardened Cast Iron · Hardened","hrc":55,"user":"Hardened Cast Iron"}
+  ]
+  </script>
+
+  {% comment %} ====== JS ====== {% endcomment %}
+  <script>
+  (function(){
+    const el = (sel, root=document) => root.querySelector(sel);
+    const els = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+    const steps = els('.es-step');
+    const bar = el('#es-progress-bar');
+    const stepLabel = el('#es-step-label');
+    let step = 1;
+
+    const selected = {
+      operationTag: null,
+      iso: 'P',
+      vdi: null,             // numeric VDI chosen
+      materialLabel: null,   // User Category
+      shapeTag: null,
+      diameter: null
+    };
+
+    // Progress
+    const setStep = (n) => {
+      step = n;
+      steps.forEach((s) => {
+        const active = Number(s.dataset.step) === n;
+        s.style.opacity = active ? 1 : 0;
+        s.style.pointerEvents = active ? 'auto' : 'none';
+        s.style.position = active ? 'relative' : 'absolute';
+        s.setAttribute('aria-hidden', String(!active));
+      });
+      bar.style.width = (n-1) / 3 * 100 + '%';
+      stepLabel.textContent = `Step ${n} of 4`;
+    };
+
+    // Operation choices
+    els('.es-op').forEach(btn => {
+      btn.addEventListener('click', () => {
+        els('.es-op').forEach(b => b.setAttribute('aria-selected','false'));
+        btn.setAttribute('aria-selected','true');
+        selected.operationTag = btn.dataset.tag;
+        btn.closest('.es-step').querySelector('.es-next').disabled = false;
+      });
+    });
+
+    // ISO tabs + materials grid
+    const MAT = JSON.parse(el('#es-vdi-table').textContent);
+    const matGrid = el('#es-material-grid');
+    const renderMaterials = (iso) => {
+      matGrid.innerHTML = '';
+      MAT.filter(m => m.iso === iso).forEach(m => {
+        const item = document.createElement('button');
+        item.type = 'button';
+        item.className = 'rc-item es-mat';
+        item.dataset.vdi = m.vdi;
+        item.dataset.iso = m.iso;
+        item.setAttribute('aria-selected','false');
+        item.innerHTML = `
+          <div class="rc-item__label h5">${m.user}</div>
+          <div class="rc-item__text">${m.desc}${m.hrc!=null?` · HRC ${m.hrc}`:''} · VDI ${m.vdi}</div>
+        `;
+        item.addEventListener('click', () => {
+          els('.es-mat').forEach(b => b.setAttribute('aria-selected','false'));
+          item.setAttribute('aria-selected','true');
+          selected.vdi = Number(item.dataset.vdi);
+          selected.iso = item.dataset.iso;
+          selected.materialLabel = m.user;
+          item.closest('.es-step').querySelector('.es-next').disabled = false;
+        });
+        matGrid.appendChild(item);
+      });
+    };
+
+    els('.es-iso-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        els('.es-iso-tab').forEach(t => t.setAttribute('aria-selected','false'));
+        tab.setAttribute('aria-selected','true');
+        selected.iso = tab.dataset.iso;
+        selected.vdi = null;
+        renderMaterials(selected.iso);
+        const nx = tab.closest('.es-step').querySelector('.es-next');
+        if (nx) nx.disabled = true;
+      });
+    });
+    renderMaterials(selected.iso);
+
+    // Shape choices
+    els('.es-shape').forEach(btn => {
+      btn.addEventListener('click', () => {
+        els('.es-shape').forEach(b => b.setAttribute('aria-selected','false'));
+        btn.setAttribute('aria-selected','true');
+        selected.shapeTag = btn.dataset.tag;
+        btn.closest('.es-step').querySelector('.es-next').disabled = false;
+      });
+    });
+
+    // Diameter
+    el('#es-dia').addEventListener('input', (e) => {
+      const v = e.target.value.trim();
+      selected.diameter = v === '' ? null : Number(v);
+    });
+
+    // Nav buttons
+    els('.es-next').forEach(b => b.addEventListener('click', () => setStep(Math.min(4, step+1))));
+    els('.es-prev').forEach(b => b.addEventListener('click', () => setStep(Math.max(1, step-1))));
+    el('.es-finish').addEventListener('click', () => {
+      setStep(4);
+      renderResults();
+      renderChips();
+      window.scrollTo({ top: el('#es-results').offsetTop - 20, behavior: 'smooth' });
+    });
+
+    // Reset
+    el('#es-reset').addEventListener('click', () => {
+      // clear selections
+      selected.operationTag = null;
+      selected.iso = 'P';
+      selected.vdi = null;
+      selected.materialLabel = null;
+      selected.shapeTag = null;
+      selected.diameter = null;
+
+      // UI reset
+      els('.es-op,.es-mat,.es-shape').forEach(b => b.setAttribute('aria-selected','false'));
+      els('.es-next').forEach(n => n.disabled = true);
+      els('.es-iso-tab').forEach((t,i)=>t.setAttribute('aria-selected', String(i===0)));
+      el('#es-dia').value = '';
+      renderMaterials('P');
+      el('#es-chips').style.display = 'none';
+      el('#es-grid').innerHTML = '';
+      el('#es-empty').style.display = 'none';
+      setStep(1);
+    });
+
+    // Data load
+    const PRODUCT_DATA = JSON.parse(el('#es-products-json').innerHTML.trim());
+    // Normalize metafields. They may arrive as strings. Try to coerce.
+    PRODUCT_DATA.forEach(p => {
+      p.vdi_good = Array.isArray(p.vdi_good) ? p.vdi_good : tryParseArray(p.vdi_good);
+      p.vdi_excellent = Array.isArray(p.vdi_excellent) ? p.vdi_excellent : tryParseArray(p.vdi_excellent);
+      p.diameters = (p.diameters || []).map(x => Number(String(x).replace(',','.')));
+    });
+    function tryParseArray(v){
+      try{
+        if (typeof v === 'string') return JSON.parse(v);
+        return [];
+      }catch(e){ return []; }
+    }
+
+    // Filtering
+    function matchesProduct(p){
+      // Operation tag
+      if (selected.operationTag && !p.tags.includes(selected.operationTag)) return false;
+      // Shape tag
+      if (selected.shapeTag && !p.tags.includes(selected.shapeTag)) return false;
+      // Material VDI — if picked. match if product marks that VDI in good/excellent
+      if (selected.vdi != null){
+        const vd = Number(selected.vdi);
+        const good = (p.vdi_good || []).map(Number);
+        const exc  = (p.vdi_excellent || []).map(Number);
+        if (![...good, ...exc].includes(vd)) return false;
+      }
+      // Diameter — allow small tolerance 0.01
+      if (selected.diameter != null){
+        const want = Number(selected.diameter);
+        const has = (p.diameters || []).some(d => Math.abs(d - want) < 0.01);
+        if (!has) return false;
+      }
+      return true;
+    }
+
+    // Render results
+    function renderResults(){
+      const grid = el('#es-grid');
+      grid.innerHTML = '';
+      const matches = PRODUCT_DATA.filter(matchesProduct);
+
+      if (matches.length === 0){
+        el('#es-empty').style.display = 'block';
+        return;
+      }
+      el('#es-empty').style.display = 'none';
+
+      // Prioritize products that mark the selected VDI as excellent
+      matches.sort((a,b) => {
+        if (selected.vdi == null) return 0;
+        const vd = Number(selected.vdi);
+        const ax = (a.vdi_excellent||[]).includes(vd) ? 1 : 0;
+        const bx = (b.vdi_excellent||[]).includes(vd) ? 1 : 0;
+        if (ax !== bx) return bx - ax;
+        // tie-breaker. keep original
+        return 0;
+      });
+
+      const frag = document.createDocumentFragment();
+      matches.forEach(p => {
+        const tpl = el(`#tpl-${p.id}`);
+        if (tpl && 'content' in tpl){
+          frag.appendChild(tpl.content.cloneNode(true));
+        }else{
+          // Fallback. link only
+          const a = document.createElement('a');
+          a.href = p.url; a.textContent = p.title;
+          a.className = 'collection-card';
+          frag.appendChild(a);
+        }
+      });
+      grid.appendChild(frag);
+      el('#es-chips').style.display = 'flex';
+    }
+
+    // Chips summary
+    function renderChips(){
+      const chipIso = el('#chip-iso');
+      if (selected.iso){
+        chipIso.style.display = 'inline-grid';
+        chipIso.dataset.m = selected.iso;
+        chipIso.textContent = selected.iso;
+      } else {
+        chipIso.style.display = 'none';
+      }
+      // You can add more chips here if you want visible operation/shape/diameter.
+    }
+
+    // Initial
+    setStep(1);
+  })();
+  </script>
+
+  <style>
+    /* Wizard step transitions */
+    .es-step{
+      transition: opacity .35s ease, transform .35s ease;
+      transform: translateY(0);
+    }
+    .es-step[aria-hidden="true"]{ transform: translateY(6px); }
+    .rc-item[aria-selected="true"]{
+      outline: 2px solid var(--color-primary-orange);
+      box-shadow: 0 0 0 2px color-mix(in oklab, var(--color-primary-orange) 20%, transparent);
+    }
+  </style>
+</section>
+
+{% schema %}
+{
+  "name": "Endmill Product Selector",
+  "settings": [
+    {
+      "type": "collection",
+      "id": "collection",
+      "label": "Source collection",
+      "info": "All products to consider for filtering"
+    }
+  ],
+  "presets": [
+    { "name": "Endmill Product Selector" }
+  ]
+}
+{% endschema %}
