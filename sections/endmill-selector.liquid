@@ -36,7 +36,7 @@
           {% assign ops = "Profiling|Chamfering|Side Milling|Small Part|Slotting|Die Sinking|Facing|Corner|Helical-Interpol|Trochoidal|Side Taper" | split: "|" %}
           {% for op in ops %}
             {% assign tag = op | replace: ' ', '_' %}
-            <button type="button" class="rc-item es-op" data-tag="Operation_{{ tag }}" aria-selected="false">
+            <button type="button" class="rc-item es-op" p.tagdata-tag="Operation_{{ op }}"s aria-selected="false">
               <div class="rc-item__label h5">{{ op }}</div>
               <div class="rc-item__text">Tag: Operation_{{ tag }}</div>
             </button>
@@ -81,7 +81,7 @@
           {% assign shapes = "Square End|Ball Nose|Corner Radius|Ripper / Rougher" | split: "|" %}
           {% for s in shapes %}
             {% assign t = s | replace: ' ', '_' | replace: '/', 'Rougher' %}
-            <button type="button" class="rc-item es-shape" data-tag="Cutting Shape_{{ t }}" aria-selected="false">
+            <button type="button" class="rc-item es-shape" data-tag="Cutting Shape_{{ s }}" aria-selected="false">
               <div class="rc-item__label h5">{{ s }}</div>
               <div class="rc-item__text">Tag: Cutting Shape_{{ t }}</div>
             </button>
@@ -388,16 +388,21 @@ debug('Sample product', PRODUCT_DATA[0]);
 
     // Normalize metafields. They may arrive as strings. Try to coerce.
     PRODUCT_DATA.forEach(p => {
-      p.vdi_good = Array.isArray(p.vdi_good) ? p.vdi_good : tryParseArray(p.vdi_good);
-      p.vdi_excellent = Array.isArray(p.vdi_excellent) ? p.vdi_excellent : tryParseArray(p.vdi_excellent);
+      p.vdi_good = tryParseArray(p.vdi_good);
+p.vdi_excellent = tryParseArray(p.vdi_excellent);
       p.diameters = (p.diameters || []).map(x => Number(String(x).replace(',','.')));
     });
     function tryParseArray(v){
-      try{
-        if (typeof v === 'string') return JSON.parse(v);
-        return [];
-      }catch(e){ return []; }
-    }
+  if (!v) return [];
+  if (Array.isArray(v)) return v.map(Number);
+  if (typeof v === 'string') {
+    // strip quotes/brackets like "[21,22]" or "21,22"
+    v = v.replace(/^\[|\]$/g,'');
+    const nums = v.split(/[,|;]/).map(x => parseFloat(x)).filter(x => !isNaN(x));
+    return nums;
+  }
+  return [];
+}
 
     // Filtering
     function matchesProduct(p){
