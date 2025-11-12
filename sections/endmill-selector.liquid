@@ -364,28 +364,6 @@
     // Data load
     const PRODUCT_DATA = JSON.parse(el('#es-products-json').innerHTML.trim());
 
-// === DEBUG ===
-window.ES_DEBUG = true;
-function debug(msg, obj) {
-  if (!window.ES_DEBUG) return;
-  const wrap = document.querySelector('#es-debug') || (() => {
-    const w = document.createElement('pre');
-    w.id = 'es-debug';
-    w.style.cssText = 'position:fixed;bottom:0;left:0;width:100%;max-height:40vh;overflow:auto;background:#111;color:#0f0;font-size:12px;z-index:9999;padding:8px;margin:0;white-space:pre-wrap;';
-    document.body.appendChild(w);
-    return w;
-  })();
-  const line = (obj !== undefined)
-    ? `${msg}:\n${JSON.stringify(obj, null, 2)}\n\n`
-    : `${msg}\n`;
-  wrap.textContent += line;
-}
-
-// check what Liquid actually gave you
-debug('Loaded product count', PRODUCT_DATA.length);
-debug('Excluding drilling tags from results', PRODUCT_DATA.filter(p => 
-  p.tags.some(t => /Operation_(Blind|Through) Drilling/.test(t))
-).map(p => p.title));
 
 
 
