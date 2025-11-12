@@ -261,7 +261,7 @@
 {%- assign chamfer_angle = '' -%}
 {%- for t in product.tags -%}
   {%- assign tdown = t | downcase -%}
-  {%- assign pref  = tdown | slice: 0, 14 -%} {# 'chamfer angle_' length 14 #}
+  {%- assign pref  = tdown | slice: 0, 14 -%}
   {%- if pref == 'chamfer angle_' -%}
     {%- assign chamfer_angle = t | remove_first: 'Chamfer Angle_' -%}
     {%- break -%}
