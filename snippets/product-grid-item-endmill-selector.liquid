@@ -1,0 +1,507 @@
+{% render 'wcp_discount' with product %}
+{% assign current_variant = product.selected_or_first_available_variant %}
+{% render 'wcp_variant' with current_variant %}
+
+{% assign temp_wcp_v_price = wcp_v_price %}
+{% assign temp_wcp_v_compare_at_price = wcp_v_compare_at_price %}
+{% unless grid_item_width %}
+  {% assign grid_item_width = 'large--one-quarter medium-down--one-half' %}
+{% endunless %}
+
+{% unless image_size %}
+  {% assign image_size = '600x600' %}
+{% endunless %}
+
+{% unless current_collection %}
+  {% assign current_collection = collection %}
+{% endunless %}
+
+{% assign on_sale = false %}
+{% if wcp_compare_at_price > wcp_price %}
+  {% assign on_sale = true %}
+{% endif %}
+
+<div class="grid-item {{ grid_item_width }}{% if on_sale %} on-sale{% endif %}">
+  <a href="{{ product.url | within: current_collection }}" class="product-grid-item">
+    <div class="product-grid-image">
+      <div class="product-grid-image--centered">
+        {% if product.tags contains 'New'%}
+          <span class="new-badge font-bold">New</span>
+        {% endif %}
+        {% if product.tags contains 'YG-1' %}
+          <div
+            class="yg-logo-wrapper"
+            style="position: absolute; top: 0; right: 0; z-index: 10; padding: 15px; background: #d52e30; border-radius: 0px 15px;"
+          >
+            <img
+              src="https://cdn.shopify.com/s/files/1/0439/5597/8399/files/YG_Logo_White.png?v=1748387180"
+              alt="YG-1 Logo"
+              class="yg-logo"
+              style="max-width: 50px; height: auto;"
+              width="50px"
+            >
+          </div>
+        {% endif %}
+
+        {% if product.featured_image %}
+          {% assign first_image = product.featured_image %}
+
+          {% if product.images.size > 1 %}
+            {% assign second_image = product.images[1] %}
+            <div class="product-image-wrapper">
+              <!-- First (Default) Image -->
+              <img
+                class="product-image front lazyload"
+                data-src="{{ first_image | img_url: '540x' }}"
+                data-widths="[125, 180, 360, 540, 720, 900, 1080, 1296, 1512, 1728, 2048]"
+                data-sizes="auto"
+                alt="{{ first_image.alt | escape }}"
+              >
+
+              <!-- Second (Hover) Image -->
+              <img
+                class="product-image back lazyload"
+                data-src="{{ second_image | img_url: '540x' }}"
+                data-widths="[125, 180, 360, 540, 720, 900, 1080, 1296, 1512, 1728, 2048]"
+                data-sizes="auto"
+                alt="{{ second_image.alt | escape }}"
+              >
+            </div>
+          {% else %}
+            <div class="product-image-wrapper" style="transition: none;">
+              <!-- Single Image (No Hover Effect) -->
+              <img
+                class="product-image single lazyload"
+                data-src="{{ first_image | img_url: '540x' }}"
+                data-widths="[125, 180, 360, 540, 720, 900, 1080, 1296, 1512, 1728, 2048]"
+                data-sizes="auto"
+                alt="{{ first_image.alt | escape }}"
+              >
+            </div>
+          {% endif %}
+        {% else %}
+          <div>
+            <img
+              class="product-placeholder-image"
+              src=" https://cdn.shopify.com/s/files/1/0439/5597/8399/files/Excision_Logo_2025.svg?v=1745463654"
+              alt="Excision"
+            >
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <p class="font-bold {% if product.metafields.custom.title.value != blank %} cpgs_title{% endif %}">
+      {{ product.title }}
+    </p>
+    {% if product.metafields.custom.title.value != blank %}
+      <span class="secondary--product_title ">{{ product.metafields.custom.title }}</span>
+    {% endif %}
+
+    <div class="product-item--price">
+      <span class="medium--left">
+{% if on_sale %}
+  <span class="visually-hidden">{{ 'products.general.sale_price' | t }}</span>
+{% else %}
+  <span class="visually-hidden">{{ 'products.general.regular_price' | t }}</span>
+{% endif %}
+
+{%- comment -%} === PRICE BLOCK (INC dominant + small EX) === {%- endcomment -%}
+{%- assign is_matrix = false -%}
+{%- if product.metafields.custom.price_matrix.value != blank or product.metafields.custom.price_matrix != blank -%}
+  {%- assign is_matrix = true -%}
+{%- endif -%}
+
+{%- assign taxable  = product.selected_or_first_available_variant.taxable | default: true -%}
+
+{%- if is_matrix -%}
+{%- comment -%} Parse minimum price from the matrix text (robust) {%- endcomment -%}
+{%- assign raw = product.metafields.custom.price_matrix.value | default: product.metafields.custom.price_matrix -%}
+{%- assign text = raw | strip | replace: '\r\n', '\n' | replace: '\r', '\n' -%}
+{%- assign lines = text | split: '\n' -%}
+{%- assign header = lines.first | default: '' -%}
+
+{%- capture tab %}	{% endcapture %}{% comment %} real tab {% endcomment %}
+{%- assign comma_cols = header | split: ',' | size -%}
+{%- assign tab_cols   = header | split: tab | size -%}
+{%- assign delim = ',' -%}
+{%- if tab_cols > comma_cols -%}{%- assign delim = tab -%}{%- endif -%}
+
+{%- assign cols = header | split: delim -%}
+{%- assign price_col = -1 -%}
+{%- for c in cols -%}
+  {%- assign k = c | strip | downcase -%}
+  {%- if price_col < 0 -%}
+    {%- if k == 'price' or k contains 'web price' or k contains 'price 1+' or k contains 'inc gst' or k contains 'ex gst' or k contains 'price inc' or k contains 'price ex' -%}
+      {%- assign price_col = forloop.index0 -%}
+    {%- endif -%}
+  {%- endif -%}
+{%- endfor -%}
+
+{%- assign min_price_cents = blank -%}
+{%- if price_col >= 0 -%}
+  {%- for l in lines offset:1 -%}
+    {%- assign parts = l | split: delim -%}
+    {%- if parts.size != cols.size -%}{% continue %}{%- endif -%}{% comment %} skip malformed rows {% endcomment %}
+
+    {%- assign rawp = parts[price_col] | default: '' -%}
+    {%- assign p = rawp | strip | remove: 'AU$' | remove: '$' | replace: ',', '' -%}
+    {%- if p == '' -%}{% continue %}{%- endif -%}{% comment %} empty price cell {% endcomment %}
+
+    {%- assign cents = p | plus: 0 | times: 100 | round -%}
+    {%- if cents > 0 -%}
+      {%- if min_price_cents == blank or cents < min_price_cents -%}
+        {%- assign min_price_cents = cents -%}
+      {%- endif -%}
+    {%- endif -%}
+  {%- endfor -%}
+{%- endif -%}
+
+
+
+  {%- if min_price_cents != blank -%}   {# or: if min_price_cents > 0 #}
+    {%- assign from_ex  = min_price_cents -%}
+    {%- assign from_inc = min_price_cents -%}
+    {%- if taxable -%}
+      {%- if shop.taxes_included -%}
+        {%- assign from_inc = min_price_cents -%}
+        {%- assign from_ex  = min_price_cents | times: 10 | divided_by: 11 -%}
+      {%- else -%}
+        {%- assign from_ex  = min_price_cents -%}
+        {%- assign from_inc = min_price_cents | times: 11 | divided_by: 10 -%}
+      {%- endif -%}
+    {%- endif -%}
+
+    <span class="ex-price ex-price--stack from-price">
+      <strong class="ex-price__inc">
+  From&nbsp;{{ from_inc | money }}<span class="inc-price__label">INC GST</span>
+</strong>
+{% if taxable %}
+  <div class="ex-price__ex">
+    From&nbsp;{{ from_ex | money }} <span class="ex-price__label">EX GST</span>
+  </div>
+{% endif %}
+
+    </span>
+{%- else -%}
+  {%- comment -%} Fallback if matrix couldn’t be parsed — find lowest non-zero variant price instead of $0 {%- endcomment -%}
+  {%- assign safe_min = blank -%}
+  {%- for v in product.variants -%}
+    {%- if v.price > 0 -%}
+      {%- if safe_min == blank or v.price < safe_min -%}{%- assign safe_min = v.price -%}{%- endif -%}
+    {%- endif -%}
+  {%- endfor -%}
+  {%- if safe_min != blank -%}
+    {%- assign ex_cents  = safe_min -%}
+    {%- assign inc_cents = safe_min -%}
+    {%- if taxable -%}
+      {%- if shop.taxes_included -%}
+        {%- assign ex_cents  = safe_min | times: 10 | divided_by: 11 -%}
+      {%- else -%}
+        {%- assign inc_cents = safe_min | times: 11 | divided_by: 10 -%}
+      {%- endif -%}
+    {%- endif -%}
+    <span class="ex-price ex-price--stack from-price">
+      <strong class="ex-price__inc">
+  From&nbsp;{{ inc_cents | money }}<span class="inc-price__label">INC GST</span>
+</strong>
+{% if taxable %}
+  <div class="ex-price__ex">
+    From&nbsp;{{ ex_cents | money }} <span class="ex-price__label">EX GST</span>
+  </div>
+{% endif %}
+
+    </span>
+  {%- else -%}
+    <span class="ex-price ex-price--stack from-price">
+      <strong class="ex-price__inc">Select your blade</strong>
+    </span>
+  {%- endif -%}
+{%- endif -%}
+
+
+{%- else -%}
+  {%- comment -%} Normal products — min/max across variants {%- endcomment -%}
+  {%- assign min_price_cents = nil -%}
+  {%- assign max_price_cents = nil -%}
+  {%- for v in product.variants -%}
+    {%- if v.price > 0 -%}
+      {%- if min_price_cents == nil or v.price < min_price_cents -%}{%- assign min_price_cents = v.price -%}{%- endif -%}
+      {%- if max_price_cents == nil or v.price > max_price_cents -%}{%- assign max_price_cents = v.price -%}{%- endif -%}
+    {%- endif -%}
+  {%- endfor -%}
+
+  {%- if min_price_cents -%}
+    {% assign show_from = false %}
+{% if product.variants.size > 1 and min_price_cents != max_price_cents %}
+  {% assign show_from = true %}
+{% endif %}
+
+
+    {%- assign ex_cents  = min_price_cents -%}
+    {%- assign inc_cents = min_price_cents -%}
+    {%- if taxable -%}
+      {%- if shop.taxes_included -%}
+        {%- assign inc_cents = min_price_cents -%}
+        {%- assign ex_cents  = min_price_cents | times: 10 | divided_by: 11 -%}
+      {%- else -%}
+        {%- assign ex_cents  = min_price_cents -%}
+        {%- assign inc_cents = min_price_cents | times: 11 | divided_by: 10 -%}
+      {%- endif -%}
+    {%- endif -%}
+
+    <span class="ex-price ex-price--stack {%- if show_from -%}from-price{%- endif -%}">
+      <strong class="ex-price__inc">
+  {%- if show_from -%}From&nbsp;{%- endif -%}{{ inc_cents | money }}<span class="inc-price__label">INC GST</span>
+</strong>
+{% if taxable %}
+  <div class="ex-price__ex">
+    {%- if show_from -%}From&nbsp;{%- endif -%}{{ ex_cents | money }} <span class="ex-price__label">EX GST</span>
+  </div>
+{% endif %}
+
+    </span>
+{%- else -%}
+  {%- comment -%} No non-zero variant prices → show a request label instead of $0.00 {%- endcomment -%}
+  <span class="ex-price ex-price--stack from-price">
+    <strong class="ex-price__inc">Pricing available on request</strong>
+  </span>
+{%- endif -%}
+{%- endif -%}
+
+</span>
+
+      <style>
+                  .product-item--price small {
+                    font-size: 18px;
+                  }
+                  .product-item--price small:hover {
+                    color: black;
+                  }
+                  div.product-item--price {
+                    text-align: left;
+                  }
+                  .product-item--price span {
+                    display: flex;
+                    line-height: unset;
+                    flex-direction: column;
+                  }
+                  a:hover {
+                    color: unset;
+                  }
+                  /* default: no footprint */
+        .icon-container{
+          min-height: 0;
+          position: absolute;
+        }
+
+        /* show + space only when it actually has element children */
+        .icon-container:has(> *){
+          position: relative;
+        }
+
+        /* fallback for older browsers; may miss whitespace-only nodes */
+        .icon-container:empty{ display:none; }
+      
+        .card-variants {
+          margin-bottom: 15px;
+        }
+
+        .card-variants-label {
+            font-size: 16px !important;
+            font-weight: 400 !important;
+            color: #666666;
+            margin-bottom: 7px !important;
+            text-align: start;
+        }
+
+        .card-variants-chips {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 9px;
+        }
+
+        .variant-chip {
+            padding: 8px 12px;
+            border: 2px solid #e8e8e8;
+            border-radius: 99px;
+            white-space: nowrap;
+            line-height: 1;
+            min-height: 40px;
+            align-content: center;
+        }
+
+        .variant-chip--more {
+            color: #666666;
+            border: 2px solid #f1f1f1;
+        }
+      </style>
+
+      {% if product.selected_or_first_available_variant.available
+        and product.selected_or_first_available_variant.unit_price_measurement
+      %}
+        {% render 'product-unit-price', variant: product.selected_or_first_available_variant %}
+      {% endif %}
+    </div>
+
+{% render 'auto-discount-note', product: product %}
+
+
+    {% comment %}
+      {% if product.variants.first.sku %}
+        <p style="padding-top: 0; font-size: 17px; color: #666666;">{{ product.variants.first.sku }}</p>
+      {% endif %}
+    {% endcomment %}
+
+    {% if section.settings.product_reviews_enable %}
+      <span class="shopify-product-reviews-badge" data-id="{{ product.id }}"></span>
+    {% endif %}
+
+{% assign total_qty = 0 %}
+{% assign any_managed = false %}
+{% assign any_available = false %}
+{% assign any_continue = false %}
+{% assign any_incoming = false %}
+{% assign next_date = blank %}
+
+{% assign is_yg1 = false %}
+{% if product and product.tags and product.tags contains 'YG-1' %}
+  {% assign is_yg1 = true %}
+{% endif %}
+
+{% for v in product.variants %}
+  {% if v.inventory_management %}
+    {% assign any_managed = true %}
+    {% assign total_qty = total_qty | plus: v.inventory_quantity %}
+  {% endif %}
+  {% if v.available %}{% assign any_available = true %}{% endif %}
+  {% if v.inventory_policy == 'continue' %}{% assign any_continue = true %}{% endif %}
+  {% if v.incoming and v.next_incoming_date %}
+    {% assign any_incoming = true %}
+    {% assign next_date = v.next_incoming_date %}
+  {% endif %}
+{% endfor %}
+
+{% assign status = '' %}
+{% capture status_text %}
+  {% if any_managed %}
+    {% if total_qty > 5 %}
+      {% assign status = 'green' %}In stock
+    {% elsif total_qty > 0 %}
+      {% assign status = 'orange' %}Low stock
+    {% else %}
+      {% if any_incoming and next_date %}
+        {% assign status = 'blue' %}Restocking
+        {% comment %} If you want the due date, swap the line above for:
+           {% assign status = 'blue' %}Restocking · Due {{ next_date | date: "%-d %b %Y" }}
+        {% endcomment %}
+      {% elsif any_continue %}
+        {% if is_yg1 %}
+          {% assign status = 'yellow' %}5 days
+        {% else %}
+          {% assign status = 'red' %}Order in
+        {% endif %}
+      {% else %}
+        {% assign status = 'red' %}No stock
+      {% endif %}
+    {% endif %}
+  {% else %}
+    {% assign status = 'grey' %}Quantity unavailable
+  {% endif %}
+{% endcapture %}
+
+
+    <div class="ex-card-badge" data-status="{{ status | strip }}">
+      {{ status_text | strip }}
+    </div>
+  </a>
+
+  <div class="payment-buttons payment-buttons--medium form-payment-buttons">
+    {% assign first_avail = product.selected_or_first_available_variant | default: product.first_available_variant %}
+    {% assign _price_cents = first_avail.price | default: product.price | plus: 0 %}
+
+    {% if product.tags contains 'Custom Length' %}
+      <!-- Custom-length products must be configured on the PDP -->
+      <a href="{{ product.url }}" class="btn btn--wide btn--buyNow" style="background:#f88d2b;color:#fff;">
+        <span style="display:flex;align-items:center;gap:10px;"> Select your blade </span>
+      </a>
+
+    {% else %}
+      {% if _price_cents == 0 %}
+        <!-- $0.00 → send them to PDP to request a quote -->
+        <a href="{{ product.url }}" class="btn btn--wide btn--buyNow is-quote" style="background:#f88d2b;color:#fff;">
+          <span style="display:flex;align-items:center;gap:10px;"> Request Quote </span>
+        </a>
+      {% elsif first_avail %}
+        <!-- normal priced product → keep Add to Cart -->
+        <a
+          href="javascript:void(0);"
+          class="btn btn--wide btn--buyNow add-to-cart-btn"
+          data-variant-id="{{ first_avail.id }}"
+          style="background:#e0592a;color:#fff;"
+        >
+          <span style="display:flex;align-items:center;gap:10px;">
+            <i
+              class="fa fa-cart"
+              style="content:url(https://cdn.shopify.com/s/files/1/0439/5597/8399/files/Asset_Cart-white.png?v=1730169426);height:17px;"
+            ></i>
+            Add to Cart
+          </span>
+        </a>
+      {% else %}
+        <button class="btn btn--wide" disabled>Sold out</button>
+      {% endif %}
+    {% endif %}
+  </div>
+</div>
+
+  <style>
+    /* Ensure the hover effect only applies to the image container */
+    .product-image-wrapper {
+      position: relative;
+      overflow: hidden;
+      width: 100%;
+      height: 100%;
+      padding-top: 100%; /* Maintain aspect ratio */
+    }
+
+    .product-image {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: none !important;
+    }
+
+    /* Default image visible, second image hidden */
+    .product-image.front {
+      opacity: 1;
+      z-index: 2;
+    }
+
+    .product-image.back {
+      opacity: 0;
+      z-index: 100;
+      transform: scale(1.04);
+    }
+
+    /* Hide default image and show hover image on hover */
+    .product-grid-item:hover .product-image-wrapper .product-image.front {
+      opacity: 0 !important;
+    }
+
+    .product-grid-item:hover .product-image-wrapper .product-image.back {
+      opacity: 1 !important;
+      transform: scale(1);
+      transition: 0.3s ease !important;
+
+    }
+
+    /* Single image stays visible without hover effect */
+    .product-image.single {
+      opacity: 1;
+      z-index: 2;
+    }
+  </style>
