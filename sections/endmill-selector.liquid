@@ -383,7 +383,6 @@ function debug(msg, obj) {
 
 // check what Liquid actually gave you
 debug('Loaded product count', PRODUCT_DATA.length);
-debug('Sample product', PRODUCT_DATA[0]);
 debug('Excluding drilling tags from results', PRODUCT_DATA.filter(p => 
   p.tags.some(t => /Operation_(Blind|Through) Drilling/.test(t))
 ).map(p => p.title));
