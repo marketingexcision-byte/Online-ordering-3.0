@@ -419,12 +419,6 @@
 
 <div class="variant-quick-specs">
   <div class="vqs-row">
-    <div class="vqs-col"><small>Price</small><div class="vqs-val">
-      {{ v.price | money }}
-      {%- if v.compare_at_price > v.price -%}
-        <s class="vqs-compare">{{ v.compare_at_price | money }}</s>
-      {%- endif -%}
-    </div></div>
 
     <div class="vqs-col"><small>Product Code</small><div class="vqs-val">{{ v.sku | default: '—' }}</div></div>
 
