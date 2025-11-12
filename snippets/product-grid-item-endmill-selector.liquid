@@ -22,7 +22,9 @@
 {% endif %}
 
 <div class="grid-item {{ grid_item_width }}{% if on_sale %} on-sale{% endif %}">
-  <a href="{{ product.url | within: current_collection }}" class="product-grid-item">
+  <a href="{{ product.url | within: current_collection }}"
+   class="product-grid-item"
+   data-variant-id="{{ current_variant.id }}">
     <div class="product-grid-image">
       <div class="product-grid-image--centered">
         {% if product.tags contains 'New'%}
