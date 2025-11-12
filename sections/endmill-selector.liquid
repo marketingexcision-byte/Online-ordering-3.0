@@ -511,6 +511,7 @@ function matchesProduct(p){
   </script>
 
   <style>
+
     /* Wizard step transitions */
     .es-step{
       transition: opacity .35s ease, transform .35s ease;
@@ -520,6 +521,10 @@ function matchesProduct(p){
     .rc-item[aria-selected="true"]{
       outline: 2px solid var(--color-primary-orange);
       box-shadow: 0 0 0 2px color-mix(in oklab, var(--color-primary-orange) 20%, transparent);
+    }
+    .rc-item__label.h5 {
+    display: flex;
+    align-items: center;
     }
   </style>
 </section>
