@@ -411,6 +411,12 @@ function normalizeTag(t) {
   return t.toLowerCase().replace(/\s+/g, '').replace(/_/g, '');
 }
 
+function hasExcludedTag(p){
+  const t = p.tags.map(normalizeTag);
+  return t.includes('operationblinddrilling') || t.includes('operationthroughdrilling');
+}
+
+
 function matchesProduct(p){
   const tagsNorm = p.tags.map(normalizeTag);
 
@@ -491,11 +497,65 @@ function matchesProduct(p){
       el('#es-chips').style.display = 'flex';
     }
 
-    if (window.ES_DEBUG) {
+    const matches = PRODUCT_DATA.filter(matchesProduct);
+
+if (window.ES_DEBUG) {
   debug('Selected filters', selected);
   debug('Matches count', matches.length);
-  debug('First 3 products after filtering', matches.slice(0,3));
+
+  if (matches.length === 0) {
+    // tell me why the first few failed
+    const sampleFailures = PRODUCT_DATA.slice(0, 12).map(p => {
+      const reasons = [];
+      const tagsNorm = p.tags.map(normalizeTag);
+
+      if (hasExcludedTag(p)) reasons.push('excluded: drilling');
+      if (selected.operationTag) {
+        const opNorm = normalizeTag(selected.operationTag);
+        if (!tagsNorm.includes(opNorm)) reasons.push(`missing tag ${selected.operationTag}`);
+      }
+      if (selected.shapeTag) {
+        const shNorm = normalizeTag(selected.shapeTag);
+        if (!tagsNorm.includes(shNorm)) reasons.push(`missing tag ${selected.shapeTag}`);
+      }
+      if (selected.vdi != null) {
+        const vd = Number(selected.vdi);
+        const good = (p.vdi_good || []);
+        const exc  = (p.vdi_excellent || []);
+        if (![...good, ...exc].includes(vd)) reasons.push(`vdi ${vd} not in good/excellent`);
+      }
+      if (selected.diameter != null) {
+        const want = Number(selected.diameter);
+        const has = (p.diameters || []).some(d => Math.abs(d - want) < 0.01);
+        if (!has) reasons.push(`no diameter ${want}`);
+      }
+
+      return { title: p.title, reasons };
+    });
+
+    debug('Zero matches. Sample failure reasons', sampleFailures);
+  }
 }
+
+
+const excludedList = PRODUCT_DATA.filter(hasExcludedTag);
+const excludedCount = excludedList.length;
+const remainingCount = PRODUCT_DATA.length - excludedCount;
+
+debug('Loaded product count', PRODUCT_DATA.length);
+debug('Excluded by drilling tags', { excludedCount, remainingCount });
+
+// sample a few excluded titles so you can eyeball it without spamming
+debug('Excluded sample', excludedList.slice(0, 10).map(p => p.title));
+
+// also sanity check diameters and vdi parsing on first few
+debug('Sample product after normalize', {
+  title: PRODUCT_DATA[0]?.title,
+  vdi_good: PRODUCT_DATA[0]?.vdi_good,
+  vdi_excellent: PRODUCT_DATA[0]?.vdi_excellent,
+  diameters: PRODUCT_DATA[0]?.diameters?.slice(0,10)
+});
+
 
 
     // Chips summary
