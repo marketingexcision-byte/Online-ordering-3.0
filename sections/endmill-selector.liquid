@@ -122,6 +122,65 @@
     <!-- Results -->
     <div id="es-results">
       <h3 class="h3" style="margin-top:0;">Results</h3>
+
+      {%- comment -%} Editable summary controls shown on results {%- endcomment -%}
+{% assign iso_tabs = "P|M|K|N|S|H" | split: "|" %}
+{% assign ops = "Profiling|Chamfering|Side Milling|Small Part|Slotting|Die Sinking|Facing|Corner|Helical-Interpol|Trochoidal|Side Taper" | split: "|" %}
+{% assign shapes = "Square End|Ball Nose|Corner Radius|Ripper / Rougher" | split: "|" %}
+
+<div id="es-editable-summary" class="card" style="display:none;margin:16px 0 22px;">
+  <h4 class="h4" style="margin-top:0;">Your selections</h4>
+  <div class="rc-row">
+    <label class="rc-item">
+      <span class="rc-item__label">Operation</span>
+      <select id="es-sel-operation" class="form-input">
+        <option value="">Any</option>
+        {% for op in ops %}
+          {% assign tag = op | replace: ' ', '_' %}
+          <option value="Operation_{{ tag }}">{{ op }}</option>
+        {% endfor %}
+      </select>
+    </label>
+
+    <label class="rc-item">
+      <span class="rc-item__label">ISO</span>
+      <select id="es-sel-iso" class="form-input">
+        {% for i in iso_tabs %}
+          <option value="{{ i }}">{{ i }}</option>
+        {% endfor %}
+      </select>
+    </label>
+
+    <label class="rc-item">
+      <span class="rc-item__label">Material</span>
+      <select id="es-sel-material" class="form-input">
+        <option value="">Any</option>
+        {# options filled by JS based on ISO. label shows “User · VDI n” #}
+      </select>
+    </label>
+
+    <label class="rc-item">
+      <span class="rc-item__label">Cutting shape</span>
+      <select id="es-sel-shape" class="form-input">
+        <option value="">Any</option>
+        {% for s in shapes %}
+          {% assign t = s | replace: ' ', '_' | replace: '/', 'Rougher' %}
+          <option value="Cutting Shape_{{ t }}">{{ s }}</option>
+        {% endfor %}
+      </select>
+    </label>
+
+    <label class="rc-item">
+      <span class="rc-item__label">Diameter (mm)</span>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input id="es-sel-dia" type="number" class="form-input" step="0.01" min="0" placeholder="Any">
+        <button type="button" class="btn btn-outline" id="es-dia-clear">Clear</button>
+      </div>
+    </label>
+  </div>
+</div>
+
+
       <div id="es-empty" class="collection-card__description" style="display:none;">
         No matching products. Loosen a filter or clear Diameter.
       </div>
@@ -299,6 +358,96 @@
       });
     };
 
+    // === Editable summary ===
+const summaryEl = el('#es-editable-summary');
+const selOp   = () => el('#es-sel-operation');
+const selISO  = () => el('#es-sel-iso');
+const selMat  = () => el('#es-sel-material');
+const selSh   = () => el('#es-sel-shape');
+const selDia  = () => el('#es-sel-dia');
+const btnDiaC = () => el('#es-dia-clear');
+
+function buildMaterialOptions(iso, currentVDI) {
+  const opts = [`<option value="">Any</option>`];
+  MAT.filter(m => m.iso === iso).forEach(m => {
+    const label = `${m.user} · VDI ${m.vdi}`;
+    const sel = currentVDI === m.vdi ? ' selected' : '';
+    opts.push(`<option value="${m.vdi}"${sel}>${label}</option>`);
+  });
+  selMat().innerHTML = opts.join('');
+}
+
+function syncSummaryFromState() {
+  // Operation
+  selOp().value = selected.operationTag || '';
+  // ISO + material
+  selISO().value = selected.iso || 'P';
+  buildMaterialOptions(selISO().value, selected.vdi ?? null);
+  // Shape
+  selSh().value = selected.shapeTag || '';
+  // Diameter
+  selDia().value = selected.diameter != null ? String(selected.diameter) : '';
+}
+
+function attachSummaryHandlersOnce() {
+  if (summaryEl.dataset.bound === '1') return;
+
+  selOp().addEventListener('change', () => {
+    selected.operationTag = selOp().value || null;
+    renderResults(); renderChips();
+  });
+
+  selISO().addEventListener('change', () => {
+    selected.iso = selISO().value;
+    // ISO change clears VDI selection until user picks one
+    selected.vdi = null;
+    selected.materialLabel = null;
+    buildMaterialOptions(selected.iso, null);
+    renderResults(); renderChips();
+  });
+
+  selMat().addEventListener('change', () => {
+    const v = selMat().value;
+    if (v === '') {
+      selected.vdi = null;
+      selected.materialLabel = null;
+    } else {
+      selected.vdi = Number(v);
+      const m = MAT.find(x => x.vdi === selected.vdi);
+      selected.materialLabel = m ? m.user : null;
+      selected.iso = m ? m.iso : selected.iso;
+      selISO().value = selected.iso; // keep ISO select in sync
+    }
+    renderResults(); renderChips();
+  });
+
+  selSh().addEventListener('change', () => {
+    selected.shapeTag = selSh().value || null;
+    renderResults(); renderChips();
+  });
+
+  selDia().addEventListener('input', () => {
+    const v = selDia().value.trim();
+    selected.diameter = v === '' ? null : Number(v);
+    renderResults(); renderChips();
+  });
+
+  btnDiaC().addEventListener('click', () => {
+    selDia().value = '';
+    selected.diameter = null;
+    renderResults(); renderChips();
+  });
+
+  summaryEl.dataset.bound = '1';
+}
+
+function showSummary() {
+  summaryEl.style.display = 'block';
+  attachSummaryHandlersOnce();
+  syncSummaryFromState();
+}
+
+
     els('.es-iso-tab').forEach(tab => {
       tab.addEventListener('click', () => {
         els('.es-iso-tab').forEach(t => t.setAttribute('aria-selected','false'));
@@ -331,13 +480,13 @@
     // Nav buttons
     els('.es-next').forEach(b => b.addEventListener('click', () => setStep(Math.min(4, step+1))));
     els('.es-prev').forEach(b => b.addEventListener('click', () => setStep(Math.max(1, step-1))));
-    el('.es-finish').addEventListener('click', () => {
-      setStep(4);
-      renderResults();
-      renderChips();
-      window.scrollTo({ top: el('#es-results').offsetTop - 20, behavior: 'smooth' });
-    });
-
+el('.es-finish').addEventListener('click', () => {
+  setStep(4);
+  renderResults();
+  renderChips();
+  showSummary();
+  window.scrollTo({ top: el('#es-results').offsetTop - 20, behavior: 'smooth' });
+});
     // Reset
     el('#es-reset').addEventListener('click', () => {
       // clear selections
@@ -358,7 +507,17 @@
       el('#es-grid').innerHTML = '';
       el('#es-empty').style.display = 'none';
       setStep(1);
-    });
+    
+        summaryEl.style.display = 'none';
+  if (summaryEl.dataset.bound !== '1') attachSummaryHandlersOnce();
+  // default selects
+  selOp().value = '';
+  selISO().value = 'P';
+  buildMaterialOptions('P', null);
+  selMat().value = '';
+  selSh().value = '';
+  selDia().value = '';
+});
 
     // Data load
     const PRODUCT_DATA = JSON.parse(el('#es-products-json').innerHTML.trim());
