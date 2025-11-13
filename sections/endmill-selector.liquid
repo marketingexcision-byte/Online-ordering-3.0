@@ -958,18 +958,16 @@ els('.es-skip').forEach(btn => {
         p.diameters = (p.diameters || []).map((x) => Number(String(x).replace(',', '.')));
       });
 
-      function tryParseArray(v) {
-        if (!v) return [];
-        if (Array.isArray(v)) return v.map(Number);
-        if (typeof v === 'string') {
-          v = v.replace(/^\[|\]$/g, '');
-          return v
-            .split(/[,|;]/)
-            .map((x) => parseFloat(x))
-            .filter((x) => !isNaN(x));
-        }
-        return [];
-      }
+      function tryParseArray(v){
+  if (!v) return [];
+  if (Array.isArray(v)) return v.map(Number).filter(n => !isNaN(n));
+
+  // Accept anything: bullets •, commas, spaces, slashes, etc.
+  // Grab every integer or float from the string.
+  const nums = String(v).match(/\d+(?:\.\d+)?/g);
+  return nums ? nums.map(Number).filter(n => !isNaN(n)) : [];
+}
+
 
       function normalizeTag(t) {
         return String(t)
