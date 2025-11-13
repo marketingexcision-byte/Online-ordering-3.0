@@ -391,10 +391,22 @@ based on data-variant-id + data-product-json set by the selector.
     return raw + '°';
   }
   function flutesFromTags(tags){
-    const t = (tags||[]).find(x => typeof x==='string' && x.slice(0,12).toLowerCase()==='no. flutes_');
-    if (!t) return '';
-    return t.replace(/^No\. Flutes_/i,'').trim();
+  if (!Array.isArray(tags)) return '';
+  // Primary. "No. Flutes_*" (your canonical format)
+  for (const raw of tags){
+    if (typeof raw !== 'string') continue;
+    const m = raw.match(/^No\.?\s*Flutes_(.+)$/i);
+    if (m) return m[1].trim(); // e.g. "4", "3-5", "4 & 6"
   }
+  // Fallbacks seen in the wild
+  for (const raw of tags){
+    if (typeof raw !== 'string') continue;
+    const m = raw.match(/^Flutes_(.+)$/i);
+    if (m) return m[1].trim();
+  }
+  return '';
+}
+
   function matsFromVDI(p){
     // p.vdi_good/excellent may be strings or arrays. Normalize here.
     function parseList(val){
