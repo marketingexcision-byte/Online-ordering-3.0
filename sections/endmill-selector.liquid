@@ -98,7 +98,7 @@
   <h3 class="h3" style="margin-top:0;">Length</h3>
 
   <div class="rc-row" role="listbox" aria-label="Length">
-    {% assign lengths = "Throw Away|Stub|Short|Long|Extra Long|Long Reach" | split: "|" %}
+    {% assign lengths = "Throw Away|Stub|Short|Long|Extra Long|Long Reach|Extended Neck" | split: "|" %}
     {% for L in lengths %}
       <button type="button" class="rc-item es-length" data-tag="Length_{{ L }}" aria-selected="false">
         <div class="rc-item__label h5">{{ L }}</div>
@@ -147,7 +147,7 @@
 {% assign iso_tabs = "P|M|K|N|S|H" | split: "|" %}
 {% assign ops = "Profiling|Chamfering|Side Milling|Small Part|Slotting|Die Sinking|Facing|Corner|Helical-Interpol|Trochoidal|Side Taper" | split: "|" %}
 {% assign shapes = "Square|Ball Nose|Corner Radius|Ripper / Rougher|Chamfer Prep" | split: "|" %}
-{% assign lengths = "Throw Away|Stub|Short|Long|Extra Long|Long Reach" | split: "|" %}
+{% assign lengths = "Throw Away|Stub|Short|Long|Extra Long|Long Reach|Extended Neck" | split: "|" %}
 
 
 <div id="es-editable-summary" class="card" style="display:none;margin:16px 0 22px;">
