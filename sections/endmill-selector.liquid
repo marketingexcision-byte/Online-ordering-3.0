@@ -44,7 +44,7 @@
       <article class="card es-step" data-step="1" aria-hidden="false">
         <h3 class="h3" style="margin-top:0;">What operation are you doing?</h3>
         <div class="rc-row" role="listbox" aria-label="Operation">
-          {% assign ops = 'Profiling|Chamfering|Side Milling|Small Part|Slotting|Die Sinking|Facing|Corner|Helical-Interpol|Trochoidal|Side Taper'
+          {% assign ops = 'Profiling|Side Milling|Small Part|Slotting|Die Sinking|Facing|Corner|Helical-Interpol|Trochoidal|Side Taper'
             | split: '|'
           %}
           {% for op in ops %}
@@ -211,7 +211,7 @@
 
       {%- comment -%} Editable summary controls shown on results {%- endcomment -%}
       {% assign iso_tabs = 'P|M|K|N|S|H' | split: '|' %}
-      {% assign ops = 'Profiling|Chamfering|Side Milling|Small Part|Slotting|Die Sinking|Facing|Corner|Helical-Interpol|Trochoidal|Side Taper'
+      {% assign ops = 'Profiling|Side Milling|Small Part|Slotting|Die Sinking|Facing|Corner|Helical-Interpol|Trochoidal|Side Taper'
         | split: '|'
       %}
       {% assign shapes = 'Square|Ball Nose|Corner Radius|Ripper / Rougher|Chamfer Prep' | split: '|' %}
