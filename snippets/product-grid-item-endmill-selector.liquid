@@ -431,6 +431,62 @@ based on data-variant-id + data-product-json set by the selector.
     const V = (P.variants||[]).find(v => String(v.id) === String(vid)) || (P.variants||[])[0];
     if (!V) return;
 
+    // Update displayed price for the chosen variant
+(function(){
+  const priceInc = selectBy(scope, '.ex-price__inc');
+  const priceEx  = selectBy(scope, '.ex-price__ex');
+  if (!priceInc) return;
+
+  // Use shop tax mode from Liquid
+  const taxesIncluded = {{ shop.taxes_included | json }};
+  // Assume taxable unless you also serialize V.taxable
+  const taxable = true;
+
+  let inc = V.price, ex = V.price;
+  if (taxable){
+    if (taxesIncluded){
+      inc = V.price;
+      ex  = Math.round(V.price * 10 / 11);
+    } else {
+      ex  = V.price;
+      inc = Math.round(V.price * 11 / 10);
+    }
+  }
+
+  const fmt = (cents) => (Number(cents||0)/100).toLocaleString(undefined,{style:'currency',currency:'AUD'});
+
+  // ex-price__inc looks like: "<strong>$$$<span class='inc-price__label'>INC GST</span></strong>"
+  // Safely set the text node before the span
+  const incLabel = priceInc.querySelector('.inc-price__label');
+  if (incLabel){
+    // If there’s a text node before the span, set it. else rebuild innerHTML.
+    const first = priceInc.firstChild;
+    if (first && first.nodeType === 3){
+      first.nodeValue = fmt(inc);
+    } else {
+      priceInc.innerHTML = `${fmt(inc)}<span class="inc-price__label">INC GST</span>`;
+    }
+  } else {
+    // Fallback. no nested span. just write the money
+    priceInc.textContent = fmt(inc);
+  }
+
+  if (priceEx){
+    const exLabel = priceEx.querySelector('.ex-price__label');
+    if (exLabel){
+      const first = priceEx.firstChild;
+      if (first && first.nodeType === 3){
+        first.nodeValue = fmt(ex) + ' ';
+      } else {
+        priceEx.innerHTML = `${fmt(ex)} <span class="ex-price__label">EX GST</span>`;
+      }
+    } else {
+      priceEx.textContent = fmt(ex);
+    }
+  }
+})();
+
+
     // product-level flags
     const isYG1 = (P.tags||[]).includes('YG-1');
 
@@ -493,26 +549,6 @@ if (matsWrap){
     const root = e.target && e.target.classList && e.target.classList.contains('product-grid-item') ? e.target : null;
     if (root) hydrateCard(root);
   });
-
-  // Update the price UI to the chosen variant
-const priceInc = selectBy(scope, '.ex-price__inc');
-const priceEx  = selectBy(scope, '.ex-price__ex');
-if (priceInc) {
-  const taxable = true; // your Liquid used v.taxable|default:true. adjust if needed
-  let inc = V.price, ex = V.price;
-  if (taxable) {
-    if ({{ shop.taxes_included | json }}) {
-      inc = V.price;
-      ex  = Math.round(V.price * 10 / 11);
-    } else {
-      ex  = V.price;
-      inc = Math.round(V.price * 11 / 10);
-    }
-  }
-  function fmt(c){ return (Number(c||0)/100).toLocaleString(undefined,{style:'currency',currency:'AUD'}); }
-  priceInc.childNodes[0].nodeValue = fmt(inc); // keep “INC GST” span
-  if (priceEx) priceEx.childNodes[0].nodeValue  = fmt(ex) + ' ';
-}
 
 
   // also hydrate on DOM ready for SSR fallbacks
