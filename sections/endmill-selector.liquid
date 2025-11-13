@@ -199,10 +199,6 @@
         | split: '|'
       %}
       {% assign shapes = 'Square|Ball Nose|Corner Radius|Ripper / Rougher|Chamfer Prep' | split: '|' %}
-      {% assign lengths = 'Throw Away|Stub|Short|Long|Extra Long|Long Reach|Extended Neck' | split: '|' %}
-      {% assign types = 'Center Match|Rib Processing|Miniature|High Feed|Sharp Corner Removal|Taper Neck|Center Cut'
-        | split: '|'
-      %}
 
       <div id="es-editable-summary" class="card" style="display:none;margin:16px 0 22px;">
         <h4 class="h4" style="margin-top:0;">Your selections</h4>
@@ -858,7 +854,7 @@
         selected.diameter = null;
 
         // UI reset
-        els('.es-op,.es-mat,.es-shape,.es-length').forEach((b) => b.setAttribute('aria-selected', 'false'));
+        els('.es-op,.es-mat,.es-shape,.es-length,.es-type').forEach((b) => b.setAttribute('aria-selected', 'false'));
         els('.es-next').forEach((n) => (n.disabled = true));
         els('.es-iso-tab').forEach((t, i) => t.setAttribute('aria-selected', String(i === 0)));
         el('#es-dia').value = '';
