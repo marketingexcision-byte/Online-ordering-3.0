@@ -685,7 +685,7 @@
         selSh().value = selected.shapeTag || '';
         // Diameter
         selDia().value = selected.diameter != null ? String(selected.diameter) : '';
-        selLen().value  = selected.lengthTag || '';
+        selLen().value = selected.lengthTag || '';
         selType().value = selected.typeTag || '';
       }
 
@@ -948,8 +948,11 @@
           if (!tagsNorm.includes(shapeNorm)) return false;
         }
 
-        // Length tag
-        if (selected.lengthTag) {
+        // Length vs Type. only one applies
+        if (selected.typeTag) {
+          const tNorm = normalizeTag(selected.typeTag);
+          if (!tagsNorm.includes(tNorm)) return false;
+        } else if (selected.lengthTag) {
           const lenNorm = normalizeTag(selected.lengthTag);
           if (!tagsNorm.includes(lenNorm)) return false;
         }
