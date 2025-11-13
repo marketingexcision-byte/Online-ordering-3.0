@@ -240,6 +240,10 @@ based on data-variant-id + data-product-json set by the selector.
       <small>Shank Diameter</small><div class="vqs-val" data-vqs__shank>—</div>
     </div>
 
+    <div class="vqs-col" data-vqs-shanktype>
+      <small>Shank Type</small><div class="vqs-val" data-vqs__shanktype>—</div>
+    </div>
+
     <div class="vqs-col" data-vqs-cr>
       <small>Corner Radius</small><div class="vqs-val" data-vqs__cr>—</div>
     </div>
@@ -390,6 +394,15 @@ based on data-variant-id + data-product-json set by the selector.
     if (raw==='') return '';
     return raw + '°';
   }
+  function shankTypeFromTags(tags){
+  if (!Array.isArray(tags)) return '';
+  for (const raw of tags){
+    if (typeof raw !== 'string') continue;
+    const m = raw.match(/^Shank Type_(.+)$/i);
+    if (m) return m[1].trim();
+  }
+  return '';
+}
   function flutesFromTags(tags){
   if (!Array.isArray(tags)) return '';
   // Primary. "No. Flutes_*" (your canonical format)
@@ -511,6 +524,9 @@ based on data-variant-id + data-product-json set by the selector.
     // Shank: prefer MF, else option
     const shank = (V.shank_diameter_mm_mf && String(V.shank_diameter_mm_mf).trim()!=='') ? V.shank_diameter_mm_mf : V.shank_diameter_mm_opt;
     showRow(scope, 'shank', shank ? (shank + ' mm') : '');
+
+    // Shank Type from product tags
+showRow(scope, 'shanktype', shankTypeFromTags(P.tags));
 
     // Corner radius
     showRow(scope, 'cr', V.corner_radius_mm ? (V.corner_radius_mm + ' mm') : '');
