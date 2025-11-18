@@ -660,7 +660,8 @@ const subgradeGrid = el('#es-material-grid');
 
 isoCards.forEach(card => {
   card.addEventListener('click', () => {
-    const iso = card.dataset.iso;
+    const rawIso = card.dataset.iso || '';
+    const iso = rawIso.trim();
 
     // visual toggle
     isoCards.forEach(c => c.classList.remove('active'));
@@ -706,6 +707,7 @@ isoCards.forEach(card => {
     });
   });
 });
+
 
 
 
