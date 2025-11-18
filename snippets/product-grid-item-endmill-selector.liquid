@@ -104,33 +104,10 @@
       {{ product.title }}
     </p>
 
-    {% comment %}
-      Suitability line: “Excellent for slotting Medium Carbon Steel”
-      Values come from JS via data attributes.
-    {% endcomment %}
+    <div class="vqs-col" data-vqs-suitability-row hidden>
+  <small data-vqs-suitability>—</small>
+</div>
 
-    {% assign suit = '' %}
-    {% assign op = '' %}
-    {% assign mat = '' %}
-
-    {% if product_grid_item['data-suitability'] %}
-      {% assign suit = product_grid_item['data-suitability'] %}
-    {% endif %}
-    {% if product_grid_item['data-op-label'] %}
-      {% assign op = product_grid_item['data-op-label'] | replace: 'Operation_', '' | replace: '_', ' ' %}
-    {% endif %}
-    {% if product_grid_item['data-material-label'] %}
-      {% assign mat = product_grid_item['data-material-label'] %}
-    {% endif %}
-
-    {% if suit != '' and mat != '' %}
-      <div class="vqs-col">
-        <small>
-          {{- suit }} for {{ op }}
-          {{ mat -}}
-        </small>
-      </div>
-    {% endif %}
 
     {%- comment -%} Clean ops list for JS hydration {%- endcomment -%}
     {%- assign ops_human = '' -%}
