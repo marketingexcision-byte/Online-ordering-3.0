@@ -1,6 +1,7 @@
-{% assign lengths = "Throw Away|Stub|Short|Long|Extra Long|Long Reach|Extended Neck" | split: "|" %}
-{% assign types   = "Center Match|Rib Processing|Miniature|High Feed|Sharp Corner Removal|Taper Neck|Center Cut" | split: "|" %}
-
+{% assign lengths = 'Throw Away|Stub|Short|Long|Extra Long|Long Reach|Extended Neck' | split: '|' %}
+{% assign types = 'Center Match|Rib Processing|Miniature|High Feed|Sharp Corner Removal|Taper Neck|Center Cut'
+  | split: '|'
+%}
 
 <section
   class="section"
@@ -47,9 +48,9 @@
         <div style="display:flex;gap:12px;justify-content:space-between;align-items:center;margin-top:var(--space-6);">
           <span class="rc-item__text">Pick one</span>
           <div style="display:flex;gap:8px;">
-             <button type="button" class="btn es-skip">Skip</button>
-    <button type="button" class="btn btn-primary es-next" disabled>Next</button>
-  </div>
+            <button type="button" class="btn es-skip">Skip</button>
+            <button type="button" class="btn btn-primary es-next" disabled>Next</button>
+          </div>
         </div>
       </article>
 
@@ -88,9 +89,9 @@
         <div style="display:flex;gap:12px;justify-content:space-between;align-items:center;margin-top:var(--space-6);">
           <button type="button" class="btn btn-outline es-prev">Back</button>
           <div style="display:flex;gap:8px;">
-             <button type="button" class="btn es-skip">Skip</button>
-    <button type="button" class="btn btn-primary es-next" disabled>Next</button>
-  </div>
+            <button type="button" class="btn es-skip">Skip</button>
+            <button type="button" class="btn btn-primary es-next" disabled>Next</button>
+          </div>
         </div>
       </article>
 
@@ -114,9 +115,9 @@
         <div style="display:flex;gap:12px;justify-content:space-between;align-items:center;margin-top:var(--space-6);">
           <button type="button" class="btn btn-outline es-prev">Back</button>
           <div style="display:flex;gap:8px;">
-             <button type="button" class="btn es-skip">Skip</button>
-    <button type="button" class="btn btn-primary es-next" disabled>Next</button>
-  </div>
+            <button type="button" class="btn es-skip">Skip</button>
+            <button type="button" class="btn btn-primary es-next" disabled>Next</button>
+          </div>
         </div>
       </article>
 
@@ -152,8 +153,8 @@
           <button type="button" class="btn btn-outline es-prev">Back</button>
           <div style="display:flex;gap:8px;">
             <button type="button" class="btn es-skip">Skip</button>
-    <button type="button" class="btn btn-primary es-next" disabled>Next</button>
-  </div>
+            <button type="button" class="btn btn-primary es-next" disabled>Next</button>
+          </div>
         </div>
       </article>
 
@@ -283,10 +284,10 @@
     </div>
   </div>
 
-{%- comment -%}Force selector to read from the entire catalog{%- endcomment -%}
-{% assign coll = collections['all-endmills'] %}
+  {%- comment -%}Force selector to read from the entire catalog{%- endcomment -%}
+  {% assign coll = collections['all-endmills'] %}
 
-{% paginate coll.products by 1000 %}
+  {% paginate coll.products by 1000 %}
     <template id="es-products-json">
       [
       {% for product in coll.products %}
@@ -624,8 +625,6 @@
         });
       });
 
-
-
       // ISO tabs + materials grid
       const MAT = JSON.parse(el('#es-vdi-table').textContent);
       const matGrid = el('#es-material-grid');
@@ -776,56 +775,55 @@
       }
 
       // clear UI selections within a step
-function clearSelectionsIn(stepEl){
-  if (!stepEl) return;
-  // unselect all toggles in this step
-  Array.from(stepEl.querySelectorAll('[aria-selected]')).forEach(b => b.setAttribute('aria-selected','false'));
-  // clear inputs in this step
-  Array.from(stepEl.querySelectorAll('input[type="number"],input[type="text"]')).forEach(i => i.value = '');
-}
+      function clearSelectionsIn(stepEl) {
+        if (!stepEl) return;
+        // unselect all toggles in this step
+        Array.from(stepEl.querySelectorAll('[aria-selected]')).forEach((b) => b.setAttribute('aria-selected', 'false'));
+        // clear inputs in this step
+        Array.from(stepEl.querySelectorAll('input[type="number"],input[type="text"]')).forEach((i) => (i.value = ''));
+      }
 
-function doFinish(){
-  setStep(4);
-  renderResults();
-  renderChips();
-  showSummary();
-  window.scrollTo({ top: el('#es-results').offsetTop - 20, behavior: 'smooth' });
-}
+      function doFinish() {
+        setStep(4);
+        renderResults();
+        renderChips();
+        showSummary();
+        window.scrollTo({ top: el('#es-results').offsetTop - 20, behavior: 'smooth' });
+      }
 
-// Skip buttons: set this step to "Any" and advance
-els('.es-skip').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const stepEl = btn.closest('.es-step');
-    const n = Number(stepEl?.dataset.step || 0);
+      // Skip buttons: set this step to "Any" and advance
+      els('.es-skip').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const stepEl = btn.closest('.es-step');
+          const n = Number(stepEl?.dataset.step || 0);
 
-    switch (n) {
-      case 1: // Operation -> Any
-        selected.operationTag = null;
-        break;
-      case 2: // Material -> Any (keep ISO tab as-is. clear VDI)
-        selected.vdi = null;
-        selected.materialLabel = null;
-        break;
-      case 3: // Shape -> Any
-        selected.shapeTag = null;
-        break;
-      case 4: // Length/Type -> Any
-        selected.lengthTag = null;
-        selected.typeTag = null;
-        break;
-      case 5: // Diameter -> Any. then finish
-        selected.diameter = null;
-        el('#es-dia').value = '';
-        clearSelectionsIn(stepEl);
-        doFinish();
-        return; // don't call setStep again
-    }
+          switch (n) {
+            case 1: // Operation -> Any
+              selected.operationTag = null;
+              break;
+            case 2: // Material -> Any (keep ISO tab as-is. clear VDI)
+              selected.vdi = null;
+              selected.materialLabel = null;
+              break;
+            case 3: // Shape -> Any
+              selected.shapeTag = null;
+              break;
+            case 4: // Length/Type -> Any
+              selected.lengthTag = null;
+              selected.typeTag = null;
+              break;
+            case 5: // Diameter -> Any. then finish
+              selected.diameter = null;
+              el('#es-dia').value = '';
+              clearSelectionsIn(stepEl);
+              doFinish();
+              return; // don't call setStep again
+          }
 
-    clearSelectionsIn(stepEl);
-    setStep(Math.min(5, n + 1));
-  });
-});
-
+          clearSelectionsIn(stepEl);
+          setStep(Math.min(5, n + 1));
+        });
+      });
 
       els('.es-iso-tab').forEach((tab) => {
         tab.addEventListener('click', () => {
@@ -944,13 +942,12 @@ els('.es-skip').forEach(btn => {
         p.diameters = (p.diameters || []).map((x) => Number(String(x).replace(',', '.')));
       });
 
-      function tryParseArray(v){
-  if (!v) return [];
-  if (Array.isArray(v)) return v.map(Number).filter(n => !isNaN(n));
-  const nums = String(v).match(/\d+(?:\.\d+)?/g);
-  return nums ? nums.map(Number).filter(n => !isNaN(n)) : [];
-}
-
+      function tryParseArray(v) {
+        if (!v) return [];
+        if (Array.isArray(v)) return v.map(Number).filter((n) => !isNaN(n));
+        const nums = String(v).match(/\d+(?:\.\d+)?/g);
+        return nums ? nums.map(Number).filter((n) => !isNaN(n)) : [];
+      }
 
       function normalizeTag(t) {
         return String(t)
@@ -1075,16 +1072,15 @@ els('.es-skip').forEach(btn => {
             // stash product JSON for the card hydrator
             root.setAttribute('data-product-json', JSON.stringify(p));
             // annotate suitability info
-let suitability = '';
-if (selected.vdi != null) {
-  const vd = Number(selected.vdi);
-  const isExc = (p.vdi_excellent || []).includes(vd);
-  suitability = isExc ? 'Excellent' : 'Good';
-}
-root.setAttribute('data-suitability', suitability);
-root.setAttribute('data-op-label', selected.operationTag || '');
-root.setAttribute('data-material-label', selected.materialLabel || '');
-
+            let suitability = '';
+            if (selected.vdi != null) {
+              const vd = Number(selected.vdi);
+              const isExc = (p.vdi_excellent || []).includes(vd);
+              suitability = isExc ? 'Excellent' : 'Good';
+            }
+            root.setAttribute('data-suitability', suitability);
+            root.setAttribute('data-op-label', selected.operationTag || '');
+            root.setAttribute('data-material-label', selected.materialLabel || '');
           }
 
           frag.appendChild(node);

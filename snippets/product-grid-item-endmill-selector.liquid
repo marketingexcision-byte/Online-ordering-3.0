@@ -1,7 +1,7 @@
 {% render 'wcp_discount' with product %}
 {%- comment -%}
-We’ll default to first available, but a JS hydrator will overwrite DOM to the exact variant
-based on data-variant-id + data-product-json set by the selector.
+  We’ll default to first available, but a JS hydrator will overwrite DOM to the exact variant
+  based on data-variant-id + data-product-json set by the selector.
 {%- endcomment -%}
 {% assign current_variant = product.selected_or_first_available_variant | default: product.variants.first %}
 
@@ -27,12 +27,14 @@ based on data-variant-id + data-product-json set by the selector.
 {% endif %}
 
 <div class="grid-item {{ grid_item_width }}{% if on_sale %} on-sale{% endif %}">
-  <a href="{{ product.url | within: current_collection }}"
-   class="product-grid-item"
-   data-variant-id="{{ current_variant.id }}">
+  <a
+    href="{{ product.url | within: current_collection }}"
+    class="product-grid-item"
+    data-variant-id="{{ current_variant.id }}"
+  >
     <div class="product-grid-image">
       <div class="product-grid-image--centered">
-        {% if product.tags contains 'New'%}
+        {% if product.tags contains 'New' %}
           <span class="new-badge font-bold">New</span>
         {% endif %}
         {% if product.tags contains 'YG-1' %}
@@ -103,78 +105,82 @@ based on data-variant-id + data-product-json set by the selector.
     </p>
 
     {% comment %}
-Suitability line: “Excellent for slotting Medium Carbon Steel”
-Values come from JS via data attributes.
-{% endcomment %}
+      Suitability line: “Excellent for slotting Medium Carbon Steel”
+      Values come from JS via data attributes.
+    {% endcomment %}
 
-{% assign suit = '' %}
-{% assign op = '' %}
-{% assign mat = '' %}
+    {% assign suit = '' %}
+    {% assign op = '' %}
+    {% assign mat = '' %}
 
-{% if product_grid_item.data-suitability %}
-  {% assign suit = product_grid_item.data-suitability %}
-{% endif %}
-{% if product_grid_item.data-op-label %}
-  {% assign op = product_grid_item.data-op-label | replace: 'Operation_', '' | replace: '_', ' ' %}
-{% endif %}
-{% if product_grid_item.data-material-label %}
-  {% assign mat = product_grid_item.data-material-label %}
-{% endif %}
+    {% if product_grid_item['data-suitability'] %}
+      {% assign suit = product_grid_item['data-suitability'] %}
+    {% endif %}
+    {% if product_grid_item['data-op-label'] %}
+      {% assign op = product_grid_item['data-op-label'] | replace: 'Operation_', '' | replace: '_', ' ' %}
+    {% endif %}
+    {% if product_grid_item['data-material-label'] %}
+      {% assign mat = product_grid_item['data-material-label'] %}
+    {% endif %}
 
-{% if suit != '' and mat != '' %}
-  <div class="vqs-col">
-    <small>{{ suit }} for {{ op }} {{ mat }}</small>
-  </div>
-{% endif %}
+    {% if suit != '' and mat != '' %}
+      <div class="vqs-col">
+        <small>
+          {{- suit }} for {{ op }}
+          {{ mat -}}
+        </small>
+      </div>
+    {% endif %}
 
+    {%- comment -%} Clean ops list for JS hydration {%- endcomment -%}
+    {%- assign ops_human = '' -%}
+    {%- for t in product.tags -%}
+      {%- assign tdown = t | downcase -%}
+      {%- assign prefix = tdown | slice: 0, 10 -%}
+      {%- if prefix == 'operation_' -%}
+        {%- assign nice = t | replace_first: 'Operation_', '' | replace: '_', ' ' -%}
+        {%- if ops_human != '' -%}{%- assign ops_human = ops_human | append: ', ' -%}{%- endif -%}
+        {%- assign ops_human = ops_human | append: nice -%}
+      {%- endif -%}
+    {%- endfor -%}
+    <span data-vqs-source="ops" data-ops="{{ ops_human | escape }}" style="display:none;"></span>
 
-{%- comment -%} Clean ops list for JS hydration {%- endcomment -%}
-{%- assign ops_human = '' -%}
-{%- for t in product.tags -%}
-  {%- assign tdown  = t | downcase -%}
-  {%- assign prefix = tdown | slice: 0, 10 -%}
-  {%- if prefix == 'operation_' -%}
-    {%- assign nice = t | replace_first: 'Operation_', '' | replace: '_', ' ' -%}
-    {%- if ops_human != '' -%}{%- assign ops_human = ops_human | append: ', ' -%}{%- endif -%}
-    {%- assign ops_human = ops_human | append: nice -%}
-  {%- endif -%}
-{%- endfor -%}
-<span data-vqs-source="ops" data-ops="{{ ops_human | escape }}" style="display:none;"></span>
-
-
-
-    
     <div class="product-item--price">
-<span class="medium--left">
-  {%- assign v = current_variant -%}
-  {%- assign taxable = v.taxable | default: true -%}
+      <span class="medium--left">
+        {%- assign v = current_variant -%}
+        {%- assign taxable = v.taxable | default: true -%}
 
-  {%- if v.price > 0 -%}
-    {%- assign inc = v.price -%}
-    {%- assign ex  = v.price -%}
-    {%- if taxable -%}
-      {%- if shop.taxes_included -%}
-        {%- assign inc = v.price -%}
-        {%- assign ex  = v.price | times: 10 | divided_by: 11 -%}
-      {%- else -%}
-        {%- assign ex  = v.price -%}
-        {%- assign inc = v.price | times: 11 | divided_by: 10 -%}
-      {%- endif -%}
-    {%- endif -%}
+        {%- if v.price > 0 -%}
+          {%- assign inc = v.price -%}
+          {%- assign ex = v.price -%}
+          {%- if taxable -%}
+            {%- if shop.taxes_included -%}
+              {%- assign inc = v.price -%}
+              {%- assign ex = v.price | times: 10 | divided_by: 11 -%}
+            {%- else -%}
+              {%- assign ex = v.price -%}
+              {%- assign inc = v.price | times: 11 | divided_by: 10 -%}
+            {%- endif -%}
+          {%- endif -%}
 
-    <span class="ex-price ex-price--stack">
-      <strong class="ex-price__inc">{{ inc | money }}<span class="inc-price__label">INC GST</span></strong>
-      {%- if taxable -%}
-        <div class="ex-price__ex">{{ ex | money }} <span class="ex-price__label">EX GST</span></div>
-      {%- endif -%}
-    </span>
-  {%- else -%}
-    <span class="ex-price ex-price--stack from-price">
-      <strong class="ex-price__inc">Pricing available on request</strong>
-    </span>
-  {%- endif -%}
-</span>
-
+          <span class="ex-price ex-price--stack">
+            <strong class="ex-price__inc">
+              {{- inc | money -}}
+              <span class="inc-price__label">INC GST</span></strong
+            >
+            {%- if taxable -%}
+              <div class="ex-price__ex">
+                {{ ex | money }}
+                <span class="ex-price__label">EX GST</span>
+              </div>
+            {%- endif -%}
+          </span>
+        {%- else -%}
+          <span class="ex-price ex-price--stack from-price">
+            <strong class="ex-price__inc">Pricing available on request</strong>
+          </span>
+        {%- endif -%}
+      </span>
 
       <style>
                   .product-item--price small {
@@ -207,7 +213,7 @@ Values come from JS via data attributes.
 
         /* fallback for older browsers; may miss whitespace-only nodes */
         .icon-container:empty{ display:none; }
-      
+
         .card-variants {
           margin-bottom: 15px;
         }
@@ -249,90 +255,96 @@ Values come from JS via data attributes.
       {% endif %}
     </div>
 
-{% render 'auto-discount-note', product: product %}
+    {% render 'auto-discount-note', product: product %}
 
-{%- comment -%} ==== VARIANT QUICK GLANCE (variant-scoped; DOM will be hydrated by JS) ==== {%- endcomment -%}
-<div class="variant-quick-specs" data-vqs>
-  <div class="vqs-row">
-    <div class="vqs-col" data-vqs-sku>
-      <small>Product Code</small><div class="vqs-val" data-vqs__sku>—</div>
+    {%- comment -%} ==== VARIANT QUICK GLANCE (variant-scoped; DOM will be hydrated by JS) ==== {%- endcomment -%}
+    <div class="variant-quick-specs" data-vqs>
+      <div class="vqs-row">
+        <div class="vqs-col" data-vqs-sku>
+          <small>Product Code</small>
+          <div class="vqs-val" data-vqs__sku>—</div>
+        </div>
+
+        <div class="vqs-col" data-vqs-dia>
+          <small>Mill Diameter</small>
+          <div class="vqs-val" data-vqs__dia>—</div>
+        </div>
+
+        <div class="vqs-col" data-vqs-shank>
+          <small>Shank Diameter</small>
+          <div class="vqs-val" data-vqs__shank>—</div>
+        </div>
+
+        <div class="vqs-col" data-vqs-shanktype>
+          <small>Shank Type</small>
+          <div class="vqs-val" data-vqs__shanktype>—</div>
+        </div>
+
+        <div class="vqs-col" data-vqs-cr>
+          <small>Corner Radius</small>
+          <div class="vqs-val" data-vqs__cr>—</div>
+        </div>
+
+        <div class="vqs-col" data-vqs-loc>
+          <small>Length of Cut</small>
+          <div class="vqs-val" data-vqs__loc>—</div>
+        </div>
+
+        <div class="vqs-col" data-vqs-chamfer>
+          <small>Chamfer Angle</small>
+          <div class="vqs-val" data-vqs__chamfer>—</div>
+        </div>
+
+        <div class="vqs-col" data-vqs-flutes>
+          <small>Flutes</small>
+          <div class="vqs-val" data-vqs__flutes>—</div>
+        </div>
+
+        <div class="vqs-col vqs-ops" data-vqs-ops>
+          <small>Operation</small>
+          <div class="vqs-val" data-vqs__ops>—</div>
+        </div>
+
+        <div class="vqs-col" data-vqs-mats>
+          <small>Workpiece Materials</small>
+          <div class="vqs-val vqs-mats" data-vqs__mats></div>
+        </div>
+
+        <div class="vqs-col" data-vqs-stock>
+          <small>Stock</small>
+          <div class="vqs-val"><span class="ex-card-badge" data-vqs__stock data-status=""></span></div>
+        </div>
+      </div>
     </div>
 
-    <div class="vqs-col" data-vqs-dia>
-      <small>Mill Diameter</small><div class="vqs-val" data-vqs__dia>—</div>
-    </div>
-
-    <div class="vqs-col" data-vqs-shank>
-      <small>Shank Diameter</small><div class="vqs-val" data-vqs__shank>—</div>
-    </div>
-
-    <div class="vqs-col" data-vqs-shanktype>
-      <small>Shank Type</small><div class="vqs-val" data-vqs__shanktype>—</div>
-    </div>
-
-    <div class="vqs-col" data-vqs-cr>
-      <small>Corner Radius</small><div class="vqs-val" data-vqs__cr>—</div>
-    </div>
-
-    <div class="vqs-col" data-vqs-loc>
-      <small>Length of Cut</small><div class="vqs-val" data-vqs__loc>—</div>
-    </div>
-
-    <div class="vqs-col" data-vqs-chamfer>
-      <small>Chamfer Angle</small><div class="vqs-val" data-vqs__chamfer>—</div>
-    </div>
-
-    <div class="vqs-col" data-vqs-flutes>
-      <small>Flutes</small><div class="vqs-val" data-vqs__flutes>—</div>
-    </div>
-
-    <div class="vqs-col vqs-ops" data-vqs-ops>
-      <small>Operation</small><div class="vqs-val" data-vqs__ops>—</div>
-    </div>
-
-    <div class="vqs-col" data-vqs-mats>
-      <small>Workpiece Materials</small>
-      <div class="vqs-val vqs-mats" data-vqs__mats></div>
-    </div>
-
-    <div class="vqs-col" data-vqs-stock>
-      <small>Stock</small><div class="vqs-val"><span class="ex-card-badge" data-vqs__stock data-status=""></span></div>
-    </div>
-  </div>
-</div>
-
-
-
-{%- comment -%} Per-variant payload for client hydration {%- endcomment -%}
-<script type="application/json" class="vmap">
-[
-  {%- for v in product.variants -%}
-  {
-    "id": {{ v.id }},
-    "sku": {{ v.sku | json }},
-    "price": {{ v.price | default: 0 }},
-    "compare": {{ v.compare_at_price | default: 0 }},
-    "available": {{ v.available | json }},
-    "inventory_management": {{ v.inventory_management | json }},
-    "inventory_quantity": {{ v.inventory_quantity | default: 0 }},
-    "inventory_policy": {{ v.inventory_policy | json }},
-    "incoming": {{ v.incoming | json }},
-    "next_incoming_date": {{ v.next_incoming_date | date: "%s" | default: 'null' }},
-    "options": [{% for o in v.options %}{{ o | json }}{% unless forloop.last %},{% endunless %}{% endfor %}],
-    "mf": {
-      "shank": {{ v.metafields.filter.shank_diameter_mm | default: v.metafields.filter['shank_diameter_mm'] | json }},
-      "loc":   {{ v.metafields.custom.length_of_cut_mm  | default: v.metafields.custom['length_of_cut_mm']  | json }}
-    }
-  }{% unless forloop.last %},{% endunless %}
-  {%- endfor -%}
-]
-</script>
-
+    {%- comment -%} Per-variant payload for client hydration {%- endcomment -%}
+    <script type="application/json" class="vmap">
+      [
+        {%- for v in product.variants -%}
+        {
+          "id": {{ v.id }},
+          "sku": {{ v.sku | json }},
+          "price": {{ v.price | default: 0 }},
+          "compare": {{ v.compare_at_price | default: 0 }},
+          "available": {{ v.available | json }},
+          "inventory_management": {{ v.inventory_management | json }},
+          "inventory_quantity": {{ v.inventory_quantity | default: 0 }},
+          "inventory_policy": {{ v.inventory_policy | json }},
+          "incoming": {{ v.incoming | json }},
+          "next_incoming_date": {{ v.next_incoming_date | date: "%s" | default: 'null' }},
+          "options": [{% for o in v.options %}{{ o | json }}{% unless forloop.last %},{% endunless %}{% endfor %}],
+          "mf": {
+            "shank": {{ v.metafields.filter.shank_diameter_mm | default: v.metafields.filter['shank_diameter_mm'] | json }},
+            "loc":   {{ v.metafields.custom.length_of_cut_mm  | default: v.metafields.custom['length_of_cut_mm']  | json }}
+          }
+        }{% unless forloop.last %},{% endunless %}
+        {%- endfor -%}
+      ]
+    </script>
 
     {% if section.settings.product_reviews_enable %}
       <span class="shopify-product-reviews-badge" data-id="{{ product.id }}"></span>
     {% endif %}
-
   </a>
 
   <div class="payment-buttons payment-buttons--medium form-payment-buttons">
@@ -612,77 +624,75 @@ if (matsWrap){
 })();
 </script>
 
+<style>
+  /* Ensure the hover effect only applies to the image container */
+  .product-image-wrapper {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+    padding-top: 100%; /* Maintain aspect ratio */
+  }
 
-  <style>
-    /* Ensure the hover effect only applies to the image container */
-    .product-image-wrapper {
-      position: relative;
-      overflow: hidden;
-      width: 100%;
-      height: 100%;
-      padding-top: 100%; /* Maintain aspect ratio */
-    }
+  .product-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: none !important;
+  }
 
-    .product-image {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      transition: none !important;
-    }
+  /* Default image visible, second image hidden */
+  .product-image.front {
+    opacity: 1;
+    z-index: 2;
+  }
 
-    /* Default image visible, second image hidden */
-    .product-image.front {
-      opacity: 1;
-      z-index: 2;
-    }
+  .product-image.back {
+    opacity: 0;
+    z-index: 100;
+    transform: scale(1.04);
+  }
 
-    .product-image.back {
-      opacity: 0;
-      z-index: 100;
-      transform: scale(1.04);
-    }
+  /* Hide default image and show hover image on hover */
+  .product-grid-item:hover .product-image-wrapper .product-image.front {
+    opacity: 0 !important;
+  }
 
-    /* Hide default image and show hover image on hover */
-    .product-grid-item:hover .product-image-wrapper .product-image.front {
-      opacity: 0 !important;
-    }
+  .product-grid-item:hover .product-image-wrapper .product-image.back {
+    opacity: 1 !important;
+    transform: scale(1);
+    transition: 0.3s ease !important;
 
-    .product-grid-item:hover .product-image-wrapper .product-image.back {
-      opacity: 1 !important;
-      transform: scale(1);
-      transition: 0.3s ease !important;
+  }
 
-    }
+  /* Single image stays visible without hover effect */
+  .product-image.single {
+    opacity: 1;
+    z-index: 2;
+  }
+</style>
 
-    /* Single image stays visible without hover effect */
-    .product-image.single {
-      opacity: 1;
-      z-index: 2;
-    }
-  </style>
+<style>
+    .variant-quick-specs { margin-top: 8px; }
+    .vqs-row { display:grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap:10px 14px; }
+    @media(min-width:900px){ .vqs-row{ grid-template-columns: repeat(3,minmax(0,1fr)); } }
+    .vqs-col small{ display:block; color:#666; font-size:12px; margin-bottom:4px; }
+    .vqs-val{ font-size:14px; line-height:1.3; }
+    .vqs-compare{ color:#888; font-weight:400; margin-left:6px; }
+    .vqs-mats{ display:flex; gap:6px; align-items:center; }
+    .material { font-family: 'Humanist777BT-Bold'; border-radius: 5px; color: white; width: 30px; height: 30px; display: flex; justify-content: center; align-items: center; }
+    .material-P { background:#0069a7 }
+    .material-M { background:#f6b519 }
+    .material-K { background:#e0592a }
+    .material-N { background:#109954 }
+    .material-S { background:#f88d2b }
+    .material-H { background:#666666 }
 
-  <style>
-  .variant-quick-specs { margin-top: 8px; }
-  .vqs-row { display:grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap:10px 14px; }
-  @media(min-width:900px){ .vqs-row{ grid-template-columns: repeat(3,minmax(0,1fr)); } }
-  .vqs-col small{ display:block; color:#666; font-size:12px; margin-bottom:4px; }
-  .vqs-val{ font-size:14px; line-height:1.3; }
-  .vqs-compare{ color:#888; font-weight:400; margin-left:6px; }
-  .vqs-mats{ display:flex; gap:6px; align-items:center; }
-  .material { font-family: 'Humanist777BT-Bold'; border-radius: 5px; color: white; width: 30px; height: 30px; display: flex; justify-content: center; align-items: center; }
-  .material-P { background:#0069a7 }
-  .material-M { background:#f6b519 }
-  .material-K { background:#e0592a }
-  .material-N { background:#109954 }
-  .material-S { background:#f88d2b }
-  .material-H { background:#666666 }
-
-  .vqs-col small {
-  font-weight: 600;
-  color: #444;
-}
-
+    .vqs-col small {
+    font-weight: 600;
+    color: #444;
+  }
 </style>
