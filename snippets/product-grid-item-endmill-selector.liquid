@@ -582,26 +582,15 @@ if (matsWrap){
       badge.setAttribute('data-status', status);
     }
 
-    // Also fix the Add to Cart button variant id so it matches
-    const atc = (scope || document).querySelector('.add-to-cart-btn');
-    if (atc) atc.setAttribute('data-variant-id', String(V.id));
-  }
-
-  // hydrate when the grid tells us
-  document.addEventListener('es:hydrate-card', function(e){
-    const root = e.target && e.target.classList && e.target.classList.contains('product-grid-item') ? e.target : null;
-    if (root) hydrateCard(root);
-  });
-
-  // --- Suitability line ---
+    // --- Suitability line (inside hydrateCard where scope & root exist) ---
 (function(){
-  const row = selectBy(scope, '[data-vqs-suitability-row]');
+  const row  = selectBy(scope, '[data-vqs-suitability-row]');
   const cell = selectBy(scope, '[data-vqs-suitability]');
   if (!row || !cell) return;
 
   const suit = root.getAttribute('data-suitability') || '';
   const opRaw = root.getAttribute('data-op-label') || '';
-  const mat = root.getAttribute('data-material-label') || '';
+  const mat   = root.getAttribute('data-material-label') || '';
 
   let op = opRaw.replace(/^Operation_/, '').replace(/_/g, ' ').trim();
 
@@ -613,6 +602,17 @@ if (matsWrap){
   }
 })();
 
+
+    // Also fix the Add to Cart button variant id so it matches
+    const atc = (scope || document).querySelector('.add-to-cart-btn');
+    if (atc) atc.setAttribute('data-variant-id', String(V.id));
+  }
+
+  // hydrate when the grid tells us
+  document.addEventListener('es:hydrate-card', function(e){
+    const root = e.target && e.target.classList && e.target.classList.contains('product-grid-item') ? e.target : null;
+    if (root) hydrateCard(root);
+  });
 
 
   // also hydrate on DOM ready for SSR fallbacks
