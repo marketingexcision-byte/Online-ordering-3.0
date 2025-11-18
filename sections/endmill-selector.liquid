@@ -55,78 +55,75 @@
       </article>
 
       <!-- 2. Material -->
-<article
-  class="card es-step"
-  data-step="2"
-  aria-hidden="true"
-  style="position:absolute;inset:0;opacity:0;pointer-events:none;"
->
-  <h3 class="h3" style="margin-top:0;">What material?</h3>
+      <article
+        class="card es-step"
+        data-step="2"
+        aria-hidden="true"
+        style="position:absolute;inset:0;opacity:0;pointer-events:none;"
+      >
+        <h3 class="h3" style="margin-top:0;">What material?</h3>
 
-  <p class="rc-item__text" style="margin-bottom:var(--space-4);">
-    Select the material you’re machining. We’ll match it to the right cutting parameters.
-  </p>
+        <p class="rc-item__text" style="margin-bottom:var(--space-4);">
+          Select the material you’re machining. We’ll match it to the right cutting parameters.
+        </p>
 
-  <div class="material-groups">
-
-    {% assign groups = 
-      "
+        <div class="material-groups">
+          {% assign groups = '
       P:Steels:1020,1045,4140,Bisalloy;
       M:Stainless Steels:304,316,420,431;
       K:Cast Irons:Grey,Ductile,Malleable;
       N:Aluminium & Soft Metals:6061,7075,Brass,Bronze,Copper;
       S:Titanium & Super Alloys:Ti6Al4V,Inconel,Hastelloy;
       H:Hardened Steels:55 HRC,60 HRC,Tool Steel
-      " | split: ";" 
-    %}
+      '
+            | split: ';'
+          %}
 
-    {% for g in groups %}
-      {% assign parts = g | split: ":" %}
-      {% assign iso = parts[0] %}
-      {% assign label = parts[1] %}
-      {% assign examples = parts[2] | split: "," %}
+          {% for g in groups %}
+            {% assign parts = g | split: ':' %}
+            {% assign iso = parts[0] %}
+            {% assign label = parts[1] %}
+            {% assign examples = parts[2] | split: ',' %}
 
-      <div class="material-group-card"
-           data-iso="{{ iso }}"
-           data-friendly="{{ label | escape }}">
-        
-        <div class="mgc-header">
-          <span class="mgc-iso">{{ iso }}</span>
-          <span class="mgc-title">{{ label }}</span>
-        </div>
+            <div
+              class="material-group-card"
+              data-iso="{{ iso }}"
+              data-friendly="{{ label | escape }}"
+            >
+              <div class="mgc-header">
+                <span class="mgc-iso">{{ iso }}</span>
+                <span class="mgc-title">{{ label }}</span>
+              </div>
 
-        <div class="mgc-examples">
-          {% for e in examples %}
-            <span class="mgc-example">{{ e }}</span>
+              <div class="mgc-examples">
+                {% for e in examples %}
+                  <span class="mgc-example">{{ e }}</span>
+                {% endfor %}
+              </div>
+            </div>
           {% endfor %}
+
+          <div
+            class="material-group-card mgc-unknown"
+            data-iso="ANY"
+            data-friendly="General Purpose Steels"
+          >
+            <div class="mgc-header">
+              <span class="mgc-iso">?</span>
+              <span class="mgc-title">I’m not sure</span>
+            </div>
+            <div class="mgc-examples">Works for most mild & medium steels.</div>
+          </div>
         </div>
 
-      </div>
-    {% endfor %}
-
-    <div class="material-group-card mgc-unknown"
-         data-iso="ANY"
-         data-friendly="General Purpose Steels">
-      <div class="mgc-header">
-        <span class="mgc-iso">?</span>
-        <span class="mgc-title">I’m not sure</span>
-      </div>
-      <div class="mgc-examples">
-        Works for most mild & medium steels.
-      </div>
-    </div>
-
-  </div>
-
-  <div style="display:flex;gap:12px;justify-content:space-between;align-items:center;margin-top:var(--space-6);">
-    <button type="button" class="btn btn-outline es-prev">Back</button>
-    <div style="display:flex;gap:8px;">
-      <button type="button" class="btn es-skip">Skip</button>
-      <button type="button" class="btn btn-primary es-next" disabled>Next</button>
-    </div>
-  </div>
-</article>
-
+        <div style="display:flex;gap:12px;justify-content:space-between;align-items:center;margin-top:var(--space-6);">
+          <button type="button" class="btn btn-outline es-prev">Back</button>
+          <div style="display:flex;gap:8px;">
+            <button type="button" class="btn es-skip">Skip</button>
+            <button type="button" class="btn btn-primary es-next" disabled>Next</button>
+          </div>
+        </div>
+      </article>
 
       <!-- 3. Cutting shape -->
       <article
@@ -658,6 +655,26 @@
         });
       });
 
+      // New intuitive material selectors
+      els('.material-group-card').forEach((card) => {
+        card.addEventListener('click', () => {
+          // Visually toggle
+          els('.material-group-card').forEach((c) => c.classList.remove('active'));
+          card.classList.add('active');
+
+          const iso = card.dataset.iso;
+          const friendly = card.dataset.friendly;
+
+          // Store selection
+          selected.iso = iso === 'ANY' ? null : iso;
+          selected.vdi = null; // user isn't choosing an exact VDI
+          selected.materialLabel = friendly;
+
+          // Enable next button
+          card.closest('.es-step').querySelector('.es-next').disabled = false;
+        });
+      });
+
       // ISO tabs + materials grid
       const MAT = JSON.parse(el('#es-vdi-table').textContent);
       const matGrid = el('#es-material-grid');
@@ -1182,6 +1199,68 @@
     }
     .btn.es-skip { background: transparent; border: 2px solid #e5e5e5; }
     .btn.es-skip:hover { background: #fafafa; }
+
+    .material-groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fill,minmax(220px,1fr));
+  gap: 16px;
+  margin-top: 15px;
+}
+
+.material-group-card {
+  border: 2px solid #e6e6e6;
+  border-radius: 10px;
+  padding: 15px;
+  cursor: pointer;
+  background: white;
+  transition: all .18s ease;
+}
+
+.material-group-card:hover {
+  border-color: var(--color-primary-orange);
+  box-shadow: 0 0 0 3px rgba(248,141,43,0.2);
+}
+
+.material-group-card.active {
+  border-color: var(--color-primary-orange);
+  background: #fff7f0;
+}
+
+.mgc-header {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.mgc-iso {
+  background: #333;
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.mgc-title {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.mgc-examples {
+  font-size: 13px;
+  color: #555;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.mgc-example {
+  background: #f2f2f2;
+  padding: 2px 7px;
+  border-radius: 6px;
+}
+
   </style>
 </section>
 
