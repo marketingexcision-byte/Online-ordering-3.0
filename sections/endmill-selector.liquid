@@ -1074,6 +1074,17 @@ els('.es-skip').forEach(btn => {
             root.setAttribute('data-variant-id', matchVid || '');
             // stash product JSON for the card hydrator
             root.setAttribute('data-product-json', JSON.stringify(p));
+            // annotate suitability info
+let suitability = '';
+if (selected.vdi != null) {
+  const vd = Number(selected.vdi);
+  const isExc = (p.vdi_excellent || []).includes(vd);
+  suitability = isExc ? 'Excellent' : 'Good';
+}
+root.setAttribute('data-suitability', suitability);
+root.setAttribute('data-op-label', selected.operationTag || '');
+root.setAttribute('data-material-label', selected.materialLabel || '');
+
           }
 
           frag.appendChild(node);
