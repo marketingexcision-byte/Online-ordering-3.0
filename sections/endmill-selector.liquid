@@ -80,8 +80,9 @@
 
     {% for g in iso_groups %}
       {% assign parts = g | split: ':' %}
-      {% assign iso = parts[0] %}
-      {% assign label = parts[1] %}
+      {% assign iso = parts[0] | strip %}
+{% assign label = parts[1] | strip %}
+
 
       <div class="material-group-card es-iso-card" data-iso="{{ iso }}">
         <div class="mgc-header">
