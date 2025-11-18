@@ -54,69 +54,70 @@
         </div>
       </article>
 
-<!-- 2. Material (New intuitive version) -->
-<article
-  class="card es-step"
-  data-step="2"
-  aria-hidden="true"
-  style="position:absolute;inset:0;opacity:0;pointer-events:none;"
->
-  <h3 class="h3" style="margin-top:0;">What material are you machining?</h3>
+      <!-- 2. Material (New intuitive version) -->
+      <article
+        class="card es-step"
+        data-step="2"
+        aria-hidden="true"
+        style="position:absolute;inset:0;opacity:0;pointer-events:none;"
+      >
+        <h3 class="h3" style="margin-top:0;">What material are you machining?</h3>
 
-  <p class="rc-item__text" style="margin-bottom:16px;">
-    Start with the broad group. Then choose a specific grade if you want. We’ll map it to the correct VDI automatically.
-  </p>
+        <p class="rc-item__text" style="margin-bottom:16px;">
+          Start with the broad group. Then choose a specific grade if you want. We’ll map it to the correct VDI
+          automatically.
+        </p>
 
-  <!-- ISO Level -->
-  <div class="material-groups">
-    {% assign iso_groups = '
+        <!-- ISO Level -->
+        <div class="material-groups">
+          {% assign iso_groups = '
       P:Steels;
       M:Stainless Steels;
       K:Cast Irons;
       N:Aluminium & Soft Metals;
       S:Titanium & Super Alloys;
       H:Hardened Steels
-    ' | split: ';' %}
+    '
+            | split: ';'
+          %}
 
-    {% for g in iso_groups %}
-      {% assign parts = g | split: ':' %}
-      {% assign iso = parts[0] | strip %}
-{% assign label = parts[1] | strip %}
+          {% for g in iso_groups %}
+            {% assign parts = g | split: ':' %}
+            {% assign iso = parts[0] | strip %}
+            {% assign label = parts[1] | strip %}
 
+            <div class="material-group-card es-iso-card" data-iso="{{ iso }}">
+              <div class="mgc-header">
+                <span class="mgc-iso">{{ iso }}</span>
+                <span class="mgc-title">{{ label }}</span>
+              </div>
+            </div>
+          {% endfor %}
 
-      <div class="material-group-card es-iso-card" data-iso="{{ iso }}">
-        <div class="mgc-header">
-          <span class="mgc-iso">{{ iso }}</span>
-          <span class="mgc-title">{{ label }}</span>
+          <!-- Unknown -->
+          <div class="material-group-card mgc-unknown es-iso-card" data-iso="ANY">
+            <div class="mgc-header">
+              <span class="mgc-iso">?</span>
+              <span class="mgc-title">Not sure</span>
+            </div>
+            <div class="mgc-examples">General-purpose steels</div>
+          </div>
         </div>
-      </div>
-    {% endfor %}
 
-    <!-- Unknown -->
-    <div class="material-group-card mgc-unknown es-iso-card" data-iso="ANY">
-      <div class="mgc-header">
-        <span class="mgc-iso">?</span>
-        <span class="mgc-title">Not sure</span>
-      </div>
-      <div class="mgc-examples">General-purpose steels</div>
-    </div>
-  </div>
+        <!-- Subgrade list (hidden until ISO selected) -->
+        <div id="es-material-subgrades" style="display:none;margin-top:20px;">
+          <h4 class="h5" style="margin-bottom:10px;">Select grade</h4>
+          <div id="es-material-grid" class="material-groups"></div>
+        </div>
 
-  <!-- Subgrade list (hidden until ISO selected) -->
-  <div id="es-material-subgrades" style="display:none;margin-top:20px;">
-    <h4 class="h5" style="margin-bottom:10px;">Select grade</h4>
-    <div id="es-material-grid" class="material-groups"></div>
-  </div>
-
-  <div style="display:flex;gap:12px;justify-content:space-between;align-items:center;margin-top:var(--space-6);">
-    <button type="button" class="btn btn-outline es-prev">Back</button>
-    <div style="display:flex;gap:8px;">
-      <button type="button" class="btn es-skip">Skip</button>
-      <button type="button" class="btn btn-primary es-next" disabled>Next</button>
-    </div>
-  </div>
-</article>
-
+        <div style="display:flex;gap:12px;justify-content:space-between;align-items:center;margin-top:var(--space-6);">
+          <button type="button" class="btn btn-outline es-prev">Back</button>
+          <div style="display:flex;gap:8px;">
+            <button type="button" class="btn es-skip">Skip</button>
+            <button type="button" class="btn btn-primary es-next" disabled>Next</button>
+          </div>
+        </div>
+      </article>
 
       <!-- 3. Cutting shape -->
       <article
@@ -385,7 +386,6 @@
   {% comment %} ====== MATERIAL TABLE (VDI → ISO + Label) ====== {% endcomment %}
   <script type="application/json" id="es-vdi-table">
     [
-      
       {
         "vdi": 1,
         "iso": "P",
@@ -618,6 +618,7 @@
         operationTag: null,
         iso: 'P',
         vdi: null,
+        vdis: null,
         materialLabel: null,
         shapeTag: null,
         lengthTag: null,
@@ -649,208 +650,213 @@
         });
       });
 
-
       // ISO tabs + materials grid
       const MAT = JSON.parse(el('#es-vdi-table').textContent);
 
       const MATERIAL_BUCKETS = [
-  // P. Steels
-  {
-    id: 'P-mild-medium',
-    iso: 'P',
-    label: 'Mild & medium steels',
-    hint: 'e.g. 1018, 1020, 1045 bar and plate',
-    vdis: [1, 2, 3, 6, 7]
-  },
-  {
-    id: 'P-tool-alloy',
-    iso: 'P',
-    label: 'Tool & alloy steels',
-    hint: 'e.g. O1, D2, H13 annealed or toughened',
-    vdis: [8, 10, 11]
-  },
-  {
-    id: 'P-wear-plate',
-    iso: 'P',
-    label: 'High strength & wear plate',
-    hint: 'e.g. Hardox, Bisalloy, wear plate',
-    vdis: [9]
-  },
+        // P. Steels
+        {
+          id: 'P-mild-medium',
+          iso: 'P',
+          label: 'Mild & medium steels',
+          hint: 'e.g. 1018, 1020, 1045 bar and plate',
+          vdis: [1, 2, 3, 6, 7],
+        },
+        {
+          id: 'P-tool-alloy',
+          iso: 'P',
+          label: 'Tool & alloy steels',
+          hint: 'e.g. O1, D2, H13 annealed or toughened',
+          vdis: [8, 10, 11],
+        },
+        {
+          id: 'P-wear-plate',
+          iso: 'P',
+          label: 'High strength & wear plate',
+          hint: 'e.g. Hardox, Bisalloy, wear plate',
+          vdis: [9],
+        },
 
-  // M. Stainless
-  {
-    id: 'M-304-316',
-    iso: 'M',
-    label: 'Stainless 304 / 316',
-    hint: 'Most general stainless sheet, bar, tube',
-    vdis: [14]
-  },
-  {
-    id: 'M-hard-stainless',
-    iso: 'M',
-    label: 'Harder stainless (420 / 431)',
-    hint: 'Knives, shafts, hardened stainless parts',
-    vdis: [12, 13]
-  },
+        // M. Stainless
+        {
+          id: 'M-304-316',
+          iso: 'M',
+          label: 'Stainless 304 / 316',
+          hint: 'Most general stainless sheet, bar, tube',
+          vdis: [14],
+        },
+        {
+          id: 'M-hard-stainless',
+          iso: 'M',
+          label: 'Harder stainless (420 / 431)',
+          hint: 'Knives, shafts, hardened stainless parts',
+          vdis: [12, 13],
+        },
 
-  // K. Cast irons
-  {
-    id: 'K-soft-iron',
-    iso: 'K',
-    label: 'Soft / normal cast iron',
-    hint: 'Grey iron, softer ductile iron',
-    vdis: [15, 17, 19]
-  },
-  {
-    id: 'K-hard-iron',
-    iso: 'K',
-    label: 'Hard cast & ductile iron',
-    hint: 'Hard pearlitic ductile or grey iron',
-    vdis: [16, 18, 20]
-  },
+        // K. Cast irons
+        {
+          id: 'K-soft-iron',
+          iso: 'K',
+          label: 'Soft / normal cast iron',
+          hint: 'Grey iron, softer ductile iron',
+          vdis: [15, 17, 19],
+        },
+        {
+          id: 'K-hard-iron',
+          iso: 'K',
+          label: 'Hard cast & ductile iron',
+          hint: 'Hard pearlitic ductile or grey iron',
+          vdis: [16, 18, 20],
+        },
 
-  // N. Aluminium & soft metals
-  {
-    id: 'N-soft-aluminium',
-    iso: 'N',
-    label: 'Soft wrought aluminium',
-    hint: 'e.g. 1050, 5083 plate, extrusion',
-    vdis: [21]
-  },
-  {
-    id: 'N-hard-aluminium',
-    iso: 'N',
-    label: 'Heat treated aluminium 6061 / 7075',
-    hint: 'Stronger tempers like T6, T651',
-    vdis: [22]
-  },
-  {
-    id: 'N-cast-aluminium',
-    iso: 'N',
-    label: 'Cast aluminium',
-    hint: 'Engine blocks, sand or die castings',
-    vdis: [23, 24, 25]
-  },
-  {
-    id: 'N-brass-bronze',
-    iso: 'N',
-    label: 'Brass & bronze',
-    hint: 'Bushes, fittings, bearing bronze',
-    vdis: [26, 27]
-  },
-  {
-    id: 'N-copper',
-    iso: 'N',
-    label: 'Copper',
-    hint: 'Pure copper, electrical copper',
-    vdis: [28]
-  },
-  {
-    id: 'N-plastics',
-    iso: 'N',
-    label: 'Plastics, composites, wood',
-    hint: 'Plastics, FRP, laminates, timber',
-    vdis: [29, 30]
-  },
+        // N. Aluminium & soft metals
+        {
+          id: 'N-soft-aluminium',
+          iso: 'N',
+          label: 'Soft wrought aluminium',
+          hint: 'e.g. 1050, 5083 plate, extrusion',
+          vdis: [21],
+        },
+        {
+          id: 'N-hard-aluminium',
+          iso: 'N',
+          label: 'Heat treated aluminium 6061 / 7075',
+          hint: 'Stronger tempers like T6, T651',
+          vdis: [22],
+        },
+        {
+          id: 'N-cast-aluminium',
+          iso: 'N',
+          label: 'Cast aluminium',
+          hint: 'Engine blocks, sand or die castings',
+          vdis: [23, 24, 25],
+        },
+        {
+          id: 'N-brass-bronze',
+          iso: 'N',
+          label: 'Brass & bronze',
+          hint: 'Bushes, fittings, bearing bronze',
+          vdis: [26, 27],
+        },
+        {
+          id: 'N-copper',
+          iso: 'N',
+          label: 'Copper',
+          hint: 'Pure copper, electrical copper',
+          vdis: [28],
+        },
+        {
+          id: 'N-plastics',
+          iso: 'N',
+          label: 'Plastics, composites, wood',
+          hint: 'Plastics, FRP, laminates, timber',
+          vdis: [29, 30],
+        },
 
-  // S. Titanium & super alloys
-  {
-    id: 'S-superalloy-annealed',
-    iso: 'S',
-    label: 'Nickel & cobalt alloys. annealed',
-    hint: 'Inconel, Hastelloy before hard service',
-    vdis: [31, 33]
-  },
-  {
-    id: 'S-superalloy-hard',
-    iso: 'S',
-    label: 'Nickel & cobalt alloys. hardened',
-    hint: 'Inconel in service, turbine parts',
-    vdis: [32, 34, 35]
-  },
-  {
-    id: 'S-titanium',
-    iso: 'S',
-    label: 'Titanium alloys',
-    hint: 'Commercially pure and Ti-6Al-4V etc',
-    vdis: [36, 37]
-  },
+        // S. Titanium & super alloys
+        {
+          id: 'S-superalloy-annealed',
+          iso: 'S',
+          label: 'Nickel & cobalt alloys. annealed',
+          hint: 'Inconel, Hastelloy before hard service',
+          vdis: [31, 33],
+        },
+        {
+          id: 'S-superalloy-hard',
+          iso: 'S',
+          label: 'Nickel & cobalt alloys. hardened',
+          hint: 'Inconel in service, turbine parts',
+          vdis: [32, 34, 35],
+        },
+        {
+          id: 'S-titanium',
+          iso: 'S',
+          label: 'Titanium alloys',
+          hint: 'Commercially pure and Ti-6Al-4V etc',
+          vdis: [36, 37],
+        },
 
-  // H. Hardened
-  {
-    id: 'H-hardened-steel-55',
-    iso: 'H',
-    label: 'Hardened steel around 55 HRC',
-    hint: 'Die steel. moulds. through hardened parts',
-    vdis: [38, 41]
-  },
-  {
-    id: 'H-hardened-steel-60',
-    iso: 'H',
-    label: 'Hardened steel around 60 HRC',
-    hint: 'Very hard tool steels. thin case hardened',
-    vdis: [39, 40]
-  }
-];
+        // H. Hardened
+        {
+          id: 'H-hardened-steel-55',
+          iso: 'H',
+          label: 'Hardened steel around 55 HRC',
+          hint: 'Die steel. moulds. through hardened parts',
+          vdis: [38, 41],
+        },
+        {
+          id: 'H-hardened-steel-60',
+          iso: 'H',
+          label: 'Hardened steel around 60 HRC',
+          hint: 'Very hard tool steels. thin case hardened',
+          vdis: [39, 40],
+        },
+      ];
 
+      // material handling using friendly buckets
+      const isoCards = els('.es-iso-card');
+      const subgradeWrap = el('#es-material-subgrades');
+      const subgradeGrid = el('#es-material-grid');
 
-      // material handling
-const isoCards = els('.es-iso-card');
-const subgradeWrap = el('#es-material-subgrades');
-const subgradeGrid = el('#es-material-grid');
+      isoCards.forEach((card) => {
+        card.addEventListener('click', () => {
+          const rawIso = card.dataset.iso || '';
+          const iso = rawIso.trim();
 
-isoCards.forEach(card => {
-  card.addEventListener('click', () => {
-    const rawIso = card.dataset.iso || '';
-    const iso = rawIso.trim();
+          // visual toggle
+          isoCards.forEach((c) => c.classList.remove('active'));
+          card.classList.add('active');
 
-    // visual toggle
-    isoCards.forEach(c => c.classList.remove('active'));
-    card.classList.add('active');
+          // store ISO for now
+          selected.iso = iso === 'ANY' ? null : iso;
+          selected.vdi = null;
+          selected.vdis = null;
+          selected.materialLabel = null;
 
-    // store ISO for now
-    selected.iso = iso === 'ANY' ? null : iso;
-    selected.vdi = null;
-    selected.materialLabel = null;
+          // if user says "Not sure". skip grade
+          if (iso === 'ANY') {
+            subgradeWrap.style.display = 'none';
+            card.closest('.es-step').querySelector('.es-next').disabled = false;
+            return;
+          }
 
-    // populate subgrades
-    if (iso === 'ANY') {
-      subgradeWrap.style.display = 'none';
-      card.closest('.es-step').querySelector('.es-next').disabled = false;
-      return;
-    }
+          const buckets = MATERIAL_BUCKETS.filter((b) => b.iso === iso);
 
-    const items = MAT.filter(m => m.iso === iso);
-    const html = items.map(m =>
-      `<div class="material-group-card es-subgrade" data-vdi="${m.vdi}">
-         <div class="mgc-title">${m.user}</div>
-         <div class="mgc-examples">VDI ${m.vdi} · ${m.desc}</div>
+          const html = buckets
+            .map(
+              (b) =>
+                `<div class="material-group-card es-subgrade"
+            data-vdis="${b.vdis.join(',')}"
+            data-label="${b.label.replace(/"/g, '&quot;')}">
+         <div class="mgc-title">${b.label}</div>
+         <div class="mgc-examples">${b.hint}</div>
        </div>`
-    ).join('');
+            )
+            .join('');
 
-    subgradeGrid.innerHTML = html;
-    subgradeWrap.style.display = 'block';
+          subgradeGrid.innerHTML = html;
+          subgradeWrap.style.display = 'block';
 
-    // bind subgrade buttons
-    els('.es-subgrade', subgradeGrid).forEach(sub => {
-      sub.addEventListener('click', () => {
-        els('.es-subgrade').forEach(s => s.classList.remove('active'));
-        sub.classList.add('active');
+          // bind subgrade buttons
+          els('.es-subgrade', subgradeGrid).forEach((sub) => {
+            sub.addEventListener('click', () => {
+              els('.es-subgrade').forEach((s) => s.classList.remove('active'));
+              sub.classList.add('active');
 
-        const vdi = Number(sub.dataset.vdi);
-        const row = MAT.find(x => x.vdi === vdi);
+              const vdis = (sub.dataset.vdis || '')
+                .split(',')
+                .map((x) => Number(x.trim()))
+                .filter((x) => !isNaN(x));
 
-        selected.vdi = vdi;
-        selected.materialLabel = row ? row.user : null;
+              selected.vdis = vdis;
+              selected.vdi = vdis.length ? vdis[0] : null; // representative for sorting etc
+              selected.materialLabel = sub.dataset.label || null;
 
-        card.closest('.es-step').querySelector('.es-next').disabled = false;
+              card.closest('.es-step').querySelector('.es-next').disabled = false;
+            });
+          });
+        });
       });
-    });
-  });
-});
-
-
-
 
       // === Editable summary ===
       const summaryEl = el('#es-editable-summary');
@@ -1301,96 +1307,95 @@ isoCards.forEach(card => {
   </script>
 
   <style>
-        /* Wizard step transitions */
-        .es-step{
-          transition: opacity .35s ease, transform .35s ease;
-          transform: translateY(0);
+            /* Wizard step transitions */
+            .es-step{
+              transition: opacity .35s ease, transform .35s ease;
+              transform: translateY(0);
+            }
+            .es-step[aria-hidden="true"]{ transform: translateY(6px); }
+            .rc-item[aria-selected="true"]{
+              border: 2px solid var(--color-primary-orange) !important;
+            }
+            .rc-item__label.h5 {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            }
+            button.rc-item {
+            border-radius: 10px;
         }
-        .es-step[aria-hidden="true"]{ transform: translateY(6px); }
-        .rc-item[aria-selected="true"]{
-          border: 2px solid var(--color-primary-orange) !important;
+        div#es-material-grid {
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
         }
-        .rc-item__label.h5 {
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        button.rc-item.es-mat [data-iso="P"] {
+            background: #0069a720;
         }
-        button.rc-item {
-        border-radius: 10px;
+        .grid-item.large--one-quarter.medium-down--one-half{
+        width: 100%;
+        }
+        .product-grid-image--centered {
+            background: #f1f1f1;
+            border-radius: 15px;
+            margin-bottom: var(--space-5);
+        }
+        .btn.es-skip { background: transparent; border: 2px solid #e5e5e5; }
+        .btn.es-skip:hover { background: #fafafa; }
+
+        .material-groups {
+      display: grid;
+      grid-template-columns: repeat(auto-fill,minmax(220px,1fr));
+      gap: 16px;
+      margin-top: 15px;
     }
-    div#es-material-grid {
-        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+
+    .material-group-card {
+      border: 2px solid #e6e6e6;
+      border-radius: 10px;
+      padding: 15px;
+      cursor: pointer;
+      background: white;
+      transition: all .18s ease;
     }
-    button.rc-item.es-mat [data-iso="P"] {
-        background: #0069a720;
+
+    .material-group-card.active {
+      border-color: var(--color-primary-orange);
+      background: #fff7f0;
     }
-    .grid-item.large--one-quarter.medium-down--one-half{
-    width: 100%;
+
+    .mgc-header {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 8px;
     }
-    .product-grid-image--centered {
-        background: #f1f1f1;
-        border-radius: 15px;
-        margin-bottom: var(--space-5);
+
+    .mgc-iso {
+      background: #333;
+      color: #fff;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: bold;
     }
-    .btn.es-skip { background: transparent; border: 2px solid #e5e5e5; }
-    .btn.es-skip:hover { background: #fafafa; }
 
-    .material-groups {
-  display: grid;
-  grid-template-columns: repeat(auto-fill,minmax(220px,1fr));
-  gap: 16px;
-  margin-top: 15px;
-}
+    .mgc-title {
+      font-size: 17px;
+      font-weight: 600;
+    }
 
-.material-group-card {
-  border: 2px solid #e6e6e6;
-  border-radius: 10px;
-  padding: 15px;
-  cursor: pointer;
-  background: white;
-  transition: all .18s ease;
-}
+    .mgc-examples {
+      font-size: 13px;
+      color: #555;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
 
-.material-group-card.active {
-  border-color: var(--color-primary-orange);
-  background: #fff7f0;
-}
-
-.mgc-header {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.mgc-iso {
-  background: #333;
-  color: #fff;
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: bold;
-}
-
-.mgc-title {
-  font-size: 17px;
-  font-weight: 600;
-}
-
-.mgc-examples {
-  font-size: 13px;
-  color: #555;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.mgc-example {
-  background: #f2f2f2;
-  padding: 2px 7px;
-  border-radius: 6px;
-}
-
+    .mgc-example {
+      background: #f2f2f2;
+      padding: 2px 7px;
+      border-radius: 6px;
+    }
   </style>
 </section>
 
