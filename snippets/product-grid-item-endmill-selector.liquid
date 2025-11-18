@@ -104,10 +104,6 @@
       {{ product.title }}
     </p>
 
-    <div class="vqs-col" data-vqs-suitability-row hidden>
-  <small data-vqs-suitability>—</small>
-</div>
-
 
     {%- comment -%} Clean ops list for JS hydration {%- endcomment -%}
     {%- assign ops_human = '' -%}
@@ -323,6 +319,10 @@
       <span class="shopify-product-reviews-badge" data-id="{{ product.id }}"></span>
     {% endif %}
   </a>
+
+      <div class="vqs-col" data-vqs-suitability-row hidden>
+  <small data-vqs-suitability>—</small>
+</div>
 
   <div class="payment-buttons payment-buttons--medium form-payment-buttons">
     {% assign first_avail = product.selected_or_first_available_variant | default: product.first_available_variant %}
