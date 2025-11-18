@@ -61,30 +61,65 @@
         aria-hidden="true"
         style="position:absolute;inset:0;opacity:0;pointer-events:none;"
       >
-        <h3 class="h3" style="margin-top:0;">What material?</h3>
+        <div id="step-material" class="wizard-step" data-step="material">
 
-        <!-- Tabs for ISO letters -->
-        <div class="tabs" role="tablist" aria-label="ISO">
-          {% assign iso_tabs = 'P|M|K|N|S|H' | split: '|' %}
-          {% for i in iso_tabs %}
-            <button type="button" class="es-iso-tab" role="tab" data-iso="{{ i }}" aria-selected="{{ forloop.first }}">
-              {{ i }}
-            </button>
+  <h2 class="step-title">Select Your Material</h2>
+  <p class="step-subtitle">Pick the material you're machining. We’ll map it to the correct cutting parameters.</p>
+
+  <div class="material-groups">
+
+    {% assign groups = 
+      "
+      P:Steels:1020,1045,4140,Bisalloy;
+      M:Stainless Steels:304,316,420,431;
+      K:Cast Irons:Grey,Ductile,Malleable;
+      N:Aluminium & Soft Metals:6061,7075,Brass,Bronze,Copper;
+      S:Titanium & Super Alloys:Ti6Al4V,Inconel,Hastelloy;
+      H:Hardened Steels:D2,H13,55-60 HRC Tool Steel
+      " | split: ";" 
+    %}
+
+    {% for g in groups %}
+      {% assign parts = g | split: ":" %}
+      {% assign iso = parts[0] %}
+      {% assign label = parts[1] %}
+      {% assign examples = parts[2] | split: "," %}
+
+      <div class="material-group-card" 
+           data-iso="{{ iso }}"
+           data-friendly="{{ label | escape }}">
+        
+        <div class="mgc-header">
+          <span class="mgc-iso">{{ iso }}</span>
+          <span class="mgc-title">{{ label }}</span>
+        </div>
+
+        <div class="mgc-examples">
+          {% for e in examples %}
+            <span class="mgc-example">{{ e }}</span>
           {% endfor %}
         </div>
 
-        <!-- Material list populated by JS from VDI table below -->
-        <div
-          class="rc-row"
-          id="es-material-grid"
-          style="margin-top:var(--space-6);"
-          role="listbox"
-          aria-label="Material"
-        ></div>
+      </div>
+    {% endfor %}
 
-        <div class="rc-item__text" style="margin-top:var(--space-4);">
-          Tip. We rank Excellent first if your product metafields mark a VDI as excellent.
-        </div>
+    <!-- I don't know option -->
+    <div class="material-group-card mgc-unknown" 
+         data-iso="ANY"
+         data-friendly="General Purpose Steels">
+      <div class="mgc-header">
+        <span class="mgc-iso">?</span>
+        <span class="mgc-title">I’m not sure</span>
+      </div>
+      <div class="mgc-examples">
+        Works for most mild & medium steels.
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
 
         <div style="display:flex;gap:12px;justify-content:space-between;align-items:center;margin-top:var(--space-6);">
           <button type="button" class="btn btn-outline es-prev">Back</button>
