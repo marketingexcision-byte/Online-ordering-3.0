@@ -677,31 +677,7 @@
 
       // ISO tabs + materials grid
       const MAT = JSON.parse(el('#es-vdi-table').textContent);
-      const matGrid = el('#es-material-grid');
-      const renderMaterials = (iso) => {
-        matGrid.innerHTML = '';
-        MAT.filter((m) => m.iso === iso).forEach((m) => {
-          const item = document.createElement('button');
-          item.type = 'button';
-          item.className = 'rc-item es-mat';
-          item.dataset.vdi = m.vdi;
-          item.dataset.iso = m.iso;
-          item.setAttribute('aria-selected', 'false');
-          item.innerHTML = `
-          <div class="rc-item__label h5">${m.user}</div>
-          <div class="rc-item__text">${m.desc}${m.hrc != null ? ` · HRC ${m.hrc}` : ''} · VDI ${m.vdi}</div>
-        `;
-          item.addEventListener('click', () => {
-            els('.es-mat').forEach((b) => b.setAttribute('aria-selected', 'false'));
-            item.setAttribute('aria-selected', 'true');
-            selected.vdi = Number(item.dataset.vdi);
-            selected.iso = item.dataset.iso;
-            selected.materialLabel = m.user;
-            item.closest('.es-step').querySelector('.es-next').disabled = false;
-          });
-          matGrid.appendChild(item);
-        });
-      };
+
 
       // === Editable summary ===
       const summaryEl = el('#es-editable-summary');
@@ -949,7 +925,6 @@
         els('.es-next').forEach((n) => (n.disabled = true));
         els('.es-iso-tab').forEach((t, i) => t.setAttribute('aria-selected', String(i === 0)));
         el('#es-dia').value = '';
-        renderMaterials('P');
         el('#es-chips').style.display = 'none';
         el('#es-grid').innerHTML = '';
         el('#es-empty').style.display = 'none';
