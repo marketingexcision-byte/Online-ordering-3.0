@@ -653,6 +653,147 @@
       // ISO tabs + materials grid
       const MAT = JSON.parse(el('#es-vdi-table').textContent);
 
+      const MATERIAL_BUCKETS = [
+  // P. Steels
+  {
+    id: 'P-mild-medium',
+    iso: 'P',
+    label: 'Mild & medium steels',
+    hint: 'e.g. 1018, 1020, 1045 bar and plate',
+    vdis: [1, 2, 3, 6, 7]
+  },
+  {
+    id: 'P-tool-alloy',
+    iso: 'P',
+    label: 'Tool & alloy steels',
+    hint: 'e.g. O1, D2, H13 annealed or toughened',
+    vdis: [8, 10, 11]
+  },
+  {
+    id: 'P-wear-plate',
+    iso: 'P',
+    label: 'High strength & wear plate',
+    hint: 'e.g. Hardox, Bisalloy, wear plate',
+    vdis: [9]
+  },
+
+  // M. Stainless
+  {
+    id: 'M-304-316',
+    iso: 'M',
+    label: 'Stainless 304 / 316',
+    hint: 'Most general stainless sheet, bar, tube',
+    vdis: [14]
+  },
+  {
+    id: 'M-hard-stainless',
+    iso: 'M',
+    label: 'Harder stainless (420 / 431)',
+    hint: 'Knives, shafts, hardened stainless parts',
+    vdis: [12, 13]
+  },
+
+  // K. Cast irons
+  {
+    id: 'K-soft-iron',
+    iso: 'K',
+    label: 'Soft / normal cast iron',
+    hint: 'Grey iron, softer ductile iron',
+    vdis: [15, 17, 19]
+  },
+  {
+    id: 'K-hard-iron',
+    iso: 'K',
+    label: 'Hard cast & ductile iron',
+    hint: 'Hard pearlitic ductile or grey iron',
+    vdis: [16, 18, 20]
+  },
+
+  // N. Aluminium & soft metals
+  {
+    id: 'N-soft-aluminium',
+    iso: 'N',
+    label: 'Soft wrought aluminium',
+    hint: 'e.g. 1050, 5083 plate, extrusion',
+    vdis: [21]
+  },
+  {
+    id: 'N-hard-aluminium',
+    iso: 'N',
+    label: 'Heat treated aluminium 6061 / 7075',
+    hint: 'Stronger tempers like T6, T651',
+    vdis: [22]
+  },
+  {
+    id: 'N-cast-aluminium',
+    iso: 'N',
+    label: 'Cast aluminium',
+    hint: 'Engine blocks, sand or die castings',
+    vdis: [23, 24, 25]
+  },
+  {
+    id: 'N-brass-bronze',
+    iso: 'N',
+    label: 'Brass & bronze',
+    hint: 'Bushes, fittings, bearing bronze',
+    vdis: [26, 27]
+  },
+  {
+    id: 'N-copper',
+    iso: 'N',
+    label: 'Copper',
+    hint: 'Pure copper, electrical copper',
+    vdis: [28]
+  },
+  {
+    id: 'N-plastics',
+    iso: 'N',
+    label: 'Plastics, composites, wood',
+    hint: 'Plastics, FRP, laminates, timber',
+    vdis: [29, 30]
+  },
+
+  // S. Titanium & super alloys
+  {
+    id: 'S-superalloy-annealed',
+    iso: 'S',
+    label: 'Nickel & cobalt alloys. annealed',
+    hint: 'Inconel, Hastelloy before hard service',
+    vdis: [31, 33]
+  },
+  {
+    id: 'S-superalloy-hard',
+    iso: 'S',
+    label: 'Nickel & cobalt alloys. hardened',
+    hint: 'Inconel in service, turbine parts',
+    vdis: [32, 34, 35]
+  },
+  {
+    id: 'S-titanium',
+    iso: 'S',
+    label: 'Titanium alloys',
+    hint: 'Commercially pure and Ti-6Al-4V etc',
+    vdis: [36, 37]
+  },
+
+  // H. Hardened
+  {
+    id: 'H-hardened-steel-55',
+    iso: 'H',
+    label: 'Hardened steel around 55 HRC',
+    hint: 'Die steel. moulds. through hardened parts',
+    vdis: [38, 41]
+  },
+  {
+    id: 'H-hardened-steel-60',
+    iso: 'H',
+    label: 'Hardened steel around 60 HRC',
+    hint: 'Very hard tool steels. thin case hardened',
+    vdis: [39, 40]
+  }
+];
+
+
       // material handling
 const isoCards = els('.es-iso-card');
 const subgradeWrap = el('#es-material-subgrades');
@@ -1208,11 +1349,6 @@ isoCards.forEach(card => {
   cursor: pointer;
   background: white;
   transition: all .18s ease;
-}
-
-.material-group-card:hover {
-  border-color: var(--color-primary-orange);
-  box-shadow: 0 0 0 3px rgba(248,141,43,0.2);
 }
 
 .material-group-card.active {
