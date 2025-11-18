@@ -875,19 +875,6 @@
         });
       });
 
-      els('.es-iso-tab').forEach((tab) => {
-        tab.addEventListener('click', () => {
-          els('.es-iso-tab').forEach((t) => t.setAttribute('aria-selected', 'false'));
-          tab.setAttribute('aria-selected', 'true');
-          selected.iso = tab.dataset.iso;
-          selected.vdi = null;
-          renderMaterials(selected.iso);
-          const nx = tab.closest('.es-step').querySelector('.es-next');
-          if (nx) nx.disabled = true;
-        });
-      });
-      renderMaterials(selected.iso);
-
       // Shape choices
       els('.es-shape').forEach((btn) => {
         btn.addEventListener('click', () => {
