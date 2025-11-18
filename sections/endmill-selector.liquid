@@ -286,7 +286,7 @@
 {%- comment -%}Force selector to read from the entire catalog{%- endcomment -%}
 {% assign coll = collections['all-endmills'] %}
 
-{% paginate coll.products | where: "tags", "endmills" by 500 %}
+{% paginate coll.products by 1000 %}
     <template id="es-products-json">
       [
       {% for product in coll.products %}
