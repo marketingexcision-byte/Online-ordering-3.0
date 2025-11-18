@@ -648,25 +648,6 @@
         });
       });
 
-      // New intuitive material selectors
-      els('.material-group-card').forEach((card) => {
-        card.addEventListener('click', () => {
-          // Visually toggle
-          els('.material-group-card').forEach((c) => c.classList.remove('active'));
-          card.classList.add('active');
-
-          const iso = card.dataset.iso;
-          const friendly = card.dataset.friendly;
-
-          // Store selection
-          selected.iso = iso === 'ANY' ? null : iso;
-          selected.vdi = null; // user isn't choosing an exact VDI
-          selected.materialLabel = friendly;
-
-          // Enable next button
-          card.closest('.es-step').querySelector('.es-next').disabled = false;
-        });
-      });
 
       // ISO tabs + materials grid
       const MAT = JSON.parse(el('#es-vdi-table').textContent);
