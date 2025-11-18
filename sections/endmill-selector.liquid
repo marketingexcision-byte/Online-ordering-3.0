@@ -1,14 +1,3 @@
-{% comment %}
-  Endmill Product Selector — 4-step wizard with smooth transitions
-  Requirements
-  - Products carry Operation_* and Cutting Shape_* tags.
-  - Products have metafields:
-      - custom.vdi_good      (list of integers)
-      - custom.vdi_excellent (list of integers)
-  - Variant option named exactly: "Mill Diameter (mm)"
-  - Uses your existing snippet: product-grid-item
-{% endcomment %}
-
 {% assign lengths = "Throw Away|Stub|Short|Long|Extra Long|Long Reach|Extended Neck" | split: "|" %}
 {% assign types   = "Center Match|Rib Processing|Miniature|High Feed|Sharp Corner Removal|Taper Neck|Center Cut" | split: "|" %}
 
@@ -294,11 +283,8 @@
     </div>
   </div>
 
-  {% comment %} ====== DATA PRELOAD ====== {% endcomment %}
-  {% assign coll = section.settings.collection %}
-  {% if coll == blank %}
-    {% assign coll = collections.all %}
-  {% endif %}
+{%- comment -%}Force selector to read from the entire catalog{%- endcomment -%}
+{% assign coll = collections['all'] %}
 
   {% paginate coll.products by 1000 %}
     <template id="es-products-json">
@@ -961,9 +947,6 @@ els('.es-skip').forEach(btn => {
       function tryParseArray(v){
   if (!v) return [];
   if (Array.isArray(v)) return v.map(Number).filter(n => !isNaN(n));
-
-  // Accept anything: bullets •, commas, spaces, slashes, etc.
-  // Grab every integer or float from the string.
   const nums = String(v).match(/\d+(?:\.\d+)?/g);
   return nums ? nums.map(Number).filter(n => !isNaN(n)) : [];
 }
