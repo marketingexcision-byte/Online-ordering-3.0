@@ -1192,12 +1192,18 @@
           if (!tagsNorm.includes(lenNorm)) return false;
         }
 
-        // Material VDI
-        if (selected.vdi != null) {
-          const vd = Number(selected.vdi);
-          const good = (p.vdi_good || []).map(Number);
-          const exc = (p.vdi_excellent || []).map(Number);
-          if (![...good, ...exc].includes(vd)) return false;
+        // Material VDI or VDI bucket
+        const vdiFilter =
+          selected.vdis && selected.vdis.length
+            ? selected.vdis.map(Number)
+            : selected.vdi != null
+            ? [Number(selected.vdi)]
+            : [];
+
+        if (vdiFilter.length) {
+          const allowed = new Set(vdiFilter);
+          const goodExc = [...(p.vdi_good || []).map(Number), ...(p.vdi_excellent || []).map(Number)];
+          if (!goodExc.some((v) => allowed.has(v))) return false;
         }
 
         // Diameter
@@ -1222,14 +1228,21 @@
         }
         el('#es-empty').style.display = 'none';
 
-        // Prioritize products that mark the selected VDI as excellent
+        // Prioritize products that mark any of the selected VDIs as excellent
         matches.sort((a, b) => {
-          if (selected.vdi == null) return 0;
-          const vd = Number(selected.vdi);
-          const ax = (a.vdi_excellent || []).includes(vd) ? 1 : 0;
-          const bx = (b.vdi_excellent || []).includes(vd) ? 1 : 0;
+          const vdList =
+            selected.vdis && selected.vdis.length
+              ? selected.vdis.map(Number)
+              : selected.vdi != null
+              ? [Number(selected.vdi)]
+              : [];
+
+          if (!vdList.length) return 0;
+          const set = new Set(vdList);
+
+          const ax = (a.vdi_excellent || []).some((v) => set.has(Number(v))) ? 1 : 0;
+          const bx = (b.vdi_excellent || []).some((v) => set.has(Number(v))) ? 1 : 0;
           if (ax !== bx) return bx - ax;
-          // tie-breaker. keep original
           return 0;
         });
 
