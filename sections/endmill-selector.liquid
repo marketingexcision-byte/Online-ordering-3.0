@@ -54,76 +54,68 @@
         </div>
       </article>
 
-      <!-- 2. Material -->
-      <article
-        class="card es-step"
-        data-step="2"
-        aria-hidden="true"
-        style="position:absolute;inset:0;opacity:0;pointer-events:none;"
-      >
-        <h3 class="h3" style="margin-top:0;">What material?</h3>
+<!-- 2. Material (New intuitive version) -->
+<article
+  class="card es-step"
+  data-step="2"
+  aria-hidden="true"
+  style="position:absolute;inset:0;opacity:0;pointer-events:none;"
+>
+  <h3 class="h3" style="margin-top:0;">What material are you machining?</h3>
 
-        <p class="rc-item__text" style="margin-bottom:var(--space-4);">
-          Select the material you’re machining. We’ll match it to the right cutting parameters.
-        </p>
+  <p class="rc-item__text" style="margin-bottom:16px;">
+    Start with the broad group. Then choose a specific grade if you want. We’ll map it to the correct VDI automatically.
+  </p>
 
-        <div class="material-groups">
-          {% assign groups = '
-      P:Steels:1020,1045,4140,Bisalloy;
-      M:Stainless Steels:304,316,420,431;
-      K:Cast Irons:Grey,Ductile,Malleable;
-      N:Aluminium & Soft Metals:6061,7075,Brass,Bronze,Copper;
-      S:Titanium & Super Alloys:Ti6Al4V,Inconel,Hastelloy;
-      H:Hardened Steels:55 HRC,60 HRC,Tool Steel
-      '
-            | split: ';'
-          %}
+  <!-- ISO Level -->
+  <div class="material-groups">
+    {% assign iso_groups = '
+      P:Steels;
+      M:Stainless Steels;
+      K:Cast Irons;
+      N:Aluminium & Soft Metals;
+      S:Titanium & Super Alloys;
+      H:Hardened Steels
+    ' | split: ';' %}
 
-          {% for g in groups %}
-            {% assign parts = g | split: ':' %}
-            {% assign iso = parts[0] %}
-            {% assign label = parts[1] %}
-            {% assign examples = parts[2] | split: ',' %}
+    {% for g in iso_groups %}
+      {% assign parts = g | split: ':' %}
+      {% assign iso = parts[0] %}
+      {% assign label = parts[1] %}
 
-            <div
-              class="material-group-card"
-              data-iso="{{ iso }}"
-              data-friendly="{{ label | escape }}"
-            >
-              <div class="mgc-header">
-                <span class="mgc-iso">{{ iso }}</span>
-                <span class="mgc-title">{{ label }}</span>
-              </div>
-
-              <div class="mgc-examples">
-                {% for e in examples %}
-                  <span class="mgc-example">{{ e }}</span>
-                {% endfor %}
-              </div>
-            </div>
-          {% endfor %}
-
-          <div
-            class="material-group-card mgc-unknown"
-            data-iso="ANY"
-            data-friendly="General Purpose Steels"
-          >
-            <div class="mgc-header">
-              <span class="mgc-iso">?</span>
-              <span class="mgc-title">I’m not sure</span>
-            </div>
-            <div class="mgc-examples">Works for most mild & medium steels.</div>
-          </div>
+      <div class="material-group-card es-iso-card" data-iso="{{ iso }}">
+        <div class="mgc-header">
+          <span class="mgc-iso">{{ iso }}</span>
+          <span class="mgc-title">{{ label }}</span>
         </div>
+      </div>
+    {% endfor %}
 
-        <div style="display:flex;gap:12px;justify-content:space-between;align-items:center;margin-top:var(--space-6);">
-          <button type="button" class="btn btn-outline es-prev">Back</button>
-          <div style="display:flex;gap:8px;">
-            <button type="button" class="btn es-skip">Skip</button>
-            <button type="button" class="btn btn-primary es-next" disabled>Next</button>
-          </div>
-        </div>
-      </article>
+    <!-- Unknown -->
+    <div class="material-group-card mgc-unknown es-iso-card" data-iso="ANY">
+      <div class="mgc-header">
+        <span class="mgc-iso">?</span>
+        <span class="mgc-title">Not sure</span>
+      </div>
+      <div class="mgc-examples">General-purpose steels</div>
+    </div>
+  </div>
+
+  <!-- Subgrade list (hidden until ISO selected) -->
+  <div id="es-material-subgrades" style="display:none;margin-top:20px;">
+    <h4 class="h5" style="margin-bottom:10px;">Select grade</h4>
+    <div id="es-material-grid" class="material-groups"></div>
+  </div>
+
+  <div style="display:flex;gap:12px;justify-content:space-between;align-items:center;margin-top:var(--space-6);">
+    <button type="button" class="btn btn-outline es-prev">Back</button>
+    <div style="display:flex;gap:8px;">
+      <button type="button" class="btn es-skip">Skip</button>
+      <button type="button" class="btn btn-primary es-next" disabled>Next</button>
+    </div>
+  </div>
+</article>
+
 
       <!-- 3. Cutting shape -->
       <article
@@ -392,6 +384,7 @@
   {% comment %} ====== MATERIAL TABLE (VDI → ISO + Label) ====== {% endcomment %}
   <script type="application/json" id="es-vdi-table">
     [
+      
       {
         "vdi": 1,
         "iso": "P",
@@ -677,6 +670,61 @@
 
       // ISO tabs + materials grid
       const MAT = JSON.parse(el('#es-vdi-table').textContent);
+
+      // material handling
+const isoCards = els('.es-iso-card');
+const subgradeWrap = el('#es-material-subgrades');
+const subgradeGrid = el('#es-material-grid');
+
+isoCards.forEach(card => {
+  card.addEventListener('click', () => {
+    const iso = card.dataset.iso;
+
+    // visual toggle
+    isoCards.forEach(c => c.classList.remove('active'));
+    card.classList.add('active');
+
+    // store ISO for now
+    selected.iso = iso === 'ANY' ? null : iso;
+    selected.vdi = null;
+    selected.materialLabel = null;
+
+    // populate subgrades
+    if (iso === 'ANY') {
+      subgradeWrap.style.display = 'none';
+      card.closest('.es-step').querySelector('.es-next').disabled = false;
+      return;
+    }
+
+    const items = MAT.filter(m => m.iso === iso);
+    const html = items.map(m =>
+      `<div class="material-group-card es-subgrade" data-vdi="${m.vdi}">
+         <div class="mgc-title">${m.user}</div>
+         <div class="mgc-examples">VDI ${m.vdi} · ${m.desc}</div>
+       </div>`
+    ).join('');
+
+    subgradeGrid.innerHTML = html;
+    subgradeWrap.style.display = 'block';
+
+    // bind subgrade buttons
+    els('.es-subgrade', subgradeGrid).forEach(sub => {
+      sub.addEventListener('click', () => {
+        els('.es-subgrade').forEach(s => s.classList.remove('active'));
+        sub.classList.add('active');
+
+        const vdi = Number(sub.dataset.vdi);
+        const row = MAT.find(x => x.vdi === vdi);
+
+        selected.vdi = vdi;
+        selected.materialLabel = row ? row.user : null;
+
+        card.closest('.es-step').querySelector('.es-next').disabled = false;
+      });
+    });
+  });
+});
+
 
 
       // === Editable summary ===
