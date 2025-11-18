@@ -1023,7 +1023,7 @@
       function renderResults() {
         const grid = el('#es-grid');
         grid.innerHTML = '';
-        const matches = PRODUCT_DATA.filter(matchesProduct);
+        const matches = DATASET.filter(matchesProduct);
 
         if (matches.length === 0) {
           el('#es-empty').style.display = 'block';
