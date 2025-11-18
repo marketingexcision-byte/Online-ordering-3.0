@@ -104,6 +104,10 @@
   {{ product.title }}
 </p>
 
+ <div class="vqs-suitability" data-vqs-suitability-row hidden>
+  <p data-vqs-suitability>—</p>
+</div>
+
 {%- comment -%} Clean ops list for JS hydration {%- endcomment -%}
 {%- assign ops_human = '' -%}
 {%- for t in product.tags -%}
@@ -333,9 +337,7 @@
     {% endif %}
   </a>
 
-  <div class="vqs-suitability" data-vqs-suitability-row hidden>
-  <small data-vqs-suitability>—</small>
-</div>
+ 
 
   <div class="payment-buttons payment-buttons--medium form-payment-buttons">
     {% assign first_avail = product.selected_or_first_available_variant | default: product.first_available_variant %}
