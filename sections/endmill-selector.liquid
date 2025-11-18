@@ -350,9 +350,11 @@
     </template>
 
     <!-- CLIENT-SIDE TEMPLATE MARKER -->
-    <template id="es-card-template">
-      {% render 'product-grid-item-endmill-selector', product: blank %}
-    </template>
+<template id="es-card-template">
+  {% render 'product-grid-item-endmill-selector', product: blank %}
+</template>
+
+    
   {% endpaginate %}
 
   {% comment %} ====== MATERIAL TABLE (VDI → ISO + Label) ====== {% endcomment %}
@@ -694,18 +696,18 @@
         });
 
         selType().addEventListener('change', () => {
-          selected.typeTag = selType().value || null;
+  selected.typeTag = selType().value || null;
 
-          if (selected.typeTag) {
-            // force Length to Any
-            selLen().value = '';
-            selected.lengthTag = null;
-          }
+  if (selected.typeTag) {
+    // force Length to Any
+    selLen().value = '';
+    selected.lengthTag = null;
+  }
 
-          renderResults();
-          renderChips();
-          syncSummaryFromState(); // prevents mismatched UI
-        });
+  renderResults();
+  renderChips();
+  syncSummaryFromState(); // prevents mismatched UI
+});
 
         selISO().addEventListener('change', () => {
           selected.iso = selISO().value;
@@ -740,18 +742,18 @@
         });
 
         selLen().addEventListener('change', () => {
-          selected.lengthTag = selLen().value || null;
+  selected.lengthTag = selLen().value || null;
 
-          if (selected.lengthTag) {
-            // force Type to Any
-            selType().value = '';
-            selected.typeTag = null;
-          }
+  if (selected.lengthTag) {
+    // force Type to Any
+    selType().value = '';
+    selected.typeTag = null;
+  }
 
-          renderResults();
-          renderChips();
-          syncSummaryFromState(); // keeps UI fully in-sync
-        });
+  renderResults();
+  renderChips();
+  syncSummaryFromState(); // keeps UI fully in-sync
+});
 
         selDia().addEventListener('input', () => {
           const v = selDia().value.trim();
@@ -1046,15 +1048,9 @@
 
         const frag = document.createDocumentFragment();
         matches.forEach((p) => {
-          // clone the single base template
-          const base = el('#es-card-template');
-          if (!(base && 'content' in base)) return;
-          const node = base.content.cloneNode(true);
-
-          // replace placeholder product data
-          node.querySelectorAll('[data-product-json]').forEach((el) => {
-            el.setAttribute('data-product-json', JSON.stringify(p));
-          });
+          const tpl = el(`#tpl-${p.id}`);
+          if (!(tpl && 'content' in tpl)) return;
+          const node = tpl.content.cloneNode(true);
 
           // pick exact variant by diameter if provided
           let matchVid = null;
