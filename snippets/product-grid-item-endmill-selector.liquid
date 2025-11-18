@@ -333,6 +333,10 @@
     {% endif %}
   </a>
 
+  <div class="vqs-suitability" data-vqs-suitability-row hidden>
+  <small data-vqs-suitability>—</small>
+</div>
+
   <div class="payment-buttons payment-buttons--medium form-payment-buttons">
     {% assign first_avail = product.selected_or_first_available_variant | default: product.first_available_variant %}
     {% assign _price_cents = first_avail.price | default: product.price | plus: 0 %}
