@@ -100,9 +100,22 @@
       </div>
     </div>
 
-    <p class="font-bold {% if product.metafields.custom.title.value != blank %} cpgs_title{% endif %}">
-      {{ product.title }}
-    </p>
+ <p class="font-bold {% if product.metafields.custom.title.value != blank %} cpgs_title{% endif %}">
+  {{ product.title }}
+</p>
+
+{%- comment -%} Clean ops list for JS hydration {%- endcomment -%}
+{%- assign ops_human = '' -%}
+{%- for t in product.tags -%}
+  {%- assign tdown = t | downcase -%}
+  {%- assign prefix = tdown | slice: 0, 10 -%}
+  {%- if prefix == 'operation_' -%}
+    {%- assign nice = t | replace_first: 'Operation_', '' | replace: '_', ' ' -%}
+    {%- if ops_human != '' -%}{%- assign ops_human = ops_human | append: ', ' -%}{%- endif -%}
+    {%- assign ops_human = ops_human | append: nice -%}
+  {%- endif -%}
+{%- endfor -%}
+<span data-vqs-source="ops" data-ops="{{ ops_human | escape }}" style="display:none;"></span>
 
 
     {%- comment -%} Clean ops list for JS hydration {%- endcomment -%}
@@ -319,10 +332,6 @@
       <span class="shopify-product-reviews-badge" data-id="{{ product.id }}"></span>
     {% endif %}
   </a>
-
-      <div class="vqs-col" data-vqs-suitability-row hidden>
-  <small data-vqs-suitability>—</small>
-</div>
 
   <div class="payment-buttons payment-buttons--medium form-payment-buttons">
     {% assign first_avail = product.selected_or_first_available_variant | default: product.first_available_variant %}
