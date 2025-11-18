@@ -593,6 +593,27 @@ if (matsWrap){
     if (root) hydrateCard(root);
   });
 
+  // --- Suitability line ---
+(function(){
+  const row = selectBy(scope, '[data-vqs-suitability-row]');
+  const cell = selectBy(scope, '[data-vqs-suitability]');
+  if (!row || !cell) return;
+
+  const suit = root.getAttribute('data-suitability') || '';
+  const opRaw = root.getAttribute('data-op-label') || '';
+  const mat = root.getAttribute('data-material-label') || '';
+
+  let op = opRaw.replace(/^Operation_/, '').replace(/_/g, ' ').trim();
+
+  if (suit && mat){
+    cell.textContent = `${suit} for ${op} ${mat}`;
+    row.hidden = false;
+  } else {
+    row.hidden = true;
+  }
+})();
+
+
 
   // also hydrate on DOM ready for SSR fallbacks
   document.addEventListener('DOMContentLoaded', function(){
