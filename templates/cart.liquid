@@ -658,21 +658,17 @@
                 <span class="wcp-extra-note"></span>
               </div>
 
-              {%- comment -%} Excision: Minimum Order progress (server baseline) {%- endcomment -%}
-              {%- assign MIN_CENTS = 20000 -%}
-{%- assign ex_min_override = cart.attributes.ex_min_order_override | default: '' | strip -%}
-
-{%- if ex_min_override == '1' -%}
-  {%- assign effective_min_cents = 0 -%}
-{%- else -%}
-  {%- assign effective_min_cents = MIN_CENTS -%}
-{%- endif -%}
-
+{%- comment -%} Excision: Minimum Order progress (server baseline) {%- endcomment -%}
+{%- assign MIN_CENTS = 20000 -%}
 {%- assign subtotal_cents = cart.total_price -%}
-{%- assign remaining_cents = effective_min_cents | minus: subtotal_cents -%}
+{%- assign remaining_cents = MIN_CENTS | minus: subtotal_cents -%}
 {%- if remaining_cents < 0 -%}{%- assign remaining_cents = 0 -%}{%- endif -%}
-{%- assign pct = subtotal_cents | times: 100 | divided_by: effective_min_cents -%}
+{%- assign pct = subtotal_cents | times: 100 | divided_by: MIN_CENTS -%}
 {%- if pct > 100 -%}{%- assign pct = 100 -%}{%- endif -%}
+
+{%- comment -%} Flag set by PreCart override. 1 = waived {%- endcomment -%}
+{%- assign ex_min_override = cart.attributes.ex_min_override | default: '' | strip -%}
+
 
             </div>
 
@@ -810,40 +806,46 @@
             </p>
 
             <div
-              id="ex-min-order-cart"
-              class="ex-min-order {% if remaining_cents == 0 %}ex-min-order--ok{% endif %}"
-                data-min="{{ effective_min_cents }}"
-              aria-live="polite"
-            >
-              <div class="ex-min-order__row">
-                <div class="ex-min-order__label">
-                  Minimum order: <strong>{{ MIN_CENTS | money }}</strong>
-                </div>
-                <div class="ex-min-order__value">
-                  <span data-remaining>{{ remaining_cents | money }}</span> to go
-                </div>
-              </div>
-              <div
-                class="ex-min-order__bar"
-                role="progressbar"
-                aria-valuemin="0"
-                aria-valuemax="{{ MIN_CENTS }}"
-                aria-valuenow="{{ subtotal_cents }}"
-              >
-                {%- assign pct = subtotal_cents | times: 100 | divided_by: MIN_CENTS -%}
-                {%- if pct > 100 -%}{%- assign pct = 100 -%}{%- endif -%}
-                <div class="ex-min-order__active" style="flex-basis: {{ pct }}%"></div>
-                <div class="ex-min-order__rest" style="flex-basis: {{ 100 | minus: pct }}%"></div>
-              </div>
+  id="ex-min-order-cart"
+  class="ex-min-order{% if remaining_cents == 0 %} ex-min-order--ok{% endif %}{% if ex_min_override == '1' %} ex-min-order--waived{% endif %}"
+  data-min="{{ MIN_CENTS }}"
+  data-override="{{ ex_min_override }}"
+  aria-live="polite"
+>
+  {% if ex_min_override == '1' %}
+    <div class="ex-min-order__waived-msg">
+      Your minimum order value has been waived{% if pc_by != '' %} by {{ pc_by }}{% endif %}!
+    </div>
+  {% else %}
+    <div class="ex-min-order__row">
+      <div class="ex-min-order__label">
+        Minimum order: <strong>{{ MIN_CENTS | money }}</strong>
+      </div>
+      <div class="ex-min-order__value">
+        <span data-remaining>{{ remaining_cents | money }}</span> to go
+      </div>
+    </div>
+    <div
+      class="ex-min-order__bar"
+      role="progressbar"
+      aria-valuemin="0"
+      aria-valuemax="{{ MIN_CENTS }}"
+      aria-valuenow="{{ subtotal_cents }}"
+    >
+      <div class="ex-min-order__active" style="flex-basis: {{ pct }}%"></div>
+      <div class="ex-min-order__rest" style="flex-basis: {{ 100 | minus: pct }}%"></div>
+    </div>
 
-              <div class="ex-min-order__note" data-note>
-                {% if remaining_cents == 0 %}
-                  You’ve reached the $200 minimum — you can checkout.
-                {% else %}
-                  Add {{ remaining_cents | money }} more to enable checkout.
-                {% endif %}
-              </div>
-            </div>
+    <div class="ex-min-order__note" data-note>
+      {% if remaining_cents == 0 %}
+        You’ve reached the $200 minimum. you can checkout.
+      {% else %}
+        Add {{ remaining_cents | money }} more to enable checkout.
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
+
 
             <div style="display: flex; gap: 10px;">
               <input
@@ -942,6 +944,24 @@
       object-fit: contain;
       filter: none; /* keep original logo colors */
     }
+
+    .ex-min-order--waived {
+  background: #f88d2b;
+  border-color: #f88d2b;
+  color: #ffffff;
+}
+
+.ex-min-order--waived .ex-min-order__waived-msg {
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.ex-min-order--waived .ex-min-order__label,
+.ex-min-order--waived .ex-min-order__value,
+.ex-min-order--waived [data-note] {
+  color: #ffffff;
+}
+
 
     .ex-remove-one {
         display: inline-block;
