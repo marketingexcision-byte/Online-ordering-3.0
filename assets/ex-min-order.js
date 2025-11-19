@@ -58,13 +58,23 @@ async function readCartTotalCents(){
   function paint(root, subtotalCents){
     if (!root) return;
 
-    const override = (window.EX_MIN_ORDER_OVERRIDE === '1');
-    const rawMin = Number(root.dataset.min || MIN_CENTS);
-    const min    = override ? 0 : rawMin;
-    const now = Math.max(0, subtotalCents|0);
-    const remaining = Math.max(0, min - now);
-    const pct = clamp(min > 0 ? (now / min) * 100 : 100);
+    // If override flag is present, do not touch the text or bar. just unlock checkout
+    const override = root.dataset.override === '1';
+    const btn = document.querySelector('.cart-summary button[name="checkout"], .btn.checkout, #ex-checkout');
 
+    if (override) {
+      if (btn) {
+        btn.disabled = false;
+        btn.setAttribute('aria-disabled', 'false');
+        btn.removeAttribute('title');
+      }
+      return;
+    }
+
+    const min = Number(root.dataset.min || MIN_CENTS);
+    const now = Math.max(0, subtotalCents | 0);
+    const remaining = Math.max(0, min - now);
+    const pct = clamp((now / min) * 100);
 
     const active = root.querySelector('.ex-min-order__active');
     const rest   = root.querySelector('.ex-min-order__rest');
@@ -86,12 +96,11 @@ async function readCartTotalCents(){
     root.classList.toggle('ex-min-order--ok', remaining === 0);
     if (note) {
       note.textContent = (remaining === 0)
-        ? 'You’ve reached the $200 minimum — you can checkout.'
+        ? 'You’ve reached the $200 minimum. you can checkout.'
         : `Add ${formatMoney(remaining)} more to enable checkout.`;
     }
 
-    // Cart checkout button lock
-    const btn = document.querySelector('.cart-summary button[name="checkout"], .btn.checkout, #ex-checkout');
+    // Cart checkout button lock in non override mode
     if (btn){
       btn.disabled = remaining > 0;
       btn.setAttribute('aria-disabled', remaining > 0 ? 'true' : 'false');
@@ -99,6 +108,7 @@ async function readCartTotalCents(){
       else btn.removeAttribute('title');
     }
   }
+
 
   function paintBoth(cents){
     paint(document.getElementById('ex-min-order-cart'), cents);
