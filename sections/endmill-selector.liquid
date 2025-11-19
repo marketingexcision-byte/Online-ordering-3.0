@@ -305,6 +305,17 @@
         No matching products. Loosen a filter or clear Diameter.
       </div>
       <div id="es-grid" class="collection-grid"></div>
+
+      {%- comment -%}
+        Hidden prototype card that uses the full Liquid snippet.
+        JS will clone this for each result.
+      {%- endcomment -%}
+      <div id="es-prototype" style="display:none;">
+        {% if section.settings.collection and section.settings.collection.products_count > 0 %}
+          {% assign sample_product = section.settings.collection.products.first %}
+          {% render 'product-grid-item-endmill-selector', product: sample_product %}
+        {% endif %}
+      </div>
     </div>
   </div>
 
@@ -567,6 +578,8 @@
       const COLLECTION_HANDLE = sectionRoot?.dataset.collectionHandle || 'all-endmills';
 
       const steps = els('.es-step');
+      const protoRoot = el('#es-prototype');
+      const protoCard = protoRoot ? protoRoot.querySelector('.grid-item') : null;
       const bar = el('#es-progress-bar');
       const stepLabel = el('#es-step-label');
       let step = 1;
@@ -1189,18 +1202,77 @@
         el('#es-empty').style.display = 'none';
 
         const frag = document.createDocumentFragment();
-        matches.forEach((p) => {
-          const card = document.createElement('article');
-          card.className = 'product-grid-item collection-grid-item';
-          card.innerHTML = `
-          <a href="${p.url}" class="product-grid-item__link">
-            <div class="product-grid-item__title h5">${p.title}</div>
-          </a>
-        `;
-          frag.appendChild(card);
-        });
-        grid.appendChild(frag);
 
+        matches.forEach((p) => {
+          // 1. Clone the prototype card if we have one. else simple fallback.
+          let card;
+          if (protoCard) {
+            card = protoCard.cloneNode(true);
+          } else {
+            card = document.createElement('div');
+            card.className = 'grid-item';
+          }
+
+          // 2. Wire up the main link
+          const link = card.querySelector('.product-grid-item') || card.querySelector('.product-grid-item__link');
+
+          if (link) {
+            link.href = p.url;
+
+            // Pass processed product object to the hydrator
+            try {
+              link.setAttribute('data-product-json', JSON.stringify(p));
+            } catch (e) {
+              console.warn('[ES] Failed to stringify product JSON', e, p);
+            }
+
+            const firstVariant = (p.variants || [])[0];
+            if (firstVariant) {
+              link.setAttribute('data-variant-id', String(firstVariant.id));
+            }
+          }
+
+          // 3. Title
+          const titleEl =
+            card.querySelector('.cpgs_title') ||
+            card.querySelector('.product-grid-item__title') ||
+            card.querySelector('p.font-bold');
+
+          if (titleEl) {
+            titleEl.textContent = p.title;
+          }
+
+          // 4. Reviews badge id if present
+          const badge = card.querySelector('.shopify-product-reviews-badge');
+          if (badge) {
+            badge.setAttribute('data-id', String(p.id));
+          }
+
+          // 5. Basic image hookup. use first image if available
+          if (p.images && p.images.length > 0) {
+            const src = p.images[0].src;
+            const imgFront =
+              card.querySelector('img.product-image.front') ||
+              card.querySelector('img.product-image.single') ||
+              card.querySelector('.product-grid-image img');
+
+            if (imgFront) {
+              // For your lazyload setup
+              imgFront.setAttribute('data-src', src);
+              imgFront.removeAttribute('src');
+            }
+          }
+
+          frag.appendChild(card);
+
+          // 6. Tell the hydrator script to update price, specs, stock etc
+          if (link) {
+            const evt = new Event('es:hydrate-card', { bubbles: true });
+            link.dispatchEvent(evt);
+          }
+        });
+
+        grid.appendChild(frag);
         el('#es-chips').style.display = 'flex';
       }
 
