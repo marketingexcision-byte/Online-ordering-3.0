@@ -823,16 +823,18 @@
           const buckets = MATERIAL_BUCKETS.filter((b) => b.iso === iso);
 
           const html = buckets
-            .map(
-              (b) =>
-                `<div class="material-group-card es-subgrade"
+  .map(
+    (b) =>
+      `<div class="material-group-card es-subgrade"
+            data-iso="${iso}"
             data-vdis="${b.vdis.join(',')}"
             data-label="${b.label.replace(/"/g, '&quot;')}">
          <div class="mgc-title">${b.label}</div>
          <div class="mgc-examples">${b.hint}</div>
        </div>`
-            )
-            .join('');
+  )
+  .join('');
+
 
           subgradeGrid.innerHTML = html;
           subgradeWrap.style.display = 'block';
