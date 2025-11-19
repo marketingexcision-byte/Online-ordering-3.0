@@ -827,7 +827,7 @@
               (b) =>
                 `<div class="material-group-card es-subgrade"
             data-iso="${iso}"
-            data-vdis="${b.vdis.join(',')}"
+            data-vdis="${b.vdis.join('|')}"
             data-label="${b.label.replace(/"/g, '&quot;')}">
          <div class="mgc-title">${b.label}</div>
          <div class="mgc-examples">${b.hint}</div>
@@ -845,7 +845,7 @@
               sub.classList.add('active');
 
               const vdis = (sub.dataset.vdis || '')
-                .split(',')
+                .split('|')
                 .map((s) => Number(s.trim()))
                 .filter((n) => !Number.isNaN(n));
 
