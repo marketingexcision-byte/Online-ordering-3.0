@@ -535,9 +535,10 @@
   </script>
 
   {% comment %} ====== JS ====== {% endcomment %}
-  <script>
-    async function ES_loadAllProducts() {
-    const collectionHandle = 'all-endmills'; // your source collection
+<script>
+  // Fetch ALL products in the collection via JSON (no 250 limit per page).
+  async function ES_loadAllProducts() {
+    const collectionHandle = 'all-endmills'; // source collection
     const limit = 250;
     let page = 1;
     let allProducts = [];
@@ -559,771 +560,575 @@
     return allProducts;
   }
 
-    (function () {
-      const el = (sel, root = document) => root.querySelector(sel);
-      const els = (sel, root = document) => Array.from(root.querySelectorAll(sel));
-      const steps = els('.es-step');
-      const bar = el('#es-progress-bar');
-      const stepLabel = el('#es-step-label');
-      let step = 1;
+  (function () {
+    const el = (sel, root = document) => root.querySelector(sel);
+    const els = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
-      const selected = {
-        operationTag: null,
-        iso: 'P',
-        vdi: null,
-        vdis: null,
-        materialLabel: null,
-        shapeTag: null,
-        lengthTag: null,
-        typeTag: null,
-        diameter: null,
-      };
+    const steps = els('.es-step');
+    const bar = el('#es-progress-bar');
+    const stepLabel = el('#es-step-label');
+    let step = 1;
 
-      // Progress
-      const setStep = (n) => {
-        step = n;
-        steps.forEach((s) => {
-          const active = Number(s.dataset.step) === n;
-          s.style.opacity = active ? 1 : 0;
-          s.style.pointerEvents = active ? 'auto' : 'none';
-          s.style.position = active ? 'relative' : 'absolute';
-          s.setAttribute('aria-hidden', String(!active));
-        });
-        bar.style.width = ((n - 1) / 5) * 100 + '%';
-        stepLabel.textContent = `Step ${n} of 5`;
-      };
+    // Global-ish data for this module
+    let PRODUCT_DATA = [];
+    let DATASET = [];
 
-      // Operation choices
-      els('.es-op').forEach((btn) => {
-        btn.addEventListener('click', () => {
-          els('.es-op').forEach((b) => b.setAttribute('aria-selected', 'false'));
-          btn.setAttribute('aria-selected', 'true');
-          selected.operationTag = btn.dataset.tag;
-          btn.closest('.es-step').querySelector('.es-next').disabled = false;
-        });
+    const selected = {
+      operationTag: null,
+      iso: 'P',
+      vdi: null,
+      vdis: null,
+      materialLabel: null,
+      shapeTag: null,
+      lengthTag: null,
+      typeTag: null,
+      diameter: null,
+    };
+
+    // ---------- Helpers for tags / product classification ----------
+    function normalizeTag(t) {
+      return String(t)
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '');
+    }
+
+    function isEndmill(p) {
+      // Same logic you had before: has a Cutting Shape_ tag
+      return (p.tags || []).some((t) => /^Cutting Shape_/i.test(t));
+    }
+
+    function hasExcludedTag(p) {
+      const t = (p.tags || []).map(normalizeTag);
+      return t.includes('operationblinddrilling') || t.includes('operationthroughdrilling');
+    }
+
+    // ---------- Progress ----------
+    const setStep = (n) => {
+      step = n;
+      steps.forEach((s) => {
+        const active = Number(s.dataset.step) === n;
+        s.style.opacity = active ? 1 : 0;
+        s.style.pointerEvents = active ? 'auto' : 'none';
+        s.style.position = active ? 'relative' : 'absolute';
+        s.setAttribute('aria-hidden', String(!active));
       });
+      bar.style.width = ((n - 1) / 5) * 100 + '%';
+      stepLabel.textContent = `Step ${n} of 5`;
+    };
 
-      // ISO tabs + materials grid
-      const MAT = JSON.parse(el('#es-vdi-table').textContent);
+    // ---------- Wizard click wiring (unchanged) ----------
+    els('.es-op').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        els('.es-op').forEach((b) => b.setAttribute('aria-selected', 'false'));
+        btn.setAttribute('aria-selected', 'true');
+        selected.operationTag = btn.dataset.tag;
+        btn.closest('.es-step').querySelector('.es-next').disabled = false;
+      });
+    });
 
-      const MATERIAL_BUCKETS = [
-        // P. Steels
-        {
-          id: 'P-mild-medium',
-          iso: 'P',
-          label: 'Mild & medium steels',
-          hint: 'e.g. 1018, 1020, 1045 bar and plate',
-          vdis: [1, 2, 3, 6, 7],
-        },
-        {
-          id: 'P-tool-alloy',
-          iso: 'P',
-          label: 'Tool & alloy steels',
-          hint: 'e.g. high carbon, O1, D2, H13 annealed or toughened',
-          vdis: [4, 5, 8, 10, 11],
-        },
-        {
-          id: 'P-wear-plate',
-          iso: 'P',
-          label: 'High strength & wear plate',
-          hint: 'e.g. Hardox, Bisalloy, wear plate',
-          vdis: [9],
-        },
+    const MAT = JSON.parse(el('#es-vdi-table').textContent);
 
-        // M. Stainless
-        {
-          id: 'M-304-316',
-          iso: 'M',
-          label: 'Stainless 304 / 316',
-          hint: 'Most general stainless sheet, bar, tube',
-          vdis: [14],
-        },
-        {
-          id: 'M-hard-stainless',
-          iso: 'M',
-          label: 'Harder stainless (420 / 431)',
-          hint: 'Knives, shafts, hardened stainless parts',
-          vdis: [12, 13],
-        },
+    const MATERIAL_BUCKETS = [
+      // P. Steels
+      { id: 'P-mild-medium', iso: 'P', label: 'Mild & medium steels', hint: 'e.g. 1018, 1020, 1045 bar and plate', vdis: [1, 2, 3, 6, 7] },
+      { id: 'P-tool-alloy', iso: 'P', label: 'Tool & alloy steels', hint: 'e.g. high carbon, O1, D2, H13 annealed or toughened', vdis: [4, 5, 8, 10, 11] },
+      { id: 'P-wear-plate', iso: 'P', label: 'High strength & wear plate', hint: 'e.g. Hardox, Bisalloy, wear plate', vdis: [9] },
+      // M. Stainless
+      { id: 'M-304-316', iso: 'M', label: 'Stainless 304 / 316', hint: 'Most general stainless sheet, bar, tube', vdis: [14] },
+      { id: 'M-hard-stainless', iso: 'M', label: 'Harder stainless (420 / 431)', hint: 'Knives, shafts, hardened stainless parts', vdis: [12, 13] },
+      // K. Cast irons
+      { id: 'K-soft-iron', iso: 'K', label: 'Soft / normal cast iron', hint: 'Grey iron, softer ductile iron', vdis: [15, 17, 19] },
+      { id: 'K-hard-iron', iso: 'K', label: 'Hard cast & ductile iron', hint: 'Hard pearlitic ductile or grey iron', vdis: [16, 18, 20] },
+      // N. Aluminium & soft metals
+      { id: 'N-soft-aluminium', iso: 'N', label: 'Soft wrought aluminium', hint: 'e.g. 1050, 5083 plate, extrusion', vdis: [21] },
+      { id: 'N-hard-aluminium', iso: 'N', label: 'Heat treated aluminium 6061 / 7075', hint: 'Stronger tempers like T6, T651', vdis: [22] },
+      { id: 'N-cast-aluminium', iso: 'N', label: 'Cast aluminium', hint: 'Engine blocks, sand or die castings', vdis: [23, 24, 25] },
+      { id: 'N-brass-bronze', iso: 'N', label: 'Brass & bronze', hint: 'Bushes, fittings, bearing bronze', vdis: [26, 27] },
+      { id: 'N-copper', iso: 'N', label: 'Copper', hint: 'Pure copper, electrical copper', vdis: [28] },
+      { id: 'N-plastics', iso: 'N', label: 'Plastics, composites, wood', hint: 'Plastics, FRP, laminates, timber', vdis: [29, 30] },
+      // S. Titanium & super alloys
+      { id: 'S-superalloy-annealed', iso: 'S', label: 'Nickel & cobalt alloys. annealed', hint: 'Inconel, Hastelloy before hard service', vdis: [31, 33] },
+      { id: 'S-superalloy-hard', iso: 'S', label: 'Nickel & cobalt alloys. hardened', hint: 'Inconel in service, turbine parts', vdis: [32, 34, 35] },
+      { id: 'S-titanium', iso: 'S', label: 'Titanium alloys', hint: 'Commercially pure and Ti-6Al-4V etc', vdis: [36, 37] },
+      // H. Hardened
+      { id: 'H-hardened-steel-55', iso: 'H', label: 'Hardened steel around 55 HRC', hint: 'Die steel. moulds. through hardened parts', vdis: [38, 41] },
+      { id: 'H-hardened-steel-60', iso: 'H', label: 'Hardened steel around 60 HRC', hint: 'Very hard tool steels. thin case hardened', vdis: [39, 40] },
+    ];
 
-        // K. Cast irons
-        {
-          id: 'K-soft-iron',
-          iso: 'K',
-          label: 'Soft / normal cast iron',
-          hint: 'Grey iron, softer ductile iron',
-          vdis: [15, 17, 19],
-        },
-        {
-          id: 'K-hard-iron',
-          iso: 'K',
-          label: 'Hard cast & ductile iron',
-          hint: 'Hard pearlitic ductile or grey iron',
-          vdis: [16, 18, 20],
-        },
+    const isoCards = els('.es-iso-card');
+    const subgradeWrap = el('#es-material-subgrades');
+    const subgradeGrid = el('#es-material-grid');
 
-        // N. Aluminium & soft metals
-        {
-          id: 'N-soft-aluminium',
-          iso: 'N',
-          label: 'Soft wrought aluminium',
-          hint: 'e.g. 1050, 5083 plate, extrusion',
-          vdis: [21],
-        },
-        {
-          id: 'N-hard-aluminium',
-          iso: 'N',
-          label: 'Heat treated aluminium 6061 / 7075',
-          hint: 'Stronger tempers like T6, T651',
-          vdis: [22],
-        },
-        {
-          id: 'N-cast-aluminium',
-          iso: 'N',
-          label: 'Cast aluminium',
-          hint: 'Engine blocks, sand or die castings',
-          vdis: [23, 24, 25],
-        },
-        {
-          id: 'N-brass-bronze',
-          iso: 'N',
-          label: 'Brass & bronze',
-          hint: 'Bushes, fittings, bearing bronze',
-          vdis: [26, 27],
-        },
-        {
-          id: 'N-copper',
-          iso: 'N',
-          label: 'Copper',
-          hint: 'Pure copper, electrical copper',
-          vdis: [28],
-        },
-        {
-          id: 'N-plastics',
-          iso: 'N',
-          label: 'Plastics, composites, wood',
-          hint: 'Plastics, FRP, laminates, timber',
-          vdis: [29, 30],
-        },
+    isoCards.forEach((card) => {
+      card.addEventListener('click', () => {
+        const rawIso = card.dataset.iso || '';
+        const iso = rawIso.trim();
 
-        // S. Titanium & super alloys
-        {
-          id: 'S-superalloy-annealed',
-          iso: 'S',
-          label: 'Nickel & cobalt alloys. annealed',
-          hint: 'Inconel, Hastelloy before hard service',
-          vdis: [31, 33],
-        },
-        {
-          id: 'S-superalloy-hard',
-          iso: 'S',
-          label: 'Nickel & cobalt alloys. hardened',
-          hint: 'Inconel in service, turbine parts',
-          vdis: [32, 34, 35],
-        },
-        {
-          id: 'S-titanium',
-          iso: 'S',
-          label: 'Titanium alloys',
-          hint: 'Commercially pure and Ti-6Al-4V etc',
-          vdis: [36, 37],
-        },
+        isoCards.forEach((c) => c.classList.remove('active'));
+        card.classList.add('active');
 
-        // H. Hardened
-        {
-          id: 'H-hardened-steel-55',
-          iso: 'H',
-          label: 'Hardened steel around 55 HRC',
-          hint: 'Die steel. moulds. through hardened parts',
-          vdis: [38, 41],
-        },
-        {
-          id: 'H-hardened-steel-60',
-          iso: 'H',
-          label: 'Hardened steel around 60 HRC',
-          hint: 'Very hard tool steels. thin case hardened',
-          vdis: [39, 40],
-        },
-      ];
+        selected.iso = iso === 'ANY' ? null : iso;
+        selected.vdi = null;
+        selected.vdis = null;
+        selected.materialLabel = null;
 
-      // material handling using friendly buckets
-      const isoCards = els('.es-iso-card');
-      const subgradeWrap = el('#es-material-subgrades');
-      const subgradeGrid = el('#es-material-grid');
+        if (iso === 'ANY') {
+          subgradeWrap.style.display = 'none';
+          card.closest('.es-step').querySelector('.es-next').disabled = false;
+          return;
+        }
 
-      isoCards.forEach((card) => {
-        card.addEventListener('click', () => {
-          const rawIso = card.dataset.iso || '';
-          const iso = rawIso.trim();
+        const buckets = MATERIAL_BUCKETS.filter((b) => b.iso === iso);
+        const html = buckets
+          .map(
+            (b) =>
+              `<div class="material-group-card es-subgrade"
+                 data-iso="${iso}"
+                 data-vdis="${b.vdis.join('|')}"
+                 data-label="${b.label.replace(/"/g, '&quot;')}">
+                 <div class="mgc-title">${b.label}</div>
+                 <div class="mgc-examples">${b.hint}</div>
+               </div>`
+          )
+          .join('');
 
-          // visual toggle
-          isoCards.forEach((c) => c.classList.remove('active'));
-          card.classList.add('active');
+        subgradeGrid.innerHTML = html;
+        subgradeWrap.style.display = 'block';
 
-          // store ISO for now
-          selected.iso = iso === 'ANY' ? null : iso;
-          selected.vdi = null;
-          selected.vdis = null;
-          selected.materialLabel = null;
+        els('.es-subgrade', subgradeGrid).forEach((sub) => {
+          sub.addEventListener('click', () => {
+            els('.es-subgrade').forEach((s) => s.classList.remove('active'));
+            sub.classList.add('active');
 
-          // if user says "Not sure". skip grade
-          if (iso === 'ANY') {
-            subgradeWrap.style.display = 'none';
+            const vdis = (sub.dataset.vdis || '')
+              .split('|')
+              .map((s) => Number(s.trim()))
+              .filter((n) => !Number.isNaN(n));
+
+            selected.vdi = vdis;
+            const row = MAT.find((x) => vdis.includes(x.vdi));
+            selected.materialLabel = row ? row.user : null;
+
             card.closest('.es-step').querySelector('.es-next').disabled = false;
-            return;
-          }
-
-          const buckets = MATERIAL_BUCKETS.filter((b) => b.iso === iso);
-
-          const html = buckets
-            .map(
-              (b) =>
-                `<div class="material-group-card es-subgrade"
-            data-iso="${iso}"
-            data-vdis="${b.vdis.join('|')}"
-            data-label="${b.label.replace(/"/g, '&quot;')}">
-         <div class="mgc-title">${b.label}</div>
-         <div class="mgc-examples">${b.hint}</div>
-       </div>`
-            )
-            .join('');
-
-          subgradeGrid.innerHTML = html;
-          subgradeWrap.style.display = 'block';
-
-          // bind subgrade buttons
-          els('.es-subgrade', subgradeGrid).forEach((sub) => {
-            sub.addEventListener('click', () => {
-              els('.es-subgrade').forEach((s) => s.classList.remove('active'));
-              sub.classList.add('active');
-
-              const vdis = (sub.dataset.vdis || '')
-                .split('|')
-                .map((s) => Number(s.trim()))
-                .filter((n) => !Number.isNaN(n));
-
-              selected.vdi = vdis; // now an array
-
-              // pick a representative row just for display label
-              const row = MAT.find((x) => vdis.includes(x.vdi));
-              selected.materialLabel = row ? row.user : null;
-
-              card.closest('.es-step').querySelector('.es-next').disabled = false;
-            });
           });
         });
       });
+    });
 
-      // === Editable summary ===
-      const summaryEl = el('#es-editable-summary');
-      const selOp = () => el('#es-sel-operation');
-      const selISO = () => el('#es-sel-iso');
-      const selMat = () => el('#es-sel-material');
-      const selSh = () => el('#es-sel-shape');
-      const selLen = () => el('#es-sel-length');
-      const selDia = () => el('#es-sel-dia');
-      const btnDiaC = () => el('#es-dia-clear');
-      const selType = () => el('#es-sel-type');
+    // === Editable summary ===
+    const summaryEl = el('#es-editable-summary');
+    const selOp = () => el('#es-sel-operation');
+    const selISO = () => el('#es-sel-iso');
+    const selMat = () => el('#es-sel-material');
+    const selSh = () => el('#es-sel-shape');
+    const selLen = () => el('#es-sel-length');
+    const selDia = () => el('#es-sel-dia');
+    const btnDiaC = () => el('#es-dia-clear');
+    const selType = () => el('#es-sel-type');
 
-      function buildMaterialOptions(iso, currentVDI) {
-        const opts = [`<option value="">Any</option>`];
-        MAT.filter((m) => m.iso === iso).forEach((m) => {
-          const label = `${m.user} · VDI ${m.vdi}`;
-          const sel = currentVDI === m.vdi ? ' selected' : '';
-          opts.push(`<option value="${m.vdi}"${sel}>${label}</option>`);
-        });
-        selMat().innerHTML = opts.join('');
-      }
+    function buildMaterialOptions(iso, currentVDI) {
+      const opts = [`<option value="">Any</option>`];
+      MAT.filter((m) => m.iso === iso).forEach((m) => {
+        const label = `${m.user} · VDI ${m.vdi}`;
+        const sel = currentVDI === m.vdi ? ' selected' : '';
+        opts.push(`<option value="${m.vdi}"${sel}>${label}</option>`);
+      });
+      selMat().innerHTML = opts.join('');
+    }
 
-      function syncSummaryFromState() {
-        // Operation
-        selOp().value = selected.operationTag || '';
-        // ISO + material
-        selISO().value = selected.iso || 'P';
-        buildMaterialOptions(selISO().value, selected.vdi ?? null);
-        // Shape
-        selSh().value = selected.shapeTag || '';
-        // Diameter
-        selDia().value = selected.diameter != null ? String(selected.diameter) : '';
-        selLen().value = selected.lengthTag || '';
-        selType().value = selected.typeTag || '';
-      }
+    function syncSummaryFromState() {
+      selOp().value = selected.operationTag || '';
+      selISO().value = selected.iso || 'P';
+      buildMaterialOptions(selISO().value, selected.vdi ?? null);
+      selSh().value = selected.shapeTag || '';
+      selDia().value = selected.diameter != null ? String(selected.diameter) : '';
+      selLen().value = selected.lengthTag || '';
+      selType().value = selected.typeTag || '';
+    }
 
-      function attachSummaryHandlersOnce() {
-        if (summaryEl.dataset.bound === '1') return;
+    function attachSummaryHandlersOnce() {
+      if (summaryEl.dataset.bound === '1') return;
 
-        selOp().addEventListener('change', () => {
-          selected.operationTag = selOp().value || null;
-          renderResults();
-          renderChips();
-        });
-
-        selType().addEventListener('change', () => {
-          selected.typeTag = selType().value || null;
-          if (selected.typeTag) {
-            // make Length = Any
-            selLen().value = '';
-            selected.lengthTag = null;
-          }
-          renderResults();
-          renderChips();
-        });
-
-        selISO().addEventListener('change', () => {
-          selected.iso = selISO().value;
-          // ISO change clears VDI selection until user picks one
-          selected.vdi = null;
-          selected.materialLabel = null;
-          buildMaterialOptions(selected.iso, null);
-          renderResults();
-          renderChips();
-        });
-
-        selMat().addEventListener('change', () => {
-          const v = selMat().value;
-          if (v === '') {
-            selected.vdi = null;
-            selected.materialLabel = null;
-          } else {
-            selected.vdi = Number(v);
-            const m = MAT.find((x) => x.vdi === selected.vdi);
-            selected.materialLabel = m ? m.user : null;
-            selected.iso = m ? m.iso : selected.iso;
-            selISO().value = selected.iso; // keep ISO select in sync
-          }
-          renderResults();
-          renderChips();
-        });
-
-        selSh().addEventListener('change', () => {
-          selected.shapeTag = selSh().value || null;
-          renderResults();
-          renderChips();
-        });
-
-        selLen().addEventListener('change', () => {
-          selected.lengthTag = selLen().value || null;
-          if (selected.lengthTag) {
-            // make Type = Any
-            selType().value = '';
-            selected.typeTag = null;
-          }
-          renderResults();
-          renderChips();
-        });
-
-        selDia().addEventListener('input', () => {
-          const v = selDia().value.trim();
-          selected.diameter = v === '' ? null : Number(v);
-          renderResults();
-          renderChips();
-        });
-
-        btnDiaC().addEventListener('click', () => {
-          selDia().value = '';
-          selected.diameter = null;
-          renderResults();
-          renderChips();
-        });
-
-        summaryEl.dataset.bound = '1';
-      }
-
-      function showSummary() {
-        summaryEl.style.display = 'block';
-        attachSummaryHandlersOnce();
-        syncSummaryFromState();
-      }
-
-      // clear UI selections within a step
-      function clearSelectionsIn(stepEl) {
-        if (!stepEl) return;
-        // unselect all toggles in this step
-        Array.from(stepEl.querySelectorAll('[aria-selected]')).forEach((b) => b.setAttribute('aria-selected', 'false'));
-        // clear inputs in this step
-        Array.from(stepEl.querySelectorAll('input[type="number"],input[type="text"]')).forEach((i) => (i.value = ''));
-      }
-
-      function doFinish() {
-        setStep(4);
+      selOp().addEventListener('change', () => {
+        selected.operationTag = selOp().value || null;
         renderResults();
         renderChips();
-        showSummary();
-        window.scrollTo({ top: el('#es-results').offsetTop - 20, behavior: 'smooth' });
-      }
-
-      // Skip buttons: set this step to "Any" and advance
-      els('.es-skip').forEach((btn) => {
-        btn.addEventListener('click', () => {
-          const stepEl = btn.closest('.es-step');
-          const n = Number(stepEl?.dataset.step || 0);
-
-          switch (n) {
-            case 1: // Operation -> Any
-              selected.operationTag = null;
-              break;
-            case 2: // Material -> Any (keep ISO tab as-is. clear VDI)
-              selected.vdi = null;
-              selected.materialLabel = null;
-              break;
-            case 3: // Shape -> Any
-              selected.shapeTag = null;
-              break;
-            case 4: // Length/Type -> Any
-              selected.lengthTag = null;
-              selected.typeTag = null;
-              break;
-            case 5: // Diameter -> Any. then finish
-              selected.diameter = null;
-              el('#es-dia').value = '';
-              clearSelectionsIn(stepEl);
-              doFinish();
-              return; // don't call setStep again
-          }
-
-          clearSelectionsIn(stepEl);
-          setStep(Math.min(5, n + 1));
-        });
       });
 
-      // Shape choices
-      els('.es-shape').forEach((btn) => {
-        btn.addEventListener('click', () => {
-          els('.es-shape').forEach((b) => b.setAttribute('aria-selected', 'false'));
-          btn.setAttribute('aria-selected', 'true');
-          selected.shapeTag = btn.dataset.tag;
-          btn.closest('.es-step').querySelector('.es-next').disabled = false;
-        });
-      });
-
-      // Length choices
-      els('.es-length').forEach((btn) => {
-        btn.addEventListener('click', () => {
-          // clear Type selections
-          els('.es-type').forEach((b) => b.setAttribute('aria-selected', 'false'));
-          selected.typeTag = null;
-
-          // set Length
-          els('.es-length').forEach((b) => b.setAttribute('aria-selected', 'false'));
-          btn.setAttribute('aria-selected', 'true');
-          selected.lengthTag = btn.dataset.tag;
-
-          btn.closest('.es-step').querySelector('.es-next').disabled = false;
-        });
-      });
-
-      els('.es-type').forEach((btn) => {
-        btn.addEventListener('click', () => {
-          // clear Length selections
-          els('.es-length').forEach((b) => b.setAttribute('aria-selected', 'false'));
+      selType().addEventListener('change', () => {
+        selected.typeTag = selType().value || null;
+        if (selected.typeTag) {
+          selLen().value = '';
           selected.lengthTag = null;
-
-          // set Type
-          els('.es-type').forEach((b) => b.setAttribute('aria-selected', 'false'));
-          btn.setAttribute('aria-selected', 'true');
-          selected.typeTag = btn.dataset.tag;
-
-          btn.closest('.es-step').querySelector('.es-next').disabled = false;
-        });
-      });
-
-      // Diameter
-      el('#es-dia').addEventListener('input', (e) => {
-        const v = e.target.value.trim();
-        selected.diameter = v === '' ? null : Number(v);
-      });
-
-      // Nav buttons
-      els('.es-next').forEach((b) => b.addEventListener('click', () => setStep(Math.min(5, step + 1))));
-      els('.es-prev').forEach((b) => b.addEventListener('click', () => setStep(Math.max(1, step - 1))));
-      el('.es-finish').addEventListener('click', () => {
-        setStep(5);
+        }
         renderResults();
         renderChips();
-        showSummary();
-        window.scrollTo({ top: el('#es-results').offsetTop - 20, behavior: 'smooth' });
       });
-      // Reset
-      el('#es-reset').addEventListener('click', () => {
-        // clear selections
-        selected.operationTag = null;
-        selected.iso = 'P';
+
+      selISO().addEventListener('change', () => {
+        selected.iso = selISO().value;
         selected.vdi = null;
         selected.materialLabel = null;
-        selected.shapeTag = null;
-        selected.lengthTag = null;
-        selected.typeTag = null;
-        selected.diameter = null;
-
-        // UI reset
-        els('.es-op,.es-mat,.es-shape,.es-length,.es-type').forEach((b) => b.setAttribute('aria-selected', 'false'));
-        els('.es-next').forEach((n) => (n.disabled = true));
-        els('.es-iso-tab').forEach((t, i) => t.setAttribute('aria-selected', String(i === 0)));
-        el('#es-dia').value = '';
-        el('#es-chips').style.display = 'none';
-        el('#es-grid').innerHTML = '';
-        el('#es-empty').style.display = 'none';
-        setStep(1);
-
-        summaryEl.style.display = 'none';
-        if (summaryEl.dataset.bound !== '1') attachSummaryHandlersOnce();
-        // default selects
-        selOp().value = '';
-        selISO().value = 'P';
-        buildMaterialOptions('P', null);
-        selMat().value = '';
-        selSh().value = '';
-        selDia().value = '';
-        selLen().value = '';
-        selType().value = '';
+        buildMaterialOptions(selected.iso, null);
+        renderResults();
+        renderChips();
       });
 
-      // Data load via JSON endpoint
-(async () => {
-  const rawProducts = await ES_loadAllProducts();
-
-  // Map JSON from /products.json into the shape your selector expects.
-  const PRODUCT_DATA = rawProducts.map((p) => {
-    return {
-      id: p.id,
-      handle: p.handle,
-      title: p.title,
-      url: `/products/${p.handle}`,
-      tags: p.tags || [],
-      // TODO. map your vdi_good & vdi_excellent metafields from p.metafields if exposed,
-      vdi_good: [],
-      vdi_excellent: [],
-      option_names: (p.options || []).map((o) => o.name),
-      diameters: (p.variants || []).map((v) => Number(String(v.option1 || '').replace(',', '.'))).filter((n) => !isNaN(n)),
-      variants: (p.variants || []).map((v) => ({
-        id: v.id,
-        sku: v.sku,
-        price: v.price,
-        compare_at_price: v.compare_at_price,
-        available: v.available,
-        inventory_management: v.inventory_management,
-        inventory_quantity: v.inventory_quantity,
-        inventory_policy: v.inventory_policy,
-        incoming: v.incoming,
-        next_incoming_date: v.next_incoming_date,
-        options: [v.option1, v.option2, v.option3],
-        dia_mm: v.option1 || '',
-        corner_radius_mm: v.option2 || '',
-        shank_diameter_mm_opt: v.option3 || '',
-        shank_diameter_mm_mf: null,
-        length_of_cut_mm: null,
-      })),
-    };
-  });
-
-  window.PRODUCT_DATA = PRODUCT_DATA;
-
-  // If you still want to store the JSON somewhere in DOM
-  const tplJson = document.getElementById('es-products-json');
-  if (tplJson) {
-    tplJson.textContent = JSON.stringify(PRODUCT_DATA);
-  }
-
-  // You will also need to adjust renderResults() to not rely on Liquid-built <template id="tpl-{{id}}">.
-  // Easiest. render simple cards in JS instead of cloning Liquid templates.
-})();
-
-
-console.log('[ES DEBUG] 4G products in DATASET:', debugFourGInDataset.length, debugFourGInDataset);
-
-
-      function hasExcludedTag(p) {
-        const t = p.tags.map(normalizeTag);
-        return t.includes('operationblinddrilling') || t.includes('operationthroughdrilling');
-      }
-
-      // === HARD DEBUG FOR 4G MILL COVERAGE ===
-window.ES_DEBUG = window.ES_DEBUG || {};
-
-window.ES_DEBUG.dump4G = function () {
-  const all = window.PRODUCT_DATA || [];
-  const inDataset = (DATASET || []);
-
-  const all4g = all.filter(p =>
-    /4g/i.test(p.title || '') ||
-    /4g/i.test(p.handle || '') ||
-    (p.tags || []).some(t => /4g/i.test(t))
-  );
-
-  const dataset4g = inDataset.filter(p =>
-    /4g/i.test(p.title || '') ||
-    /4g/i.test(p.handle || '') ||
-    (p.tags || []).some(t => /4g/i.test(t))
-  );
-
-  console.log('[ES DEBUG] PRODUCT_DATA size:', all.length);
-  console.log('[ES DEBUG] 4G in PRODUCT_DATA:', all4g.length, all4g.map(p => ({
-    id: p.id,
-    handle: p.handle,
-    title: p.title,
-    tags: p.tags
-  })));
-
-  console.log('[ES DEBUG] DATASET size (endmills only):', inDataset.length);
-  console.log('[ES DEBUG] 4G in DATASET:', dataset4g.length, dataset4g.map(p => ({
-    id: p.id,
-    handle: p.handle,
-    title: p.title,
-    tags: p.tags
-  })));
-};
-
-
-      function matchesProduct(p) {
-        const tagsNorm = p.tags.map(normalizeTag);
-
-        // Exclude all Blind / Through drilling operations
-        if (tagsNorm.includes('operationblinddrilling') || tagsNorm.includes('operationthroughdrilling')) {
-          return false;
-        }
-
-        // Operation tag
-        if (selected.operationTag) {
-          const opNorm = normalizeTag(selected.operationTag);
-          if (!tagsNorm.includes(opNorm)) return false;
-        }
-
-        // Shape tag
-        if (selected.shapeTag) {
-          const shapeNorm = normalizeTag(selected.shapeTag);
-          if (!tagsNorm.includes(shapeNorm)) return false;
-        }
-
-        // Length vs Type. only one applies
-        if (selected.typeTag) {
-          const tNorm = normalizeTag(selected.typeTag);
-          if (!tagsNorm.includes(tNorm)) return false;
-        } else if (selected.lengthTag) {
-          const lenNorm = normalizeTag(selected.lengthTag);
-          if (!tagsNorm.includes(lenNorm)) return false;
-        }
-
-        // Material VDI (single or multiple)
-        if (selected.vdi != null) {
-          const wantVdis = Array.isArray(selected.vdi)
-            ? selected.vdi.map(Number).filter((n) => !Number.isNaN(n))
-            : [Number(selected.vdi)];
-
-          if (!wantVdis.length) return false;
-
-          const good = (p.vdi_good || []).map(Number).filter((n) => !Number.isNaN(n));
-          const exc = (p.vdi_excellent || []).map(Number).filter((n) => !Number.isNaN(n));
-          const prodSet = new Set([...good, ...exc]);
-
-          const matchesAny = wantVdis.some((v) => prodSet.has(v));
-          if (!matchesAny) return false;
-        }
-
-        // Diameter
-        if (selected.diameter != null) {
-          const want = Number(selected.diameter);
-          const has = (p.diameters || []).some((d) => Math.abs(d - want) < 0.01);
-          if (!has) return false;
-        }
-
-        return true;
-      }
-
-      // Render results
-      function renderResults() {
-        const grid = el('#es-grid');
-        grid.innerHTML = '';
-        const matches = DATASET.filter(matchesProduct);
-
-        if (matches.length === 0) {
-          el('#es-empty').style.display = 'block';
-          return;
-        }
-        el('#es-empty').style.display = 'none';
-
-        // Prioritize products that mark any of the selected VDIs as excellent
-        matches.sort((a, b) => {
-          if (selected.vdi == null) return 0;
-
-          const wantVdis = Array.isArray(selected.vdi) ? selected.vdi : [selected.vdi];
-
-          const ax = wantVdis.some((v) => (a.vdi_excellent || []).includes(Number(v)));
-          const bx = wantVdis.some((v) => (b.vdi_excellent || []).includes(Number(v)));
-
-          if (ax === bx) return 0;
-          return bx - ax; // true > false
-        });
-
-        const frag = document.createDocumentFragment();
-        matches.forEach((p) => {
-          const tpl = el(`#tpl-${p.id}`);
-          if (!(tpl && 'content' in tpl)) return;
-          const node = tpl.content.cloneNode(true);
-
-          // pick exact variant by diameter if provided
-          let matchVid = null;
-          if (selected.diameter != null) {
-            const want = Number(selected.diameter);
-            // tolerate 0.01 mm
-            const v = (p.variants || []).find((vv) => {
-              const d = Number(String(vv.dia_mm || '').replace(',', '.'));
-              return !isNaN(d) && Math.abs(d - want) < 0.01;
-            });
-            if (v) matchVid = String(v.id);
-          }
-          // fallback: first available
-          if (!matchVid && p.variants && p.variants.length) {
-            const avail = p.variants.find((vv) => vv.available) || p.variants[0];
-            matchVid = String(avail.id);
-          }
-
-          // annotate card root so the snippet script can hydrate
-          const root = node.querySelector('.product-grid-item');
-          if (root) {
-            root.setAttribute('data-variant-id', matchVid || '');
-            // stash product JSON for the card hydrator
-            root.setAttribute('data-product-json', JSON.stringify(p));
-            // annotate suitability info
-            let suitability = '';
-            if (selected.vdi != null) {
-              const vd = Number(selected.vdi);
-              const isExc = (p.vdi_excellent || []).includes(vd);
-              suitability = isExc ? 'Excellent' : 'Good';
-            }
-            root.setAttribute('data-suitability', suitability);
-            root.setAttribute('data-op-label', selected.operationTag || '');
-            root.setAttribute('data-material-label', selected.materialLabel || '');
-          }
-
-          frag.appendChild(node);
-        });
-        grid.appendChild(frag);
-
-        // tell cards to hydrate themselves now that attributes are set
-        grid.querySelectorAll('.product-grid-item').forEach((el) => {
-          el.dispatchEvent(new CustomEvent('es:hydrate-card', { bubbles: true }));
-        });
-
-        el('#es-chips').style.display = 'flex';
-      }
-
-      // Chips summary
-      function renderChips() {
-        const chipIso = el('#chip-iso');
-        if (selected.iso) {
-          chipIso.style.display = 'inline-grid';
-          chipIso.dataset.m = selected.iso;
-          chipIso.textContent = selected.iso;
+      selMat().addEventListener('change', () => {
+        const v = selMat().value;
+        if (v === '') {
+          selected.vdi = null;
+          selected.materialLabel = null;
         } else {
-          chipIso.style.display = 'none';
+          selected.vdi = Number(v);
+          const m = MAT.find((x) => x.vdi === selected.vdi);
+          selected.materialLabel = m ? m.user : null;
+          selected.iso = m ? m.iso : selected.iso;
+          selISO().value = selected.iso;
         }
-        // You can add more chips here if you want visible operation/shape/diameter.
+        renderResults();
+        renderChips();
+      });
+
+      selSh().addEventListener('change', () => {
+        selected.shapeTag = selSh().value || null;
+        renderResults();
+        renderChips();
+      });
+
+      selLen().addEventListener('change', () => {
+        selected.lengthTag = selLen().value || null;
+        if (selected.lengthTag) {
+          selType().value = '';
+          selected.typeTag = null;
+        }
+        renderResults();
+        renderChips();
+      });
+
+      selDia().addEventListener('input', () => {
+        const v = selDia().value.trim();
+        selected.diameter = v === '' ? null : Number(v);
+        renderResults();
+        renderChips();
+      });
+
+      btnDiaC().addEventListener('click', () => {
+        selDia().value = '';
+        selected.diameter = null;
+        renderResults();
+        renderChips();
+      });
+
+      summaryEl.dataset.bound = '1';
+    }
+
+    function showSummary() {
+      summaryEl.style.display = 'block';
+      attachSummaryHandlersOnce();
+      syncSummaryFromState();
+    }
+
+    function clearSelectionsIn(stepEl) {
+      if (!stepEl) return;
+      Array.from(stepEl.querySelectorAll('[aria-selected]')).forEach((b) => b.setAttribute('aria-selected', 'false'));
+      Array.from(stepEl.querySelectorAll('input[type="number"],input[type="text"]')).forEach((i) => (i.value = ''));
+    }
+
+    function doFinish() {
+      setStep(4);
+      renderResults();
+      renderChips();
+      showSummary();
+      window.scrollTo({ top: el('#es-results').offsetTop - 20, behavior: 'smooth' });
+    }
+
+    els('.es-skip').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const stepEl = btn.closest('.es-step');
+        const n = Number(stepEl?.dataset.step || 0);
+
+        switch (n) {
+          case 1:
+            selected.operationTag = null;
+            break;
+          case 2:
+            selected.vdi = null;
+            selected.materialLabel = null;
+            break;
+          case 3:
+            selected.shapeTag = null;
+            break;
+          case 4:
+            selected.lengthTag = null;
+            selected.typeTag = null;
+            break;
+          case 5:
+            selected.diameter = null;
+            el('#es-dia').value = '';
+            clearSelectionsIn(stepEl);
+            doFinish();
+            return;
+        }
+
+        clearSelectionsIn(stepEl);
+        setStep(Math.min(5, n + 1));
+      });
+    });
+
+    els('.es-shape').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        els('.es-shape').forEach((b) => b.setAttribute('aria-selected', 'false'));
+        btn.setAttribute('aria-selected', 'true');
+        selected.shapeTag = btn.dataset.tag;
+        btn.closest('.es-step').querySelector('.es-next').disabled = false;
+      });
+    });
+
+    els('.es-length').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        els('.es-type').forEach((b) => b.setAttribute('aria-selected', 'false'));
+        selected.typeTag = null;
+
+        els('.es-length').forEach((b) => b.setAttribute('aria-selected', 'false'));
+        btn.setAttribute('aria-selected', 'true');
+        selected.lengthTag = btn.dataset.tag;
+
+        btn.closest('.es-step').querySelector('.es-next').disabled = false;
+      });
+    });
+
+    els('.es-type').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        els('.es-length').forEach((b) => b.setAttribute('aria-selected', 'false'));
+        selected.lengthTag = null;
+
+        els('.es-type').forEach((b) => b.setAttribute('aria-selected', 'false'));
+        btn.setAttribute('aria-selected', 'true');
+        selected.typeTag = btn.dataset.tag;
+
+        btn.closest('.es-step').querySelector('.es-next').disabled = false;
+      });
+    });
+
+    el('#es-dia').addEventListener('input', (e) => {
+      const v = e.target.value.trim();
+      selected.diameter = v === '' ? null : Number(v);
+    });
+
+    els('.es-next').forEach((b) => b.addEventListener('click', () => setStep(Math.min(5, step + 1))));
+    els('.es-prev').forEach((b) => b.addEventListener('click', () => setStep(Math.max(1, step - 1))));
+    el('.es-finish').addEventListener('click', () => {
+      setStep(5);
+      renderResults();
+      renderChips();
+      showSummary();
+      window.scrollTo({ top: el('#es-results').offsetTop - 20, behavior: 'smooth' });
+    });
+
+    el('#es-reset').addEventListener('click', () => {
+      selected.operationTag = null;
+      selected.iso = 'P';
+      selected.vdi = null;
+      selected.materialLabel = null;
+      selected.shapeTag = null;
+      selected.lengthTag = null;
+      selected.typeTag = null;
+      selected.diameter = null;
+
+      els('.es-op,.es-mat,.es-shape,.es-length,.es-type').forEach((b) => b.setAttribute('aria-selected', 'false'));
+      els('.es-next').forEach((n) => (n.disabled = true));
+      el('#es-dia').value = '';
+      el('#es-chips').style.display = 'none';
+      el('#es-grid').innerHTML = '';
+      el('#es-empty').style.display = 'none';
+      setStep(1);
+
+      summaryEl.style.display = 'none';
+      if (summaryEl.dataset.bound !== '1') attachSummaryHandlersOnce();
+      selOp().value = '';
+      selISO().value = 'P';
+      buildMaterialOptions('P', null);
+      selMat().value = '';
+      selSh().value = '';
+      selDia().value = '';
+      selLen().value = '';
+      selType().value = '';
+    });
+
+    // ---------- Data load + dataset build ----------
+    async function initProducts() {
+      const rawProducts = await ES_loadAllProducts();
+
+      PRODUCT_DATA = rawProducts.map((p) => {
+        return {
+          id: p.id,
+          handle: p.handle,
+          title: p.title,
+          url: `/products/${p.handle}`,
+          tags: p.tags || [],
+          vdi_good: [],       // TODO: wire metafields if you expose them in the JSON
+          vdi_excellent: [],
+          option_names: (p.options || []).map((o) => o.name),
+          diameters: (p.variants || [])
+            .map((v) => Number(String(v.option1 || '').replace(',', '.')))
+            .filter((n) => !isNaN(n)),
+          variants: (p.variants || []).map((v) => ({
+            id: v.id,
+            sku: v.sku,
+            price: v.price,
+            compare_at_price: v.compare_at_price,
+            available: v.available,
+            inventory_management: v.inventory_management,
+            inventory_quantity: v.inventory_quantity,
+            inventory_policy: v.inventory_policy,
+            incoming: v.incoming,
+            next_incoming_date: v.next_incoming_date,
+            options: [v.option1, v.option2, v.option3],
+            dia_mm: v.option1 || '',
+            corner_radius_mm: v.option2 || '',
+            shank_diameter_mm_opt: v.option3 || '',
+            shank_diameter_mm_mf: null,
+            length_of_cut_mm: null,
+          })),
+        };
+      });
+
+      window.PRODUCT_DATA = PRODUCT_DATA;
+
+      DATASET = PRODUCT_DATA.filter((p) => isEndmill(p) && !hasExcludedTag(p));
+      console.log('[ES DEBUG] PRODUCT_DATA size:', PRODUCT_DATA.length);
+      console.log('[ES DEBUG] DATASET (endmills only):', DATASET.length);
+    }
+
+    // ---------- Filtering and rendering ----------
+    function matchesProduct(p) {
+      const tagsNorm = (p.tags || []).map(normalizeTag);
+
+      if (tagsNorm.includes('operationblinddrilling') || tagsNorm.includes('operationthroughdrilling')) {
+        return false;
       }
 
-      // Initial
-      setStep(1);
-    })();
-  </script>
+      if (selected.operationTag) {
+        const opNorm = normalizeTag(selected.operationTag);
+        if (!tagsNorm.includes(opNorm)) return false;
+      }
+
+      if (selected.shapeTag) {
+        const shapeNorm = normalizeTag(selected.shapeTag);
+        if (!tagsNorm.includes(shapeNorm)) return false;
+      }
+
+      if (selected.typeTag) {
+        const tNorm = normalizeTag(selected.typeTag);
+        if (!tagsNorm.includes(tNorm)) return false;
+      } else if (selected.lengthTag) {
+        const lenNorm = normalizeTag(selected.lengthTag);
+        if (!tagsNorm.includes(lenNorm)) return false;
+      }
+
+      if (selected.vdi != null) {
+        const wantVdis = Array.isArray(selected.vdi)
+          ? selected.vdi.map(Number).filter((n) => !Number.isNaN(n))
+          : [Number(selected.vdi)];
+
+        if (!wantVdis.length) return false;
+
+        const good = (p.vdi_good || []).map(Number).filter((n) => !Number.isNaN(n));
+        const exc = (p.vdi_excellent || []).map(Number).filter((n) => !Number.isNaN(n));
+        const prodSet = new Set([...good, ...exc]);
+
+        const matchesAny = wantVdis.some((v) => prodSet.has(v));
+        if (!matchesAny) return false;
+      }
+
+      if (selected.diameter != null) {
+        const want = Number(selected.diameter);
+        const has = (p.diameters || []).some((d) => Math.abs(d - want) < 0.01);
+        if (!has) return false;
+      }
+
+      return true;
+    }
+
+    function renderResults() {
+      const grid = el('#es-grid');
+      grid.innerHTML = '';
+
+      if (!DATASET.length) {
+        // Data not loaded yet
+        el('#es-empty').style.display = 'block';
+        el('#es-empty').textContent = 'Loading products...';
+        return;
+      }
+
+      const matches = DATASET.filter(matchesProduct);
+
+      if (matches.length === 0) {
+        el('#es-empty').style.display = 'block';
+        el('#es-empty').textContent = 'No matching products. Loosen a filter or clear Diameter.';
+        return;
+      }
+      el('#es-empty').style.display = 'none';
+
+      const frag = document.createDocumentFragment();
+      matches.forEach((p) => {
+        const card = document.createElement('article');
+        card.className = 'product-grid-item collection-grid-item';
+        card.innerHTML = `
+          <a href="${p.url}" class="product-grid-item__link">
+            <div class="product-grid-item__title h5">${p.title}</div>
+          </a>
+        `;
+        frag.appendChild(card);
+      });
+      grid.appendChild(frag);
+
+      el('#es-chips').style.display = 'flex';
+    }
+
+    function renderChips() {
+      const chipIso = el('#chip-iso');
+      if (selected.iso) {
+        chipIso.style.display = 'inline-grid';
+        chipIso.dataset.m = selected.iso;
+        chipIso.textContent = selected.iso;
+      } else {
+        chipIso.style.display = 'none';
+      }
+    }
+
+    // ---------- Debug helper for 4G coverage ----------
+    window.ES_DEBUG = window.ES_DEBUG || {};
+    window.ES_DEBUG.dump4G = function () {
+      const all = PRODUCT_DATA || [];
+      const inDataset = DATASET || [];
+
+      const all4g = all.filter(
+        (p) =>
+          /4g/i.test(p.title || '') ||
+          /4g/i.test(p.handle || '') ||
+          (p.tags || []).some((t) => /4g/i.test(t))
+      );
+
+      const dataset4g = inDataset.filter(
+        (p) =>
+          /4g/i.test(p.title || '') ||
+          /4g/i.test(p.handle || '') ||
+          (p.tags || []).some((t) => /4g/i.test(t))
+      );
+
+      console.log('[ES DEBUG] PRODUCT_DATA size:', all.length);
+      console.log('[ES DEBUG] 4G in PRODUCT_DATA:', all4g.length, all4g);
+      console.log('[ES DEBUG] DATASET size (endmills only):', inDataset.length);
+      console.log('[ES DEBUG] 4G in DATASET:', dataset4g.length, dataset4g);
+    };
+
+    // ---------- Boot ----------
+    initProducts();
+    setStep(1);
+  })();
+</script>
 
   <style>
                         /* Wizard step transitions */
