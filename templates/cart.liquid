@@ -660,11 +660,20 @@
 
               {%- comment -%} Excision: Minimum Order progress (server baseline) {%- endcomment -%}
               {%- assign MIN_CENTS = 20000 -%}
-              {%- assign subtotal_cents = cart.total_price -%}
-              {%- assign remaining_cents = MIN_CENTS | minus: subtotal_cents -%}
-              {%- if remaining_cents < 0 -%}{%- assign remaining_cents = 0 -%}{%- endif -%}
-              {%- assign pct = subtotal_cents | times: 100 | divided_by: MIN_CENTS -%}
-              {%- if pct > 100 -%}{%- assign pct = 100 -%}{%- endif -%}
+{%- assign ex_min_override = cart.attributes.ex_min_order_override | default: '' | strip -%}
+
+{%- if ex_min_override == '1' -%}
+  {%- assign effective_min_cents = 0 -%}
+{%- else -%}
+  {%- assign effective_min_cents = MIN_CENTS -%}
+{%- endif -%}
+
+{%- assign subtotal_cents = cart.total_price -%}
+{%- assign remaining_cents = effective_min_cents | minus: subtotal_cents -%}
+{%- if remaining_cents < 0 -%}{%- assign remaining_cents = 0 -%}{%- endif -%}
+{%- assign pct = subtotal_cents | times: 100 | divided_by: effective_min_cents -%}
+{%- if pct > 100 -%}{%- assign pct = 100 -%}{%- endif -%}
+
             </div>
 
             {%- comment -%} === Discount-aware totals (compute BEFORE GST & Total rows) === {%- endcomment -%}
@@ -803,7 +812,7 @@
             <div
               id="ex-min-order-cart"
               class="ex-min-order {% if remaining_cents == 0 %}ex-min-order--ok{% endif %}"
-              data-min="{{ MIN_CENTS }}"
+                data-min="{{ effective_min_cents }}"
               aria-live="polite"
             >
               <div class="ex-min-order__row">
@@ -844,16 +853,17 @@
                 value="{{ 'cart.general.update' | t }}"
               >
               <button
-                type="submit"
-                name="checkout"
-                id="ex-checkout"
-                class="btn checkout"
-                {% if remaining_cents > 0 %}
-                  disabled aria-disabled="true"
-                {% endif %}
-              >
-                Checkout
-              </button>
+  type="submit"
+  name="checkout"
+  id="ex-checkout"
+  class="btn checkout"
+  {% if remaining_cents > 0 and ex_min_override != '1' %}
+    disabled aria-disabled="true"
+  {% endif %}
+>
+  Checkout
+</button>
+
             </div>
           </div>
         </aside>
@@ -1079,6 +1089,11 @@
     margin-top: 10px; }
 
 </style>
+
+<script>
+  window.EX_MIN_ORDER_OVERRIDE = {{ cart.attributes.ex_min_order_override | default: '' | strip | json }};
+</script>
+
 
 <script>
   // Remove only the clicked line using the *line item key* (preferred), else line index
