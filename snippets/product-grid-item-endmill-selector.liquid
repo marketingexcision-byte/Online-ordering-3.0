@@ -397,7 +397,7 @@
     let status = 'grey', text = 'Quantity unavailable';
     if (v.inventory_management){
       const q = Number(v.inventory_quantity || 0);
-      if (q > 5){ status='green'; text='In stock'; }
+      if (q > 3){ status='green'; text='In stock'; }
       else if (q > 0){ status='orange'; text='Low stock'; }
       else{
         if (v.incoming && v.next_incoming_date){ status='blue'; text='Restocking'; }
