@@ -308,80 +308,10 @@
     </div>
   </div>
 
-  {%- comment -%}Force selector to read from the entire catalog{%- endcomment -%}
-  {% assign coll = collections['all-endmills'] %}
+  {%- comment -%}Templates will be filled by JS after fetching all pages{%- endcomment -%}
+<template id="es-products-json"></template>
+<div id="es-product-templates" style="display:none;"></div>
 
-  {% paginate coll.products by 1000 %}
-    <template id="es-products-json">
-      [
-      {% for product in coll.products %}
-        {% assign vdi_good = product.metafields.custom.vdi_good.value
-          | default: product.metafields.custom.vdi_good
-          | default: blank
-        %}
-        {% assign vdi_exc = product.metafields.custom.vdi_excellent.value
-          | default: product.metafields.custom.vdi_excellent
-          | default: blank
-        %}
-
-        {%- comment -%} gather diameters from variants by option name {%- endcomment -%}
-        {%- assign dia_values = '' -%}
-        {%- assign dia_index = null -%}
-        {%- for opt in product.options_with_values -%}
-          {%- if opt.name == 'Mill Diameter (mm)' -%}{%- assign dia_index = forloop.index0 -%}{%- endif -%}
-        {%- endfor -%}
-        {%- if dia_index == null -%}{%- assign dia_index = 0 -%}{%- endif -%}
-        {%- assign dlist = '' -%}
-        {%- for v in product.variants -%}
-          {%- assign d = v.options[dia_index] | strip -%}
-          {%- if d and d != '' -%}
-            {%- capture dlist -%}{{ dlist }}{% if dlist != '' %},{% endif %}"{{ d | replace: '"','\"' }}"{%- endcapture -%}
-          {%- endif -%}
-        {%- endfor -%}
-
-        { "id": {{ product.id }}, "handle": {{ product.handle | json }}, "title": {{ product.title | json }}, "url":
-        {{ product.url | json }}, "tags": {{ product.tags | json }}, "vdi_good":
-        {{ vdi_good | default: '[]' | json | replace: '\"[', '[' | replace: ']\"', ']' }}, "vdi_excellent":
-        {{ vdi_exc | default: '[]' | json | replace: '\"[', '[' | replace: ']\"', ']' }}, "option_names":
-        {{ product.options_with_values | map: 'name' | json }}, "diameters": [{{ dlist }}], "variants": [
-        {%- for v in product.variants -%}
-          {%- assign _dia = '' -%}
-          {%- assign _rad = '' -%}
-          {%- assign _shank_opt = '' -%}
-          {%- for opt in product.options_with_values -%}
-            {%- assign nm = opt.name | strip -%}
-            {%- assign val = v.options[forloop.index0] | default: '' -%}
-            {%- if nm == 'Mill Diameter (mm)' -%}{%- assign _dia = val -%}{%- endif -%}
-            {%- if nm == 'Corner Radius (mm)' -%}{%- assign _rad = val -%}{%- endif -%}
-            {%- if nm == 'Shank Diameter (mm)' -%}{%- assign _shank_opt = val -%}{%- endif -%}
-          {%- endfor -%}
-          { "id": {{ v.id }}, "sku": {{ v.sku | json }}, "price": {{ v.price | default: 0 }}, "compare_at_price":
-          {{ v.compare_at_price | default: 0 }}, "available": {{ v.available | json }}, "inventory_management":
-          {{ v.inventory_management | json }}, "inventory_quantity": {{ v.inventory_quantity | default: 0 }},
-          "inventory_policy": {{ v.inventory_policy | json }}, "incoming": {{ v.incoming | json }},
-          "next_incoming_date": {{ v.next_incoming_date | json }}, "options": {{ v.options | json }}, "dia_mm":
-          {{ _dia | json }}, "corner_radius_mm": {{ _rad | json }}, "shank_diameter_mm_opt": {{ _shank_opt | json }},
-          "shank_diameter_mm_mf":
-          {{ v.metafields.filter.shank_diameter_mm | default: v.metafields.filter.shank_diameter_mm | json }},
-          "length_of_cut_mm":
-          {{ v.metafields.custom.length_of_cut_mm | default: v.metafields.custom.length_of_cut_mm | json }} }
-          {%- unless forloop.last -%},{%- endunless -%}
-        {%- endfor -%}
-        ] }
-        {% unless forloop.last %},{% endunless %}
-      {% endfor %}
-      ]
-    </template>
-
-    {% comment %} Pre-render card templates so we keep your complex price logic. {% endcomment %}
-    <div style="display:none;">
-      {% for product in coll.products %}
-        <template id="tpl-{{ product.id }}">
-          {% render 'product-grid-item-endmill-selector', product: product %}
-        </template>
-      {% endfor %}
-    </div>
-  {% endpaginate %}
 
   {% comment %} ====== MATERIAL TABLE (VDI → ISO + Label) ====== {% endcomment %}
   <script type="application/json" id="es-vdi-table">
@@ -606,6 +536,29 @@
 
   {% comment %} ====== JS ====== {% endcomment %}
   <script>
+    async function ES_loadAllProducts() {
+    const collectionHandle = 'all-endmills'; // your source collection
+    const limit = 250;
+    let page = 1;
+    let allProducts = [];
+
+    while (true) {
+      const url = `/collections/${collectionHandle}/products.json?limit=${limit}&page=${page}`;
+      const res = await fetch(url);
+      if (!res.ok) break;
+
+      const json = await res.json();
+      const products = json.products || [];
+      allProducts = allProducts.concat(products);
+
+      if (products.length < limit) break; // last page
+      page += 1;
+    }
+
+    console.log('[ES] Loaded products from JSON endpoint:', allProducts.length);
+    return allProducts;
+  }
+
     (function () {
       const el = (sel, root = document) => root.querySelector(sel);
       const els = (sel, root = document) => Array.from(root.querySelectorAll(sel));
@@ -1125,48 +1078,56 @@
         selType().value = '';
       });
 
-      // Data load
-      const PRODUCT_DATA = JSON.parse(el('#es-products-json').innerHTML.trim());
-      window.PRODUCT_DATA = PRODUCT_DATA;
+      // Data load via JSON endpoint
+(async () => {
+  const rawProducts = await ES_loadAllProducts();
 
-      // Normalize metafields. They may arrive as strings. Try to coerce.
-      PRODUCT_DATA.forEach((p) => {
-        p.vdi_good = tryParseArray(p.vdi_good);
-        p.vdi_excellent = tryParseArray(p.vdi_excellent);
-        p.diameters = (p.diameters || []).map((x) => Number(String(x).replace(',', '.')));
-      });
+  // Map JSON from /products.json into the shape your selector expects.
+  const PRODUCT_DATA = rawProducts.map((p) => {
+    return {
+      id: p.id,
+      handle: p.handle,
+      title: p.title,
+      url: `/products/${p.handle}`,
+      tags: p.tags || [],
+      // TODO. map your vdi_good & vdi_excellent metafields from p.metafields if exposed,
+      vdi_good: [],
+      vdi_excellent: [],
+      option_names: (p.options || []).map((o) => o.name),
+      diameters: (p.variants || []).map((v) => Number(String(v.option1 || '').replace(',', '.'))).filter((n) => !isNaN(n)),
+      variants: (p.variants || []).map((v) => ({
+        id: v.id,
+        sku: v.sku,
+        price: v.price,
+        compare_at_price: v.compare_at_price,
+        available: v.available,
+        inventory_management: v.inventory_management,
+        inventory_quantity: v.inventory_quantity,
+        inventory_policy: v.inventory_policy,
+        incoming: v.incoming,
+        next_incoming_date: v.next_incoming_date,
+        options: [v.option1, v.option2, v.option3],
+        dia_mm: v.option1 || '',
+        corner_radius_mm: v.option2 || '',
+        shank_diameter_mm_opt: v.option3 || '',
+        shank_diameter_mm_mf: null,
+        length_of_cut_mm: null,
+      })),
+    };
+  });
 
-      function tryParseArray(v) {
-        if (!v) return [];
-        if (Array.isArray(v)) return v.map(Number).filter((n) => !isNaN(n));
-        const nums = String(v).match(/\d+(?:\.\d+)?/g);
-        return nums ? nums.map(Number).filter((n) => !isNaN(n)) : [];
-      }
+  window.PRODUCT_DATA = PRODUCT_DATA;
 
-      function normalizeTag(t) {
-        return String(t)
-          .toLowerCase()
-          .replace(/[^a-z0-9]/g, '');
-      }
+  // If you still want to store the JSON somewhere in DOM
+  const tplJson = document.getElementById('es-products-json');
+  if (tplJson) {
+    tplJson.textContent = JSON.stringify(PRODUCT_DATA);
+  }
 
-      function isEndmill(p) {
-        return p.tags.some((t) => /^Cutting Shape_/i.test(t));
-      }
+  // You will also need to adjust renderResults() to not rely on Liquid-built <template id="tpl-{{id}}">.
+  // Easiest. render simple cards in JS instead of cloning Liquid templates.
+})();
 
-      function hasExcludedTag(p) {
-        const t = p.tags.map(normalizeTag);
-        return t.includes('operationblinddrilling') || t.includes('operationthroughdrilling');
-      }
-
-      // Work on endmills only. not drills
-      const DATASET = PRODUCT_DATA.filter((p) => isEndmill(p) && !hasExcludedTag(p));
-
-      // DEBUG. see if 4G mills are in the DATASET that we actually filter and render
-const debugFourGInDataset = DATASET.filter(p =>
-  /4g/i.test(p.title || '') ||
-  /4g/i.test(p.handle || '') ||
-  (p.tags || []).some(t => /4g/i.test(t))
-);
 
 console.log('[ES DEBUG] 4G products in DATASET:', debugFourGInDataset.length, debugFourGInDataset);
 
