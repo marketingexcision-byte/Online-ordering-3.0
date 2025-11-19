@@ -1176,6 +1176,43 @@ console.log('[ES DEBUG] 4G products in DATASET:', debugFourGInDataset.length, de
         return t.includes('operationblinddrilling') || t.includes('operationthroughdrilling');
       }
 
+      // === HARD DEBUG FOR 4G MILL COVERAGE ===
+window.ES_DEBUG = window.ES_DEBUG || {};
+
+window.ES_DEBUG.dump4G = function () {
+  const all = window.PRODUCT_DATA || [];
+  const inDataset = (DATASET || []);
+
+  const all4g = all.filter(p =>
+    /4g/i.test(p.title || '') ||
+    /4g/i.test(p.handle || '') ||
+    (p.tags || []).some(t => /4g/i.test(t))
+  );
+
+  const dataset4g = inDataset.filter(p =>
+    /4g/i.test(p.title || '') ||
+    /4g/i.test(p.handle || '') ||
+    (p.tags || []).some(t => /4g/i.test(t))
+  );
+
+  console.log('[ES DEBUG] PRODUCT_DATA size:', all.length);
+  console.log('[ES DEBUG] 4G in PRODUCT_DATA:', all4g.length, all4g.map(p => ({
+    id: p.id,
+    handle: p.handle,
+    title: p.title,
+    tags: p.tags
+  })));
+
+  console.log('[ES DEBUG] DATASET size (endmills only):', inDataset.length);
+  console.log('[ES DEBUG] 4G in DATASET:', dataset4g.length, dataset4g.map(p => ({
+    id: p.id,
+    handle: p.handle,
+    title: p.title,
+    tags: p.tags
+  })));
+};
+
+
       function matchesProduct(p) {
         const tagsNorm = p.tags.map(normalizeTag);
 
