@@ -636,7 +636,7 @@
           s.style.position = active ? 'relative' : 'absolute';
           s.setAttribute('aria-hidden', String(!active));
         });
-        bar.style.width = ((n - 1) / 4) * 100 + '%';
+        bar.style.width = ((n - 1) / 5) * 100 + '%';
         stepLabel.textContent = `Step ${n} of 5`;
       };
 
@@ -1084,7 +1084,7 @@
       els('.es-next').forEach((b) => b.addEventListener('click', () => setStep(Math.min(5, step + 1))));
       els('.es-prev').forEach((b) => b.addEventListener('click', () => setStep(Math.max(1, step - 1))));
       el('.es-finish').addEventListener('click', () => {
-        setStep(4);
+        setStep(5);
         renderResults();
         renderChips();
         showSummary();
