@@ -1036,13 +1036,12 @@
 
       els('.es-next').forEach((b) => b.addEventListener('click', () => setStep(Math.min(5, step + 1))));
       els('.es-prev').forEach((b) => b.addEventListener('click', () => setStep(Math.max(1, step - 1))));
-          el('.es-finish').addEventListener('click', () => {
-      setStep(5);
-      showSummary();
-      fetchAndRenderResults();
-      window.scrollTo({ top: el('#es-results').offsetTop - 20, behavior: 'smooth' });
-    });
-
+      el('.es-finish').addEventListener('click', () => {
+        setStep(5);
+        showSummary();
+        fetchAndRenderResults();
+        window.scrollTo({ top: el('#es-results').offsetTop - 20, behavior: 'smooth' });
+      });
 
       el('#es-reset').addEventListener('click', () => {
         selected.operationTag = null;
@@ -1129,138 +1128,76 @@
         return true;
       }
 
-          async function fetchAndRenderResults() {
-      const grid = el('#es-grid');
-      grid.innerHTML = '';
-      el('#es-empty').style.display = 'block';
-      el('#es-empty').textContent = 'Loading products...';
+async function fetchAndRenderResults() {
+  const grid = el('#es-grid');
+  grid.innerHTML = '';
+  el('#es-empty').style.display = 'block';
+  el('#es-empty').textContent = 'Loading products...';
 
-      const payload = {
-        operationTag: selected.operationTag,
-        iso: selected.iso,
-        vdi: selected.vdi,
-        vdis: selected.vdis,
-        shapeTag: selected.shapeTag,
-        lengthTag: selected.lengthTag,
-        typeTag: selected.typeTag,
-        diameter: selected.diameter,
-      };
+  const payload = {
+    operationTag: selected.operationTag,
+    iso: selected.iso,
+    vdi: selected.vdi,
+    vdis: selected.vdis,
+    shapeTag: selected.shapeTag,
+    lengthTag: selected.lengthTag,
+    typeTag: selected.typeTag,
+    diameter: selected.diameter,
+  };
 
-      try {
-        const res = await fetch('https://endmill-selector.marketingexcision.workers.dev/', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
+  try {
+    const res = await fetch('https://endmill-selector.marketingexcision.workers.dev/api/endmill-selector', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
 
-        if (!res.ok) {
-          throw new Error('Bad status ' + res.status);
-        }
+    if (!res.ok) throw new Error('Bad status ' + res.status);
 
-        const json = await res.json();
+    const json = await res.json();
 
-        PRODUCT_DATA = json.products || [];
-        DATASET = PRODUCT_DATA;
-        PRODUCTS_READY = true;
+    PRODUCT_DATA = json.products || [];
+    DATASET = PRODUCT_DATA;
+    PRODUCTS_READY = true;
 
-        renderResults();
-        renderChips();
-      } catch (err) {
-        console.error('[ES] Worker error', err);
-        el('#es-empty').style.display = 'block';
-        el('#es-empty').textContent = 'Error loading products. Please try again.';
-        PRODUCTS_READY = false;
-      }
-    }
+    renderResults();
+    renderChips();
+  } catch (err) {
+    console.error('[ES] Worker error', err);
+    el('#es-empty').style.display = 'block';
+    el('#es-empty').textContent = 'Error loading products. Please try again.';
+    PRODUCTS_READY = false;
+  }
+}
 
+async function renderResults() {
+  const grid = el('#es-grid');
+  grid.innerHTML = '';
 
-         function renderResults() {
-      const grid = el('#es-grid');
-      grid.innerHTML = '';
+  if (!PRODUCTS_READY) {
+    el('#es-empty').style.display = 'block';
+    el('#es-empty').textContent = 'Loading products...';
+    return;
+  }
 
-      if (!PRODUCTS_READY) {
-        el('#es-empty').style.display = 'block';
-        el('#es-empty').textContent = 'Loading products...';
-        return;
-      }
+  const matches = DATASET;
 
-      const matches = DATASET; // already filtered on the server
+  if (!matches || matches.length === 0) {
+    el('#es-empty').style.display = 'block';
+    el('#es-empty').textContent = 'No matching products. Loosen a filter or clear Diameter.';
+    return;
+  }
 
-      if (!matches || matches.length === 0) {
-        el('#es-empty').style.display = 'block';
-        el('#es-empty').textContent = 'No matching products. Loosen a filter or clear Diameter.';
-        return;
-      }
+  el('#es-empty').style.display = 'none';
 
-      el('#es-empty').style.display = 'none';
+  for (const p of matches) {
+    const html = await fetch(`/products/${p.handle}?view=endmill-card`).then(r => r.text());
+    grid.insertAdjacentHTML('beforeend', html);
+  }
 
-      const frag = document.createDocumentFragment();
+  el('#es-chips').style.display = 'flex';
+}
 
-      matches.forEach((p) => {
-        let card;
-        if (protoCard) {
-          card = protoCard.cloneNode(true);
-        } else {
-          card = document.createElement('div');
-          card.className = 'grid-item';
-        }
-
-        const link =
-          card.querySelector('.product-grid-item') ||
-          card.querySelector('.product-grid-item__link');
-
-        if (link) {
-          link.href = p.url;
-          try {
-            link.setAttribute('data-product-json', JSON.stringify(p));
-          } catch (e) {
-            console.warn('[ES] Failed to stringify product JSON', e, p);
-          }
-
-          const firstVariant = (p.variants || [])[0];
-          if (firstVariant) {
-            link.setAttribute('data-variant-id', String(firstVariant.id));
-          }
-        }
-
-        const titleEl =
-          card.querySelector('.cpgs_title') ||
-          card.querySelector('.product-grid-item__title') ||
-          card.querySelector('p.font-bold');
-
-        if (titleEl) {
-          titleEl.textContent = p.title;
-        }
-
-        const badge = card.querySelector('.shopify-product-reviews-badge');
-        if (badge) {
-          badge.setAttribute('data-id', String(p.id));
-        }
-
-        if (p.images && p.images.length > 0) {
-          const src = p.images[0].src;
-          const imgFront =
-            card.querySelector('img.product-image.front') ||
-            card.querySelector('img.product-image.single') ||
-            card.querySelector('.product-grid-image img');
-
-          if (imgFront) {
-            imgFront.setAttribute('data-src', src);
-            imgFront.removeAttribute('src');
-          }
-        }
-
-        frag.appendChild(card);
-
-        if (link) {
-          const evt = new Event('es:hydrate-card', { bubbles: true });
-          link.dispatchEvent(evt);
-        }
-      });
-
-      grid.appendChild(frag);
-      el('#es-chips').style.display = 'flex';
-    }
 
 
       function renderChips() {
@@ -1294,10 +1231,9 @@
         console.log('[ES DEBUG] 4G in DATASET:', dataset4g.length, dataset4g);
       };
 
-    // ---------- Boot ----------
-    setStep(1);
-  })();
-
+      // ---------- Boot ----------
+      setStep(1);
+    })();
   </script>
 
   <style>
