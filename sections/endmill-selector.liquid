@@ -1321,141 +1321,145 @@
   </script>
 
   <style>
-                /* Wizard step transitions */
-                .es-step{
-                  transition: opacity .35s ease, transform .35s ease;
-                  transform: translateY(0);
+                    /* Wizard step transitions */
+                    .es-step{
+                      transition: opacity .35s ease, transform .35s ease;
+                      transform: translateY(0);
+                    }
+                    .es-step[aria-hidden="true"]{ transform: translateY(6px); }
+                    .rc-item[aria-selected="true"]{
+                      border: 2px solid var(--color-primary-orange) !important;
+                    }
+                    .rc-item__label.h5 {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    }
+                    button.rc-item {
+                    border-radius: 10px;
                 }
-                .es-step[aria-hidden="true"]{ transform: translateY(6px); }
-                .rc-item[aria-selected="true"]{
-                  border: 2px solid var(--color-primary-orange) !important;
+                div#es-material-grid {
+                    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
                 }
-                .rc-item__label.h5 {
-                display: flex;
-                align-items: center;
-                justify-content: center;
+                button.rc-item.es-mat [data-iso="P"] {
+                    background: #0069a720;
                 }
-                button.rc-item {
-                border-radius: 10px;
-            }
-            div#es-material-grid {
-                grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            }
-            button.rc-item.es-mat [data-iso="P"] {
-                background: #0069a720;
-            }
-            .grid-item.large--one-quarter.medium-down--one-half{
-            width: 100%;
-            }
-            .product-grid-image--centered {
-                background: #f1f1f1;
-                border-radius: 15px;
-                margin-bottom: var(--space-5);
-            }
-            .btn.es-skip { background: transparent; border: 2px solid #e5e5e5; }
-            .btn.es-skip:hover { background: #fafafa; }
+                .grid-item.large--one-quarter.medium-down--one-half{
+                width: 100%;
+                }
+                .product-grid-image--centered {
+                    background: #f1f1f1;
+                    border-radius: 15px;
+                    margin-bottom: var(--space-5);
+                }
+                .btn.es-skip { background: transparent; border: 2px solid #e5e5e5; }
+                .btn.es-skip:hover { background: #fafafa; }
 
-            .material-groups {
-          display: grid;
-          grid-template-columns: repeat(auto-fill,minmax(220px,1fr));
-          gap: 16px;
-          margin-top: 15px;
+                .material-groups {
+              display: grid;
+              grid-template-columns: repeat(auto-fill,minmax(220px,1fr));
+              gap: 16px;
+              margin-top: 15px;
+            }
+
+            .material-group-card {
+              border: 2px solid #e8e8e8;
+              border-radius: 10px;
+              padding: 15px;
+              cursor: pointer;
+              background: white;
+              transition: all .18s ease;
+            }
+
+            .material-group-card.active {
+              border-color: var(--color-primary-orange);
+              background: #fff7f0;
+            }
+
+            .mgc-header {
+              display: flex;
+              gap: 10px;
+              align-items: center;
+              margin-bottom: 8px;
+            }
+
+            .mgc-iso {
+              background: #333;
+              padding: 4px 8px;
+              border-radius: 6px;
+              font-size: 14px;
+              color: white;
+        width: 29px;
+        display: flex;
+        justify-content: center;
+            }
+
+            .mgc-examples {
+              font-size: 13px;
+              color: #555;
+              display: flex;
+              flex-wrap: wrap;
+              gap: 6px;
+            }
+
+            .mgc-example {
+              background: #f2f2f2;
+              padding: 2px 7px;
+              border-radius: 6px;
+            }
+
+            /* ISO colors. matched to your work-mat chips */
+        :root {
+          --iso-P: #0069a7;  /* Steels */
+          --iso-M: #f6b519;  /* Stainless */
+          --iso-K: #e0592a;  /* Cast irons */
+          --iso-N: #109954;  /* Non-ferrous */
+          --iso-S: #f88d2b;  /* Titanium & super alloys */
+          --iso-H: #666666;  /* Hardened */
         }
 
-        .material-group-card {
-          border: 2px solid #e8e8e8;
-          border-radius: 10px;
-          padding: 15px;
-          cursor: pointer;
-          background: white;
-          transition: all .18s ease;
+        /* Soft background + border tint by ISO */
+        .material-group-card[data-iso="P"] {
+          background: rgba(0, 105, 167, 0.05);
+          border-color: rgba(0, 105, 167, 0.35);
+        }
+        .material-group-card[data-iso="M"] {
+          background: rgba(246, 181, 25, 0.07);
+          border-color: rgba(246, 181, 25, 0.45);
+        }
+        .material-group-card[data-iso="K"] {
+          background: rgba(224, 89, 42, 0.06);
+          border-color: rgba(224, 89, 42, 0.4);
+        }
+        .material-group-card[data-iso="N"] {
+          background: rgba(16, 153, 84, 0.06);
+          border-color: rgba(16, 153, 84, 0.4);
+        }
+        .material-group-card[data-iso="S"] {
+          background: rgba(248, 141, 43, 0.06);
+          border-color: rgba(248, 141, 43, 0.4);
+        }
+        .material-group-card[data-iso="H"] {
+          background: rgba(102, 102, 102, 0.06);
+          border-color: rgba(102, 102, 102, 0.4);
         }
 
+        /* ISO badge inside the card uses the strong color */
+        .material-group-card[data-iso="P"] .mgc-iso { background: var(--iso-P); }
+        .material-group-card[data-iso="M"] .mgc-iso { background: var(--iso-M); }
+        .material-group-card[data-iso="K"] .mgc-iso { background: var(--iso-K); }
+        .material-group-card[data-iso="N"] .mgc-iso { background: var(--iso-N); }
+        .material-group-card[data-iso="S"] .mgc-iso { background: var(--iso-S); }
+        .material-group-card[data-iso="H"] .mgc-iso { background: var(--iso-H); }
+
+        /* Keep the orange “selected” language. but let ISO color peek through a bit */
         .material-group-card.active {
-          border-color: var(--color-primary-orange);
-          background: #fff7f0;
+          background: #fff;
+          box-shadow: 0 0 0 2px rgba(248,141,43,0.35);
         }
-
-        .mgc-header {
-          display: flex;
-          gap: 10px;
-          align-items: center;
-          margin-bottom: 8px;
-        }
-
-        .mgc-iso {
-          background: #333;
-          padding: 4px 8px;
-          border-radius: 6px;
-          font-size: 14px;
-        }
-
-        .mgc-examples {
-          font-size: 13px;
-          color: #555;
-          display: flex;
-          flex-wrap: wrap;
-          gap: 6px;
-        }
-
-        .mgc-example {
-          background: #f2f2f2;
-          padding: 2px 7px;
-          border-radius: 6px;
-        }
-
-        /* ISO colors. matched to your work-mat chips */
-    :root {
-      --iso-P: #0069a7;  /* Steels */
-      --iso-M: #f6b519;  /* Stainless */
-      --iso-K: #e0592a;  /* Cast irons */
-      --iso-N: #109954;  /* Non-ferrous */
-      --iso-S: #f88d2b;  /* Titanium & super alloys */
-      --iso-H: #666666;  /* Hardened */
+        .mgc-title {
+        font-family: 'Humanist777BT-Bold';
     }
-
-    /* Soft background + border tint by ISO */
-    .material-group-card[data-iso="P"] {
-      background: rgba(0, 105, 167, 0.05);
-      border-color: rgba(0, 105, 167, 0.35);
-    }
-    .material-group-card[data-iso="M"] {
-      background: rgba(246, 181, 25, 0.07);
-      border-color: rgba(246, 181, 25, 0.45);
-    }
-    .material-group-card[data-iso="K"] {
-      background: rgba(224, 89, 42, 0.06);
-      border-color: rgba(224, 89, 42, 0.4);
-    }
-    .material-group-card[data-iso="N"] {
-      background: rgba(16, 153, 84, 0.06);
-      border-color: rgba(16, 153, 84, 0.4);
-    }
-    .material-group-card[data-iso="S"] {
-      background: rgba(248, 141, 43, 0.06);
-      border-color: rgba(248, 141, 43, 0.4);
-    }
-    .material-group-card[data-iso="H"] {
-      background: rgba(102, 102, 102, 0.06);
-      border-color: rgba(102, 102, 102, 0.4);
-    }
-
-    /* ISO badge inside the card uses the strong color */
-    .material-group-card[data-iso="P"] .mgc-iso { background: var(--iso-P); }
-    .material-group-card[data-iso="M"] .mgc-iso { background: var(--iso-M); }
-    .material-group-card[data-iso="K"] .mgc-iso { background: var(--iso-K); }
-    .material-group-card[data-iso="N"] .mgc-iso { background: var(--iso-N); }
-    .material-group-card[data-iso="S"] .mgc-iso { background: var(--iso-S); }
-    .material-group-card[data-iso="H"] .mgc-iso { background: var(--iso-H); }
-
-    /* Keep the orange “selected” language. but let ISO color peek through a bit */
-    .material-group-card.active {
-      background: #fff;
-      box-shadow: 0 0 0 2px rgba(248,141,43,0.35);
-    }
-    .mgc-title {
-    font-family: 'Humanist777BT-Bold';
-}
   </style>
 </section>
 
