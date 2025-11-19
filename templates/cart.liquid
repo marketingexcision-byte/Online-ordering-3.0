@@ -667,7 +667,8 @@
 {%- if pct > 100 -%}{%- assign pct = 100 -%}{%- endif -%}
 
 {%- comment -%} Flag set by PreCart override. 1 = waived {%- endcomment -%}
-{%- assign ex_min_override = cart.attributes.ex_min_override | default: '' | strip -%}
+{%- assign ex_min_override = cart.attributes.ex_min_order_override | default: '' | strip -%}
+
 
 
             </div>
