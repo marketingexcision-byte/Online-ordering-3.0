@@ -58,10 +58,13 @@ async function readCartTotalCents(){
   function paint(root, subtotalCents){
     if (!root) return;
 
-    const min = Number(root.dataset.min || MIN_CENTS);
+    const override = (window.EX_MIN_ORDER_OVERRIDE === '1');
+    const rawMin = Number(root.dataset.min || MIN_CENTS);
+    const min    = override ? 0 : rawMin;
     const now = Math.max(0, subtotalCents|0);
     const remaining = Math.max(0, min - now);
-    const pct = clamp((now / min) * 100);
+    const pct = clamp(min > 0 ? (now / min) * 100 : 100);
+
 
     const active = root.querySelector('.ex-min-order__active');
     const rest   = root.querySelector('.ex-min-order__rest');
