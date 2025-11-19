@@ -1161,6 +1161,16 @@
       // Work on endmills only. not drills
       const DATASET = PRODUCT_DATA.filter((p) => isEndmill(p) && !hasExcludedTag(p));
 
+      // DEBUG. see if 4G mills are in the DATASET that we actually filter and render
+const debugFourGInDataset = DATASET.filter(p =>
+  /4g/i.test(p.title || '') ||
+  /4g/i.test(p.handle || '') ||
+  (p.tags || []).some(t => /4g/i.test(t))
+);
+
+console.log('[ES DEBUG] 4G products in DATASET:', debugFourGInDataset.length, debugFourGInDataset);
+
+
       function hasExcludedTag(p) {
         const t = p.tags.map(normalizeTag);
         return t.includes('operationblinddrilling') || t.includes('operationthroughdrilling');
