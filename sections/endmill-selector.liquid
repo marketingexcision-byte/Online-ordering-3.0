@@ -1211,12 +1211,6 @@
           if (!matchesAny) return false;
         }
 
-        if (vdiFilter.length) {
-          const allowed = new Set(vdiFilter);
-          const goodExc = [...(p.vdi_good || []).map(Number), ...(p.vdi_excellent || []).map(Number)];
-          if (!goodExc.some((v) => allowed.has(v))) return false;
-        }
-
         // Diameter
         if (selected.diameter != null) {
           const want = Number(selected.diameter);
@@ -1304,8 +1298,6 @@
 
         el('#es-chips').style.display = 'flex';
       }
-
-      const matches = DATASET.filter(matchesProduct);
 
       // Chips summary
       function renderChips() {
