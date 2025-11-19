@@ -846,12 +846,14 @@
 
               const vdis = (sub.dataset.vdis || '')
                 .split(',')
-                .map((x) => Number(x.trim()))
-                .filter((x) => !isNaN(x));
+                .map((s) => Number(s.trim()))
+                .filter((n) => !Number.isNaN(n));
 
-              selected.vdis = vdis;
-              selected.vdi = vdis.length ? vdis[0] : null; // representative for sorting etc
-              selected.materialLabel = sub.dataset.label || null;
+              selected.vdi = vdis; // now an array
+
+              // pick a representative row just for display label
+              const row = MAT.find((x) => vdis.includes(x.vdi));
+              selected.materialLabel = row ? row.user : null;
 
               card.closest('.es-step').querySelector('.es-next').disabled = false;
             });
@@ -1193,13 +1195,22 @@
           if (!tagsNorm.includes(lenNorm)) return false;
         }
 
-        // Material VDI or VDI bucket
-        const vdiFilter =
-          selected.vdis && selected.vdis.length
-            ? selected.vdis.map(Number)
-            : selected.vdi != null
-            ? [Number(selected.vdi)]
-            : [];
+        // Material VDI (single or multiple)
+if (selected.vdi != null) {
+  const wantVdis = Array.isArray(selected.vdi)
+    ? selected.vdi.map(Number).filter(n => !Number.isNaN(n))
+    : [Number(selected.vdi)];
+
+  if (!wantVdis.length) return false;
+
+  const good = (p.vdi_good || []).map(Number).filter(n => !Number.isNaN(n));
+  const exc  = (p.vdi_excellent || []).map(Number).filter(n => !Number.isNaN(n));
+  const prodSet = new Set([...good, ...exc]);
+
+  const matchesAny = wantVdis.some(v => prodSet.has(v));
+  if (!matchesAny) return false;
+}
+
 
         if (vdiFilter.length) {
           const allowed = new Set(vdiFilter);
@@ -1231,21 +1242,19 @@
 
         // Prioritize products that mark any of the selected VDIs as excellent
         matches.sort((a, b) => {
-          const vdList =
-            selected.vdis && selected.vdis.length
-              ? selected.vdis.map(Number)
-              : selected.vdi != null
-              ? [Number(selected.vdi)]
-              : [];
+  if (selected.vdi == null) return 0;
 
-          if (!vdList.length) return 0;
-          const set = new Set(vdList);
+  const wantVdis = Array.isArray(selected.vdi)
+    ? selected.vdi
+    : [selected.vdi];
 
-          const ax = (a.vdi_excellent || []).some((v) => set.has(Number(v))) ? 1 : 0;
-          const bx = (b.vdi_excellent || []).some((v) => set.has(Number(v))) ? 1 : 0;
-          if (ax !== bx) return bx - ax;
-          return 0;
-        });
+  const ax = wantVdis.some(v => (a.vdi_excellent || []).includes(Number(v)));
+  const bx = wantVdis.some(v => (b.vdi_excellent || []).includes(Number(v)));
+
+  if (ax === bx) return 0;
+  return bx - ax; // true > false
+});
+
 
         const frag = document.createDocumentFragment();
         matches.forEach((p) => {
@@ -1321,156 +1330,156 @@
   </script>
 
   <style>
-                    /* Wizard step transitions */
-                    .es-step{
-                      transition: opacity .35s ease, transform .35s ease;
-                      transform: translateY(0);
+                        /* Wizard step transitions */
+                        .es-step{
+                          transition: opacity .35s ease, transform .35s ease;
+                          transform: translateY(0);
+                        }
+                        .es-step[aria-hidden="true"]{ transform: translateY(6px); }
+                        .rc-item[aria-selected="true"]{
+                          border: 2px solid var(--color-primary-orange) !important;
+                        }
+                        .rc-item__label.h5 {
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        }
+                        button.rc-item {
+                        border-radius: 10px;
                     }
-                    .es-step[aria-hidden="true"]{ transform: translateY(6px); }
-                    .rc-item[aria-selected="true"]{
-                      border: 2px solid var(--color-primary-orange) !important;
+                    div#es-material-grid {
+                        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
                     }
-                    .rc-item__label.h5 {
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
+                    button.rc-item.es-mat [data-iso="P"] {
+                        background: #0069a720;
                     }
-                    button.rc-item {
-                    border-radius: 10px;
+                    .grid-item.large--one-quarter.medium-down--one-half{
+                    width: 100%;
+                    }
+                    .product-grid-image--centered {
+                        background: #f1f1f1;
+                        border-radius: 15px;
+                        margin-bottom: var(--space-5);
+                    }
+                    .btn.es-skip { background: transparent; border: 2px solid #e5e5e5; }
+                    .btn.es-skip:hover { background: #fafafa; }
+
+                    .material-groups {
+                  display: grid;
+                  grid-template-columns: repeat(auto-fill,minmax(220px,1fr));
+                  gap: 16px;
+                  margin-top: 15px;
                 }
-                div#es-material-grid {
-                    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+
+                .material-group-card {
+                  border: 2px solid #e8e8e8;
+                  border-radius: 10px;
+                  padding: 15px;
+                  cursor: pointer;
+                  background: white;
+                  transition: all .18s ease;
                 }
-                button.rc-item.es-mat [data-iso="P"] {
-                    background: #0069a720;
+
+                .mgc-header {
+                  display: flex;
+                  gap: 10px;
+                  align-items: flex-start;
+                  margin-bottom: 8px;
                 }
-                .grid-item.large--one-quarter.medium-down--one-half{
-                width: 100%;
+
+                .mgc-iso {
+                  background: #333;
+                  padding: 4px 8px;
+                  border-radius: 6px;
+                  font-size: 14px;
+                  color: white;
+            width: 29px;
+            display: flex;
+            justify-content: center;
                 }
-                .product-grid-image--centered {
-                    background: #f1f1f1;
-                    border-radius: 15px;
-                    margin-bottom: var(--space-5);
+
+                .mgc-examples {
+                  font-size: 13px;
+                  color: #555;
+                  display: flex;
+                  flex-wrap: wrap;
+                  gap: 6px;
                 }
-                .btn.es-skip { background: transparent; border: 2px solid #e5e5e5; }
-                .btn.es-skip:hover { background: #fafafa; }
 
-                .material-groups {
-              display: grid;
-              grid-template-columns: repeat(auto-fill,minmax(220px,1fr));
-              gap: 16px;
-              margin-top: 15px;
+                .mgc-example {
+                  background: #f2f2f2;
+                  padding: 2px 7px;
+                  border-radius: 6px;
+                }
+
+                /* ISO colors. matched to your work-mat chips */
+            :root {
+              --iso-P: #0069a7;  /* Steels */
+              --iso-M: #f6b519;  /* Stainless */
+              --iso-K: #e0592a;  /* Cast irons */
+              --iso-N: #109954;  /* Non-ferrous */
+              --iso-S: #f88d2b;  /* Titanium & super alloys */
+              --iso-H: #666666;  /* Hardened */
             }
 
-            .material-group-card {
-              border: 2px solid #e8e8e8;
-              border-radius: 10px;
-              padding: 15px;
-              cursor: pointer;
-              background: white;
-              transition: all .18s ease;
+            /* Soft background + border tint by ISO */
+            .material-group-card[data-iso="P"] {
+              border-color: #0069a7;
+            }
+            .material-group-card[data-iso="M"] {
+              border-color: #f6b519;
+            }
+            .material-group-card[data-iso="K"] {
+              border-color: #e0592a;
+            }
+            .material-group-card[data-iso="N"] {
+              border-color: #109954;
+            }
+            .material-group-card[data-iso="S"] {
+              border-color: #f88d2b;
+            }
+            .material-group-card[data-iso="H"] {
+              border-color: #666666;
             }
 
-            .mgc-header {
-              display: flex;
-              gap: 10px;
-              align-items: flex-start;
-              margin-bottom: 8px;
-            }
+            /* ISO badge inside the card uses the strong color */
+            .material-group-card[data-iso="P"] .mgc-iso { background: var(--iso-P); }
+            .material-group-card[data-iso="M"] .mgc-iso { background: var(--iso-M); }
+            .material-group-card[data-iso="K"] .mgc-iso { background: var(--iso-K); }
+            .material-group-card[data-iso="N"] .mgc-iso { background: var(--iso-N); }
+            .material-group-card[data-iso="S"] .mgc-iso { background: var(--iso-S); }
+            .material-group-card[data-iso="H"] .mgc-iso { background: var(--iso-H); }
 
-            .mgc-iso {
-              background: #333;
-              padding: 4px 8px;
-              border-radius: 6px;
-              font-size: 14px;
-              color: white;
-        width: 29px;
-        display: flex;
-        justify-content: center;
-            }
+            .material-group-card[data-iso="P"].active { background: var(--iso-P); color: white; }
+            .material-group-card[data-iso="M"].active { background: var(--iso-M); color: white; }
+            .material-group-card[data-iso="K"].active { background: var(--iso-K); color: white; }
+            .material-group-card[data-iso="N"].active { background: var(--iso-N); color: white; }
+            .material-group-card[data-iso="S"].active { background: var(--iso-S); color: white; }
+            .material-group-card[data-iso="H"].active { background: var(--iso-H); color: white; }
 
-            .mgc-examples {
-              font-size: 13px;
-              color: #555;
-              display: flex;
-              flex-wrap: wrap;
-              gap: 6px;
-            }
+            .material-group-card[data-iso="P"].active .mgc-iso { background: white; color: black; }
+            .material-group-card[data-iso="M"].active .mgc-iso { background: white; color: black; }
+            .material-group-card[data-iso="K"].active .mgc-iso { background: white; color: black; }
+            .material-group-card[data-iso="N"].active .mgc-iso { background: white; color: black; }
+            .material-group-card[data-iso="S"].active .mgc-iso { background: white; color: black; }
+            .material-group-card[data-iso="H"].active .mgc-iso { background: white; color: black; }
 
-            .mgc-example {
-              background: #f2f2f2;
-              padding: 2px 7px;
-              border-radius: 6px;
-            }
+            .material-group-card[data-iso="P"].active .mgc-examples { color: white; }
+            .material-group-card[data-iso="M"].active .mgc-examples { color: white; }
+            .material-group-card[data-iso="K"].active .mgc-examples { color: white; }
+            .material-group-card[data-iso="N"].active .mgc-examples { color: white; }
+            .material-group-card[data-iso="S"].active .mgc-examples { color: white; }
+            .material-group-card[data-iso="H"].active .mgc-examples { color: white; }
 
-            /* ISO colors. matched to your work-mat chips */
-        :root {
-          --iso-P: #0069a7;  /* Steels */
-          --iso-M: #f6b519;  /* Stainless */
-          --iso-K: #e0592a;  /* Cast irons */
-          --iso-N: #109954;  /* Non-ferrous */
-          --iso-S: #f88d2b;  /* Titanium & super alloys */
-          --iso-H: #666666;  /* Hardened */
-        }
+            /* Keep the orange “selected” language. but let ISO color peek through a bit */
 
-        /* Soft background + border tint by ISO */
-        .material-group-card[data-iso="P"] {
-          border-color: #0069a7;
-        }
-        .material-group-card[data-iso="M"] {
-          border-color: #f6b519;
-        }
-        .material-group-card[data-iso="K"] {
-          border-color: #e0592a;
-        }
-        .material-group-card[data-iso="N"] {
-          border-color: #109954;
-        }
-        .material-group-card[data-iso="S"] {
-          border-color: #f88d2b;
-        }
-        .material-group-card[data-iso="H"] {
-          border-color: #666666;
-        }
-
-        /* ISO badge inside the card uses the strong color */
-        .material-group-card[data-iso="P"] .mgc-iso { background: var(--iso-P); }
-        .material-group-card[data-iso="M"] .mgc-iso { background: var(--iso-M); }
-        .material-group-card[data-iso="K"] .mgc-iso { background: var(--iso-K); }
-        .material-group-card[data-iso="N"] .mgc-iso { background: var(--iso-N); }
-        .material-group-card[data-iso="S"] .mgc-iso { background: var(--iso-S); }
-        .material-group-card[data-iso="H"] .mgc-iso { background: var(--iso-H); }
-
-        .material-group-card[data-iso="P"].active { background: var(--iso-P); color: white; }
-        .material-group-card[data-iso="M"].active { background: var(--iso-M); color: white; }
-        .material-group-card[data-iso="K"].active { background: var(--iso-K); color: white; }
-        .material-group-card[data-iso="N"].active { background: var(--iso-N); color: white; }
-        .material-group-card[data-iso="S"].active { background: var(--iso-S); color: white; }
-        .material-group-card[data-iso="H"].active { background: var(--iso-H); color: white; }
-
-        .material-group-card[data-iso="P"].active .mgc-iso { background: white; color: black; }
-        .material-group-card[data-iso="M"].active .mgc-iso { background: white; color: black; }
-        .material-group-card[data-iso="K"].active .mgc-iso { background: white; color: black; }
-        .material-group-card[data-iso="N"].active .mgc-iso { background: white; color: black; }
-        .material-group-card[data-iso="S"].active .mgc-iso { background: white; color: black; }
-        .material-group-card[data-iso="H"].active .mgc-iso { background: white; color: black; }
-
-        .material-group-card[data-iso="P"].active .mgc-examples { color: white; }
-        .material-group-card[data-iso="M"].active .mgc-examples { color: white; }
-        .material-group-card[data-iso="K"].active .mgc-examples { color: white; }
-        .material-group-card[data-iso="N"].active .mgc-examples { color: white; }
-        .material-group-card[data-iso="S"].active .mgc-examples { color: white; }
-        .material-group-card[data-iso="H"].active .mgc-examples { color: white; }
-
-        /* Keep the orange “selected” language. but let ISO color peek through a bit */
-
-.material-group-card.mgc-unknown.es-iso-card.active {
-border-color: #e0592a;
-}
-        
-        .mgc-title {
-        font-family: 'Humanist777BT-Bold';
+    .material-group-card.mgc-unknown.es-iso-card.active {
+    border-color: #e0592a;
     }
+
+            .mgc-title {
+            font-family: 'Humanist777BT-Bold';
+        }
   </style>
 </section>
 
