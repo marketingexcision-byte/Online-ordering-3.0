@@ -1196,21 +1196,20 @@
         }
 
         // Material VDI (single or multiple)
-if (selected.vdi != null) {
-  const wantVdis = Array.isArray(selected.vdi)
-    ? selected.vdi.map(Number).filter(n => !Number.isNaN(n))
-    : [Number(selected.vdi)];
+        if (selected.vdi != null) {
+          const wantVdis = Array.isArray(selected.vdi)
+            ? selected.vdi.map(Number).filter((n) => !Number.isNaN(n))
+            : [Number(selected.vdi)];
 
-  if (!wantVdis.length) return false;
+          if (!wantVdis.length) return false;
 
-  const good = (p.vdi_good || []).map(Number).filter(n => !Number.isNaN(n));
-  const exc  = (p.vdi_excellent || []).map(Number).filter(n => !Number.isNaN(n));
-  const prodSet = new Set([...good, ...exc]);
+          const good = (p.vdi_good || []).map(Number).filter((n) => !Number.isNaN(n));
+          const exc = (p.vdi_excellent || []).map(Number).filter((n) => !Number.isNaN(n));
+          const prodSet = new Set([...good, ...exc]);
 
-  const matchesAny = wantVdis.some(v => prodSet.has(v));
-  if (!matchesAny) return false;
-}
-
+          const matchesAny = wantVdis.some((v) => prodSet.has(v));
+          if (!matchesAny) return false;
+        }
 
         if (vdiFilter.length) {
           const allowed = new Set(vdiFilter);
@@ -1242,19 +1241,16 @@ if (selected.vdi != null) {
 
         // Prioritize products that mark any of the selected VDIs as excellent
         matches.sort((a, b) => {
-  if (selected.vdi == null) return 0;
+          if (selected.vdi == null) return 0;
 
-  const wantVdis = Array.isArray(selected.vdi)
-    ? selected.vdi
-    : [selected.vdi];
+          const wantVdis = Array.isArray(selected.vdi) ? selected.vdi : [selected.vdi];
 
-  const ax = wantVdis.some(v => (a.vdi_excellent || []).includes(Number(v)));
-  const bx = wantVdis.some(v => (b.vdi_excellent || []).includes(Number(v)));
+          const ax = wantVdis.some((v) => (a.vdi_excellent || []).includes(Number(v)));
+          const bx = wantVdis.some((v) => (b.vdi_excellent || []).includes(Number(v)));
 
-  if (ax === bx) return 0;
-  return bx - ax; // true > false
-});
-
+          if (ax === bx) return 0;
+          return bx - ax; // true > false
+        });
 
         const frag = document.createDocumentFragment();
         matches.forEach((p) => {
