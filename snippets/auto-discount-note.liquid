@@ -57,7 +57,7 @@
     {%- endif -%}
   {%- endfor -%}
 
-  {%- if show_pct == null or show_pct == 0 -%}
+  {%- if show_pct == nil or show_pct == 0 -%}
     {%- assign storewide_raw = customer.metafields.custom.store_wide_discount -%}
     {%- assign storewide_pct = storewide_raw | default: 0 | plus: 0 -%}
     {%- if storewide_pct > 0 -%}
