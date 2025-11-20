@@ -221,6 +221,7 @@
 
     <!-- Results -->
     <div id="es-results">
+      <div style="display: flex;">
       <h3 class="h3" style="margin-top:0;">Results</h3>
 
       <div id="es-sort-bar">
@@ -232,6 +233,7 @@
       <option value="price-asc" selected>Price: Low → High</option>
       <option value="price-desc">Price: High → Low</option>
   </select>
+</div>
 </div>
 
 
@@ -1879,8 +1881,6 @@ function pickVariantForCard(product) {
               --iso-S: #f88d2b;  /* Titanium & super alloys */
               --iso-H: #666666;  /* Hardened */
             }
-
-            
 
             /* Soft background + border tint by ISO */
             .material-group-card[data-iso="P"] {
