@@ -2558,6 +2558,66 @@ function updateButtonState(btn) {
     <!-- Start of Judge.me code --><div style='clear:both'></div><div id='judgeme_product_reviews' class='jdgm-widget jdgm-review-widget' data-product-title='{{ product.title | escape }}' data-id='{{ product.id }}' data-auto-install='false'>{{ product.metafields.judgeme.widget }}</div><!-- End of Judge.me code -->
   </div>
 
+  <script>
+  window.addEventListener('load', function () {
+    function bindJudgeMeBadges() {
+      // Find all Judge.me preview badges on the page
+      var badges = document.querySelectorAll('.jdgm-preview-badge');
+
+      if (!badges.length) {
+        return;
+      }
+
+      badges.forEach(function (badge) {
+        // Avoid double-binding
+        if (badge.dataset.reviewsBound === 'true') return;
+        badge.dataset.reviewsBound = 'true';
+
+        badge.addEventListener('click', function (e) {
+          e.preventDefault();
+
+          // Find the Reviews tab
+          var reviewsTab = document.querySelector('li.tab[data-tab="reviews"]');
+          if (!reviewsTab) return;
+
+          // Click the tab so your existing tab JS runs
+          reviewsTab.click();
+
+          // Decide where to scroll. Prefer the Judge.me widget if it exists
+          var reviewsWidget = document.getElementById('judgeme_product_reviews');
+          var reviewsPanel = document.querySelector('.tab-content[data-tab="reviews"]');
+          var target = reviewsWidget || reviewsPanel;
+
+          if (!target) return;
+
+          var headerOffset = 100; // adjust if you have a sticky header height
+          var rect = target.getBoundingClientRect();
+          var top = rect.top + window.pageYOffset - headerOffset;
+
+          window.scrollTo({
+            top: top,
+            behavior: 'smooth'
+          });
+        });
+      });
+    }
+
+    // Bind once on load
+    bindJudgeMeBadges();
+
+    // If Judge.me injects badges after load, watch for them
+    var observer = new MutationObserver(function () {
+      bindJudgeMeBadges();
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+  });
+</script>
+
+
 
 </div>
 
@@ -4801,51 +4861,4 @@ document.addEventListener('DOMContentLoaded', function(){
     init();
   }
 })();
-</script>
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-  function openReviewsTabAndScroll() {
-    const tabsWrapper = document.getElementById('product-tabs');
-    if (!tabsWrapper) return;
-
-    const tabs = tabsWrapper.querySelectorAll('.tab-nav .tab');
-    const contents = tabsWrapper.querySelectorAll('.tab-content');
-
-    const reviewsTab   = tabsWrapper.querySelector('.tab-nav .tab[data-tab="reviews"]');
-    const reviewsPanel = tabsWrapper.querySelector('.tab-content[data-tab="reviews"]');
-    const reviewsWidget = document.getElementById('judgeme_product_reviews');
-
-    if (!reviewsTab || !reviewsPanel) return;
-
-    // Activate the Reviews tab
-    tabs.forEach(t => t.classList.remove('active'));
-    contents.forEach(c => c.classList.remove('active'));
-    reviewsTab.classList.add('active');
-    reviewsPanel.classList.add('active');
-
-    // Decide what to scroll to. Prefer the Judge.me widget if present
-    const target = reviewsWidget || reviewsPanel;
-
-    if (!target) return;
-
-    const headerOffset = 100; // tweak for sticky header height
-    const rect = target.getBoundingClientRect();
-    const targetTop = rect.top + window.pageYOffset - headerOffset;
-
-    window.scrollTo({
-      top: targetTop,
-      behavior: 'smooth'
-    });
-  }
-
-  // Delegate click from anywhere in the body to catch both preview badges
-  document.body.addEventListener('click', function (e) {
-    const badge = e.target.closest('.jdgm-preview-badge');
-    if (!badge) return;
-
-    e.preventDefault();
-    openReviewsTabAndScroll();
-  });
-});
 </script>
