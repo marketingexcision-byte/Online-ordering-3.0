@@ -4802,3 +4802,50 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 })();
 </script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  function openReviewsTabAndScroll() {
+    const tabsWrapper = document.getElementById('product-tabs');
+    if (!tabsWrapper) return;
+
+    const tabs = tabsWrapper.querySelectorAll('.tab-nav .tab');
+    const contents = tabsWrapper.querySelectorAll('.tab-content');
+
+    const reviewsTab   = tabsWrapper.querySelector('.tab-nav .tab[data-tab="reviews"]');
+    const reviewsPanel = tabsWrapper.querySelector('.tab-content[data-tab="reviews"]');
+    const reviewsWidget = document.getElementById('judgeme_product_reviews');
+
+    if (!reviewsTab || !reviewsPanel) return;
+
+    // Activate the Reviews tab
+    tabs.forEach(t => t.classList.remove('active'));
+    contents.forEach(c => c.classList.remove('active'));
+    reviewsTab.classList.add('active');
+    reviewsPanel.classList.add('active');
+
+    // Decide what to scroll to. Prefer the Judge.me widget if present
+    const target = reviewsWidget || reviewsPanel;
+
+    if (!target) return;
+
+    const headerOffset = 100; // tweak for sticky header height
+    const rect = target.getBoundingClientRect();
+    const targetTop = rect.top + window.pageYOffset - headerOffset;
+
+    window.scrollTo({
+      top: targetTop,
+      behavior: 'smooth'
+    });
+  }
+
+  // Delegate click from anywhere in the body to catch both preview badges
+  document.body.addEventListener('click', function (e) {
+    const badge = e.target.closest('.jdgm-preview-badge');
+    if (!badge) return;
+
+    e.preventDefault();
+    openReviewsTabAndScroll();
+  });
+});
+</script>
