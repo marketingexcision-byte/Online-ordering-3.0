@@ -1148,10 +1148,6 @@ function hideUpdateHint() {
         });
       });
 
-      el('#es-dia').addEventListener('input', (e) => {
-        const v = e.target.value.trim();
-        selected.diameter = v === '' ? null : Number(v);
-      });
 
       els('.es-next').forEach((b) => b.addEventListener('click', () => setStep(Math.min(5, step + 1))));
       els('.es-prev').forEach((b) => b.addEventListener('click', () => setStep(Math.max(1, step - 1))));
