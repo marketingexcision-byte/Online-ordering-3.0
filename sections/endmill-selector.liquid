@@ -590,17 +590,19 @@
       let DATASET = [];
       let PRODUCTS_READY = false;
 
-      const selected = {
+        const selected = {
         operationTag: null,
         iso: 'P',
         vdi: null,
         vdis: null,
         materialLabel: null,
+        materialBucketId: null,
         shapeTag: null,
         lengthTag: null,
         typeTag: null,
         diameter: null,
       };
+
 
       function pickVariantForCard(product) {
         const variants = product.variants || [];
@@ -888,11 +890,12 @@
           }
 
           const buckets = MATERIAL_BUCKETS.filter((b) => b.iso === iso);
-          const html = buckets
+                   const html = buckets
             .map(
               (b) =>
                 `<div class="material-group-card es-subgrade"
                  data-iso="${iso}"
+                 data-bucket-id="${b.id}"
                  data-vdis="${b.vdis.join('|')}"
                  data-label="${b.label.replace(/"/g, '&quot;')}">
                  <div class="mgc-title">${b.label}</div>
@@ -900,6 +903,7 @@
                </div>`
             )
             .join('');
+
 
           subgradeGrid.innerHTML = html;
           subgradeWrap.style.display = 'block';
@@ -909,14 +913,16 @@
               els('.es-subgrade').forEach((s) => s.classList.remove('active'));
               sub.classList.add('active');
 
-              const vdis = (sub.dataset.vdis || '')
+                            const vdis = (sub.dataset.vdis || '')
                 .split('|')
                 .map((s) => Number(s.trim()))
                 .filter((n) => !Number.isNaN(n));
 
-              selected.vdi = vdis;
-              const row = MAT.find((x) => vdis.includes(x.vdi));
-              selected.materialLabel = row ? row.user : null;
+              selected.vdis = vdis;
+              selected.materialBucketId = sub.dataset.bucketId || null;
+              selected.iso = iso; // keep ISO + bucket in sync
+              selected.materialLabel = sub.dataset.label || null;
+
 
               card.closest('.es-step').querySelector('.es-next').disabled = false;
             });
@@ -935,20 +941,25 @@
       const btnDiaC = () => el('#es-dia-clear');
       const selType = () => el('#es-sel-type');
 
-      function buildMaterialOptions(iso, currentVDI) {
-        const opts = [`<option value="">Any</option>`];
-        MAT.filter((m) => m.iso === iso).forEach((m) => {
-          const label = `${m.user} · VDI ${m.vdi}`;
-          const sel = currentVDI === m.vdi ? ' selected' : '';
-          opts.push(`<option value="${m.vdi}"${sel}>${label}</option>`);
-        });
+            function buildMaterialOptions(currentBucketId, isoFilter) {
+        const opts = ['<option value="">Any</option>'];
+
+        MATERIAL_BUCKETS
+          .filter((b) => !isoFilter || b.iso === isoFilter)
+          .forEach((b) => {
+            const sel = b.id === currentBucketId ? ' selected' : '';
+            const label = `${b.iso} · ${b.label}`;
+            opts.push(`<option value="${b.id}"${sel}>${label}</option>`);
+          });
+
         selMat().innerHTML = opts.join('');
       }
 
+
       function syncSummaryFromState() {
-        selOp().value = selected.operationTag || '';
+                selOp().value = selected.operationTag || '';
         selISO().value = selected.iso || 'P';
-        buildMaterialOptions(selISO().value, selected.vdi ?? null);
+        buildMaterialOptions(selected.materialBucketId || '', selISO().value || null);
         selSh().value = selected.shapeTag || '';
         selDia().value = selected.diameter != null ? String(selected.diameter) : '';
         selLen().value = selected.lengthTag || '';
@@ -974,30 +985,38 @@
           renderChips();
         });
 
-        selISO().addEventListener('change', () => {
-          selected.iso = selISO().value;
-          selected.vdi = null;
+                selISO().addEventListener('change', () => {
+          const iso = selISO().value || null;
+          selected.iso = iso;
+          selected.materialBucketId = null;
+          selected.vdis = null;
           selected.materialLabel = null;
-          buildMaterialOptions(selected.iso, null);
+          buildMaterialOptions('', iso);
           renderResults();
           renderChips();
         });
 
-        selMat().addEventListener('change', () => {
-          const v = selMat().value;
-          if (v === '') {
-            selected.vdi = null;
+
+               selMat().addEventListener('change', () => {
+          const id = selMat().value;
+          if (!id) {
+            selected.materialBucketId = null;
+            selected.vdis = null;
             selected.materialLabel = null;
           } else {
-            selected.vdi = Number(v);
-            const m = MAT.find((x) => x.vdi === selected.vdi);
-            selected.materialLabel = m ? m.user : null;
-            selected.iso = m ? m.iso : selected.iso;
-            selISO().value = selected.iso;
+            const bucket = MATERIAL_BUCKETS.find((b) => b.id === id);
+            if (bucket) {
+              selected.materialBucketId = bucket.id;
+              selected.vdis = bucket.vdis.slice();
+              selected.iso = bucket.iso;
+              selISO().value = bucket.iso;
+              selected.materialLabel = bucket.label;
+            }
           }
           renderResults();
           renderChips();
         });
+
 
         selSh().addEventListener('change', () => {
           selected.shapeTag = selSh().value || null;
@@ -1388,27 +1407,64 @@
         }
       }
 
-            function productMatchesFilters(p) {
+            function deriveIsoCodes(p, tags) {
+        const isoSet = new Set();
+
+        // From tags. e.g. tags containing ISO_P, ISO-P, etc.
+        (tags || []).forEach((t) => {
+          const m = String(t).match(/\bISO[_-]?([PMKNSH])\b/i);
+          if (m) isoSet.add(m[1].toUpperCase());
+        });
+
+        // From VDI lists
+        const allVdi = [];
+        if (Array.isArray(p.vdi_good)) allVdi.push(...p.vdi_good);
+        if (Array.isArray(p.vdi_excellent)) allVdi.push(...p.vdi_excellent);
+
+        allVdi.forEach((vdiNum) => {
+          const row = MAT.find((x) => x.vdi === Number(vdiNum));
+          if (row) isoSet.add(row.iso);
+        });
+
+        return Array.from(isoSet);
+      }
+
+
+      function productMatchesFilters(p) {
         if (!p) return false;
 
         const tags = Array.isArray(p.tags) ? p.tags : [];
         const hasTag = (tag) => !tag || tags.includes(tag);
 
-        // obey Operation / Shape / Length / Type
+        // Operation / Shape / Length / Type
         if (!hasTag(selected.operationTag)) return false;
         if (!hasTag(selected.shapeTag)) return false;
         if (!hasTag(selected.lengthTag)) return false;
         if (!hasTag(selected.typeTag)) return false;
 
-        // obey ISO if we can derive it. but don't *exclude* unknowns
-        if (selected.iso) {
+        const selectedVdis = Array.isArray(selected.vdis) ? selected.vdis : null;
+
+        // Material bucket (VDI groups)
+        if (selectedVdis && selectedVdis.length) {
+          const good = Array.isArray(p.vdi_good) ? p.vdi_good : [];
+          const excellent = Array.isArray(p.vdi_excellent) ? p.vdi_excellent : [];
+          const allVdi = [...good, ...excellent]
+            .map((n) => Number(n))
+            .filter((n) => !Number.isNaN(n));
+
+          if (!allVdi.length) return false;
+
+          const hasOverlap = selectedVdis.some((vdi) => allVdi.includes(vdi));
+          if (!hasOverlap) return false;
+        } else if (selected.iso) {
+          // ISO-only filter when no bucket chosen
           const isoCodes = deriveIsoCodes(p, tags);
           if (isoCodes.length && !isoCodes.includes(selected.iso)) {
             return false;
           }
         }
 
-        // obey diameter: require at least one exact match
+        // Diameter: require at least one exact match
         if (selected.diameter != null) {
           const target = Number(selected.diameter);
           const hasExact = (p.variants || []).some(
@@ -1419,6 +1475,7 @@
 
         return true;
       }
+
 
 
       function renderResults() {
