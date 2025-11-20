@@ -223,6 +223,19 @@
     <div id="es-results">
       <h3 class="h3" style="margin-top:0;">Results</h3>
 
+      <div id="es-update-hint" style="
+  display:none;
+  background:#fff3cd;
+  color:#856404;
+  border:1px solid #ffeeba;
+  padding:10px 14px;
+  border-radius:6px;
+  margin-bottom:15px;
+  font-size:14px;
+">
+  Filters changed. Press <strong>Show results</strong> to refresh.
+</div>
+
       {%- comment -%} Editable summary controls shown on results {%- endcomment -%}
       {% assign iso_tabs = 'P|M|K|N|S|H' | split: '|' %}
       {% assign ops = 'Profiling|Side Milling|Small Part|Slotting|Die Sinking|Facing|Corner|Helical-Interpol|Trochoidal|Side Taper'
@@ -1041,6 +1054,22 @@
 
         summaryEl.dataset.bound = '1';
       }
+
+      function showUpdateHint() {
+  const hint = document.getElementById('es-update-hint');
+  if (hint) {
+    hint.style.display = 'block';
+  }
+}
+
+// Hide after new results load
+function hideUpdateHint() {
+  const hint = document.getElementById('es-update-hint');
+  if (hint) {
+    hint.style.display = 'none';
+  }
+}
+
 
       function showSummary() {
         summaryEl.style.display = 'block';
