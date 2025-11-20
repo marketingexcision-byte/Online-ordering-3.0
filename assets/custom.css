@@ -5502,5 +5502,5 @@ span.jdgm-write-review-modal__checkbox-custom {
 }
 
 .jdgm-prev-badge {
-    margin-bottom: var(--space-3);
+    margin-bottom: var(--space-3) !important;
 }
