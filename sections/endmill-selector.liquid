@@ -311,8 +311,9 @@
         JS will clone this for each result.
       {%- endcomment -%}
       <div id="es-prototype" style="display:none;">
-        {% if section.settings.collection and section.settings.collection.products_count > 0 %}
-          {% assign sample_product = section.settings.collection.products.first %}
+        {% assign fallback_collection = section.settings.collection | default: collections['all-endmills'] %}
+        {% if fallback_collection and fallback_collection.products_count > 0 %}
+          {% assign sample_product = fallback_collection.products.first %}
           {% render 'product-grid-item-endmill-selector', product: sample_product %}
         {% endif %}
       </div>
@@ -1097,14 +1098,11 @@
         console.log('[ES] Sending payload to worker', payload);
 
         try {
-          const res = await fetch(
-            'https://endmill-selector.marketingexcision.workers.dev/api/endmill-selector',
-            {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(payload),
-            }
-          );
+          const res = await fetch('https://endmill-selector.marketingexcision.workers.dev/api/endmill-selector', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
 
           if (!res.ok) {
             throw new Error('Bad status ' + res.status);
@@ -1122,8 +1120,7 @@
         } catch (err) {
           console.error('[ES] Worker error', err);
           el('#es-empty').style.display = 'block';
-          el('#es-empty').textContent =
-            'Error loading products. Please try again.';
+          el('#es-empty').textContent = 'Error loading products. Please try again.';
           PRODUCTS_READY = false;
         }
       }
@@ -1142,8 +1139,7 @@
 
         if (!matches || matches.length === 0) {
           el('#es-empty').style.display = 'block';
-          el('#es-empty').textContent =
-            'No matching products. Loosen a filter or clear Diameter.';
+          el('#es-empty').textContent = 'No matching products. Loosen a filter or clear Diameter.';
           return;
         }
 
@@ -1158,9 +1154,20 @@
             // clone the Liquid-rendered prototype card
             card = protoCard.cloneNode(true);
           } else {
-            // hard fallback if prototype missing
+            // build a minimal card so we at least show something
             card = document.createElement('div');
             card.className = 'grid-item';
+
+            card.innerHTML = `
+    <a class="product-grid-item" href="#">
+      <div class="product-grid-image">
+        <div class="product-grid-image--centered">
+          <img class="product-image single" alt="">
+        </div>
+      </div>
+      <p class="font-bold cpgs_title"></p>
+    </a>
+  `;
           }
 
           const link =
