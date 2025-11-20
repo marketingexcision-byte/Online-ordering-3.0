@@ -615,32 +615,42 @@
         sort: 'default',
       };
 
-      function pickVariantForCard(product) {
-        const variants = product.variants || [];
-        if (!variants.length) return null;
+function variantHasValidPrice(v) {
+  if (!v) return false;
 
-        const targetDia = selected.diameter;
+  // case 1 – cents number
+  if (typeof v.price === "number" && v.price > 0) return true;
 
-        if (targetDia != null) {
-          // prefer exact diameter match if we have numeric dia_mm
-          const exact = variants.find((v) => v.dia_mm != null && Number(v.dia_mm) === Number(targetDia));
-          if (exact) return exact;
+  // case 2 – moneyV2 { amount: "X.YY" }
+  if (v.price && typeof v.price.amount === "string") {
+    const n = Number(v.price.amount);
+    return Number.isFinite(n) && n > 0;
+  }
 
-          // otherwise pick the closest diameter we know about
-          let best = null;
-          for (const v of variants) {
-            if (v.dia_mm == null) continue;
-            const dist = Math.abs(Number(v.dia_mm) - Number(targetDia));
-            if (!best || dist < best.dist) {
-              best = { v, dist };
-            }
-          }
-          if (best) return best.v;
-        }
+  return false;
+}
 
-        // no diameter filter. just take first variant
-        return variants[0];
-      }
+function pickVariantForCard(product) {
+  const variants = product.variants || [];
+  if (!variants.length) return null;
+
+  // Desired diameter
+  const targetDia = selected.diameter;
+
+  // If diameter is chosen, match EXACT first
+  if (targetDia != null) {
+    const exact = variants.find(v => v.dia_mm != null && Number(v.dia_mm) === Number(targetDia));
+    if (exact) return exact;
+  }
+
+  // Otherwise: pick the FIRST variant that has a real price
+  const firstPriced = variants.find(variantHasValidPrice);
+  if (firstPriced) return firstPriced;
+
+  // LAST RESORT: return the very first variant (but it will be handled as “quote”)
+  return variants[0];
+}
+
 
       // ---------- Helpers for tags / product classification ----------
       function normalizeTag(t) {
@@ -1219,46 +1229,96 @@
 
       // ---------- Filtering and rendering ----------
 
-      function hydratePrice(card, variant) {
-        if (!variant) return;
+      // card pricing + button state
+      // product is the Shopify product JSON. variant is the chosen variant for this card
+      function hydratePrice(card, product, variant) {
+        if (!card) return;
 
+        const incEl = card.querySelector('.ex-price__inc');
+        const exEl  = card.querySelector('.ex-price__ex');
+        const productUrl = product && product.handle ? `/products/${product.handle}` : '#';
+
+        // this will usually be the cloned "Add to Cart" button from the prototype
+        const btn =
+          card.querySelector('.add-to-cart-btn') ||
+          card.querySelector('.btn.btn--buyNow') ||
+          card.querySelector('.btn');
+
+        function toQuoteMode() {
+          // text line
+          if (incEl) {
+            incEl.textContent = 'Pricing available on request';
+          }
+          // remove EX GST row completely
+          if (exEl && exEl.parentElement) {
+            exEl.parentElement.removeChild(exEl);
+          }
+
+          // turn button into "Request Quote" link that goes to PDP
+          if (btn) {
+            btn.classList.remove('add-to-cart-btn');
+            btn.classList.add('is-quote');
+            btn.removeAttribute('data-variant-id');
+            btn.setAttribute('href', productUrl);
+            btn.style.background = '#f88d2b';
+            btn.style.color = '#fff';
+            btn.innerHTML = '<span style="display:flex;align-items:center;gap:10px;">Request Quote</span>';
+          }
+        }
+
+        // No variant or no real price. quote only
+        if (!variant || !variantHasValidPrice(variant)) {
+          toQuoteMode();
+          return;
+        }
+
+        // Variant has a real price
         let cents = 0;
         if (typeof variant.price === 'number') {
+          // cents
           cents = variant.price;
         } else if (variant.price && typeof variant.price.amount === 'string') {
+          // moneyV2
           const n = Number(variant.price.amount);
           if (!Number.isNaN(n)) cents = Math.round(n * 100);
         }
-        if (!cents) return;
 
-        const ex = cents / 100; // ex GST
-        const inc = ex * 1.1; // INC GST (10%)
+        // If we still did not get a usable price. treat as quote
+        if (!cents) {
+          toQuoteMode();
+          return;
+        }
 
-        const incEl = card.querySelector('.ex-price__inc');
-        const exEl = card.querySelector('.ex-price__ex');
+        const ex = cents / 100;         // ex GST
+        const inc = ex * 1.1;           // INC GST (10% GST)
 
         if (incEl) {
-          let label = incEl.querySelector('.inc-price__label');
-          if (!label) {
-            label = document.createElement('span');
-            label.className = 'inc-price__label';
-          }
-          incEl.textContent = `$${inc.toFixed(2)}`;
-          incEl.appendChild(label);
-          label.textContent = 'INC GST';
+          incEl.innerHTML = `$${inc.toFixed(2)}<span class="inc-price__label">INC GST</span>`;
+        }
+        if (exEl) {
+          exEl.innerHTML = `$${ex.toFixed(2)}<span class="ex-price__label">EX GST</span>`;
         }
 
-        if (exEl) {
-          let label = exEl.querySelector('.ex-price__label');
-          if (!label) {
-            label = document.createElement('span');
-            label.className = 'ex-price__label';
-          }
-          exEl.textContent = `$${ex.toFixed(2)}`;
-          exEl.appendChild(label);
-          label.textContent = 'EX GST';
+        // Make sure the button is an actual Add to Cart for this variant
+        if (btn) {
+          btn.classList.add('add-to-cart-btn');
+          btn.classList.remove('is-quote');
+          btn.setAttribute('href', 'javascript:void(0);');
+          btn.setAttribute('data-variant-id', String(variant.id));
+          btn.style.background = '#e0592a';
+          btn.style.color = '#fff';
+          btn.innerHTML = `
+            <span style="display:flex;align-items:center;gap:10px;">
+              <i
+                class="fa fa-cart"
+                style="content:url(https://cdn.shopify.com/s/files/1/0439/5597/8399/files/Asset_Cart-white.png?v=1730169426);height:17px;"
+              ></i>
+              Add to Cart
+            </span>
+          `;
         }
       }
+
 
       function hydrateQuickSpecs(card, product, variant) {
         if (!product || !variant) return;
@@ -1497,28 +1557,28 @@
         return true;
       }
 
+      // Used only for sorting. if there is no valid price we return Infinity so it sinks to the bottom
       function getVariantPrice(variant) {
-        if (!variant) return 0;
+        if (!variantHasValidPrice(variant)) return Infinity;
 
-        // Case 1. Shopify cents integer
+        // cents number
         if (typeof variant.price === 'number') {
-          return variant.price / 100; // convert cents → dollars
+          return variant.price / 100;
         }
 
-        // Case 2. Shopify moneyV2 format
+        // moneyV2 string amount
         if (variant.price && typeof variant.price.amount === 'string') {
           const n = Number(variant.price.amount);
-          return Number.isFinite(n) ? n : 0;
+          return Number.isFinite(n) ? n : Infinity;
         }
 
-        // Case 3. Some themes put price in variant.compare_at_price or variant.presentment_prices
         if (variant.compare_at_price && typeof variant.compare_at_price === 'number') {
           return variant.compare_at_price / 100;
         }
 
-        // Case 4. Missing or corrupted
-        return 0;
+        return Infinity;
       }
+
 
       function sortProducts(list) {
         const mode = selected.sort;
@@ -1533,23 +1593,37 @@
             return list.slice().sort((a, b) => b.title.localeCompare(a.title));
 
           case 'price-asc':
+            // cheapest real prices first. quote only items sink to the bottom
             return list.slice().sort((a, b) => {
               const av = pickVariantForCard(a);
               const bv = pickVariantForCard(b);
-              return getVariantPrice(av) - getVariantPrice(bv);
+              const ap = getVariantPrice(av);
+              const bp = getVariantPrice(bv);
+              return ap - bp;
             });
 
           case 'price-desc':
+            // highest price first. quote only items at the end
             return list.slice().sort((a, b) => {
               const av = pickVariantForCard(a);
               const bv = pickVariantForCard(b);
-              return getVariantPrice(bv) - getVariantPrice(av);
+              const aHas = variantHasValidPrice(av);
+              const bHas = variantHasValidPrice(bv);
+
+              if (!aHas && !bHas) return 0;
+              if (!aHas) return 1;  // a goes after b
+              if (!bHas) return -1; // b goes after a
+
+              const ap = getVariantPrice(av);
+              const bp = getVariantPrice(bv);
+              return bp - ap;
             });
 
           default:
             return list;
         }
       }
+
 
       function renderResults() {
         const grid = el('#es-grid');
@@ -1625,8 +1699,8 @@
               link.setAttribute('data-material-label', selected.materialLabel);
             }
 
-            // 4. hydrate price + specs for this specific variant
-            hydratePrice(card, chosenVariant);
+                        // 4. hydrate price + specs for this specific variant
+            hydratePrice(card, p, chosenVariant);
             hydrateQuickSpecs(card, p, chosenVariant);
           }
 
