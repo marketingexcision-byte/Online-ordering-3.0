@@ -1407,28 +1407,6 @@
         }
       }
 
-            function deriveIsoCodes(p, tags) {
-        const isoSet = new Set();
-
-        // From tags. e.g. tags containing ISO_P, ISO-P, etc.
-        (tags || []).forEach((t) => {
-          const m = String(t).match(/\bISO[_-]?([PMKNSH])\b/i);
-          if (m) isoSet.add(m[1].toUpperCase());
-        });
-
-        // From VDI lists
-        const allVdi = [];
-        if (Array.isArray(p.vdi_good)) allVdi.push(...p.vdi_good);
-        if (Array.isArray(p.vdi_excellent)) allVdi.push(...p.vdi_excellent);
-
-        allVdi.forEach((vdiNum) => {
-          const row = MAT.find((x) => x.vdi === Number(vdiNum));
-          if (row) isoSet.add(row.iso);
-        });
-
-        return Array.from(isoSet);
-      }
-
 
       function productMatchesFilters(p) {
         if (!p) return false;
