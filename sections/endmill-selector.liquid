@@ -1299,46 +1299,45 @@
 
         const stockEl = root.querySelector('[data-vqs__stock]');
         if (stockEl) {
-  const isYG1 =
-    Array.isArray(product.tags) && product.tags.some((t) => /yg-?1/i.test(t));
+          const isYG1 = Array.isArray(product.tags) && product.tags.some((t) => /yg-?1/i.test(t));
 
-  let status = 'grey';
-  let text = 'Quantity unavailable';
+          let status = 'grey';
+          let text = 'Quantity unavailable';
 
-  // Determine if variant has ANY inventory visibility at all
-  const managed =
-    variant.inventory_management ||
-    variant.inventory_policy ||
-    variant.inventory_quantity != null ||
-    variant.incoming != null;
+          // Determine if variant has ANY inventory visibility at all
+          const managed =
+            variant.inventory_management ||
+            variant.inventory_policy ||
+            variant.inventory_quantity != null ||
+            variant.incoming != null;
 
-  if (managed) {
-    const q = Number(variant.inventory_quantity || 0);
+          if (managed) {
+            const q = Number(variant.inventory_quantity || 0);
 
-    if (q > 2) {
-      status = 'green';
-      text = 'In stock';
-    } else if (q > 0) {
-      status = 'orange';
-      text = 'Low stock';
-    } else {
-      if (variant.incoming && variant.next_incoming_date) {
-        status = 'blue';
-        text = 'Restocking';
-      } else if (variant.inventory_policy === 'continue') {
-        status = isYG1 ? 'yellow' : 'red';
-        text = isYG1 ? '5 days' : 'Order in';
-      } else {
-        status = 'red';
-        text = 'No stock';
+            if (q > 2) {
+              status = 'green';
+              text = 'In stock';
+            } else if (q > 0) {
+              status = 'orange';
+              text = 'Low stock';
+            } else {
+              if (variant.incoming && variant.next_incoming_date) {
+                status = 'blue';
+                text = 'Restocking';
+              } else if (variant.inventory_policy === 'continue') {
+                status = isYG1 ? 'yellow' : 'red';
+                text = isYG1 ? '5 days' : 'Order in';
+              } else {
+                status = 'red';
+                text = 'No stock';
+              }
+            }
+          }
+
+          stockEl.textContent = text;
+          stockEl.dataset.status = status;
+        }
       }
-    }
-  }
-
-  stockEl.textContent = text;
-  stockEl.dataset.status = status;
-}
-
 
       function buildWorkerPayload() {
         return {
@@ -1405,62 +1404,55 @@
 
         // Material bucket (VDI groups)
         if (selectedVdis && selectedVdis.length) {
+          function parseVdiList(val) {
+            if (!val) return [];
 
-  function parseVdiList(val) {
-    if (!val) return [];
+            if (Array.isArray(val)) return val.map(Number).filter((n) => !isNaN(n));
 
-    if (Array.isArray(val))
-      return val.map(Number).filter((n) => !isNaN(n));
+            if (typeof val === 'string' && val.trim().startsWith('[')) {
+              try {
+                const arr = JSON.parse(val);
+                if (Array.isArray(arr)) {
+                  return arr.map(Number).filter((n) => !isNaN(n));
+                }
+              } catch (e) {}
+            }
 
-    if (typeof val === 'string' && val.trim().startsWith('[')) {
-      try {
-        const arr = JSON.parse(val);
-        if (Array.isArray(arr)) {
-          return arr.map(Number).filter((n) => !isNaN(n));
+            if (typeof val === 'string') {
+              return val
+                .split(',')
+                .map((x) => Number(x.trim()))
+                .filter((n) => !isNaN(n));
+            }
+
+            return [];
+          }
+
+          const good = parseVdiList(p.vdi_good);
+          const excellent = parseVdiList(p.vdi_excellent);
+          const allVdi = [...good, ...excellent];
+
+          if (!allVdi.length) {
+            return false;
+          }
+
+          const hasOverlap = selectedVdis.some((vdi) => allVdi.includes(vdi));
+          if (!hasOverlap) return false;
+        } else if (selected.iso) {
+          // ISO fallback when no bucket selected
+          const isoCodes = deriveIsoCodes(p, tags);
+          if (!isoCodes.includes(selected.iso)) return false;
         }
-      } catch (e) {}
-    }
 
-    if (typeof val === 'string') {
-      return val
-        .split(',')
-        .map((x) => Number(x.trim()))
-        .filter((n) => !isNaN(n));
-    }
+        // Diameter filtering
+        if (selected.diameter != null) {
+          const target = Number(selected.diameter);
+          const hasDia = (p.variants || []).some((v) => v.dia_mm != null && Number(v.dia_mm) === target);
+          if (!hasDia) return false;
+        }
 
-    return [];
-  }
-
-  const good = parseVdiList(p.vdi_good);
-  const excellent = parseVdiList(p.vdi_excellent);
-  const allVdi = [...good, ...excellent];
-
-  if (!allVdi.length) {
-    return false;
-  }
-
-  const hasOverlap = selectedVdis.some((vdi) => allVdi.includes(vdi));
-  if (!hasOverlap) return false;
-
-} else if (selected.iso) {
-    // ISO fallback when no bucket selected
-  const isoCodes = deriveIsoCodes(p, tags);
-  if (!isoCodes.includes(selected.iso)) return false;
-}
-
-// Diameter filtering
-if (selected.diameter != null) {
-  const target = Number(selected.diameter);
-  const hasDia = (p.variants || []).some(
-    (v) => v.dia_mm != null && Number(v.dia_mm) === target
-  );
-  if (!hasDia) return false;
-}
-
-return true;
-}
-
-
+        return true;
+      }
 
       function renderResults() {
         const grid = el('#es-grid');
