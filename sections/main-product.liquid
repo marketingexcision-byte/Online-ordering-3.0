@@ -4802,3 +4802,24 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 })();
 </script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const badge = document.querySelector('.jdgm-prev-badge');
+  const reviewsTab = document.querySelector('.tab[data-tab="reviews"]');
+
+  if (!badge) {
+    console.error('No .jdgm-prev-badge found.');
+    return;
+  }
+
+  if (!reviewsTab) {
+    console.error('No reviews tab found.');
+    return;
+  }
+
+  badge.addEventListener('click', function() {
+    reviewsTab.click();
+  });
+});
+</script>
