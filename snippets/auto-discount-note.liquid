@@ -1,12 +1,13 @@
 {%- comment -%}
-  Shows "NN% discount applied at checkout" for a logged-in customer.
-  It checks product tags against customer metafields in the "custom" namespace.
+  Shows "NN% discount applied at checkout".
+  For logged-in customers, it tries to resolve a customer-specific discount based on product tags.
   Order of resolution.
   1) Category match using the map below.
-  2) Fallback to store_wide_discount.
-  Edit the tag-to-metafield map to match your taxonomy exactly.
+  2) Fallback to store_wide_discount (customer metafield).
+  3) Fallback to collection metafield custom.discount_must_create_discount.
+  Collection discount shows even for guests.
 {%- endcomment -%}
- 
+
 {%- comment -%} Resolve product object for PDP and cards {%- endcomment -%}
 {%- assign p = product | default: card_product | default: item | default: item_product | default: nil -%}
 {%- if p and p.object_type == blank and p.product -%}
@@ -15,6 +16,9 @@
 
 {%- assign show_pct = null -%}
 
+{%- comment -%}
+  1. CUSTOMER-BASED DISCOUNT (only if customer is logged in)
+{%- endcomment -%}
 {%- if customer and p -%}
   {%- comment -%} Tag → customer metafield key map {%- endcomment -%}
   {%- assign discount_map = '
@@ -62,15 +66,35 @@
   {%- endif -%}
 {%- endif -%}
 
+{%- comment -%}
+  2. COLLECTION-LEVEL DISCOUNT METAFIELD
+     custom.discount_must_create_discount (Decimal, e.g. 10 for 10%)
+     Used if no customer discount has been resolved.
+{%- endcomment -%}
+{%- if p and (show_pct == null or show_pct == 0) -%}
+  {%- assign c = collection -%}
+  {%- if c == nil and p.collections and p.collections.size > 0 -%}
+    {%- assign c = p.collections.first -%}
+  {%- endif -%}
+
+  {%- if c and c.metafields.custom.discount_must_create_discount != blank -%}
+    {%- assign coll_raw = c.metafields.custom.discount_must_create_discount -%}
+    {%- assign coll_pct = coll_raw | default: 0 | plus: 0 -%}
+    {%- if coll_pct > 0 -%}
+      {%- assign show_pct = coll_pct -%}
+    {%- endif -%}
+  {%- endif -%}
+{%- endif -%}
+
 {%- comment -%} Format % . integers show without .0 . decimals left as-is {%- endcomment -%}
-{%- assign rounded_pct = show_pct | round: 0 -%}
+{%- assign rounded_pct = show_pct | default: 0 | round: 0 -%}
 {%- if rounded_pct == show_pct -%}
   {%- assign display_pct = rounded_pct -%}
 {%- else -%}
   {%- assign display_pct = show_pct -%}
 {%- endif -%}
 
-{%- if customer and show_pct > 0 -%}
+{%- if show_pct and show_pct > 0 -%}
   <div class="auto-discount-note" role="status" aria-live="polite">
     <span class="auto-discount-note__icon" aria-hidden="true">
       <!-- Inline tag icon. Scales with text. Uses currentColor. -->
