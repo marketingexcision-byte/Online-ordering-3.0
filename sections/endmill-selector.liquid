@@ -232,6 +232,17 @@
 
       <div id="es-editable-summary" class="card" style="display:none;margin:16px 0 22px;">
         <h4 class="h4" style="margin-top:0;">Your selections</h4>
+        <label class="rc-item">
+  <span class="rc-item__label">Sort</span>
+  <select id="es-sel-sort" class="form-input">
+    <option value="default">Recommended</option>
+    <option value="alpha-asc">A → Z</option>
+    <option value="alpha-desc">Z → A</option>
+    <option value="price-asc">Price: Low → High</option>
+    <option value="price-desc">Price: High → Low</option>
+  </select>
+</label>
+
         <div class="rc-row">
           <label class="rc-item">
             <span class="rc-item__label">Operation</span>
@@ -601,6 +612,7 @@
         lengthTag: null,
         typeTag: null,
         diameter: null,
+        sort: "default",
       };
 
       function pickVariantForCard(product) {
@@ -961,6 +973,14 @@
 
       function attachSummaryHandlersOnce() {
         if (summaryEl.dataset.bound === '1') return;
+
+        const selSort = () => el('#es-sel-sort');
+
+selSort().addEventListener('change', () => {
+  selected.sort = selSort().value;
+  queueResultsUpdate();
+});
+
 
         selOp().addEventListener('change', () => {
   selected.operationTag = selOp().value || null;
@@ -1482,6 +1502,38 @@ el('.es-finish').addEventListener('click', () => {
         return true;
       }
 
+      function sortProducts(list) {
+  const mode = selected.sort;
+
+  if (!mode || mode === "default") return list;
+
+  switch (mode) {
+    case "alpha-asc":
+      return list.slice().sort((a, b) => a.title.localeCompare(b.title));
+
+    case "alpha-desc":
+      return list.slice().sort((a, b) => b.title.localeCompare(a.title));
+
+    case "price-asc":
+      return list.slice().sort((a, b) => {
+        const av = pickVariantForCard(a);
+        const bv = pickVariantForCard(b);
+        return (av?.price || 0) - (bv?.price || 0);
+      });
+
+    case "price-desc":
+      return list.slice().sort((a, b) => {
+        const av = pickVariantForCard(a);
+        const bv = pickVariantForCard(b);
+        return (bv?.price || 0) - (av?.price || 0);
+      });
+
+    default:
+      return list;
+  }
+}
+
+
       function renderResults() {
         const grid = el('#es-grid');
         grid.innerHTML = '';
@@ -1492,7 +1544,9 @@ el('.es-finish').addEventListener('click', () => {
           return;
         }
 
-        const matches = (DATASET || []).filter(productMatchesFilters);
+        let matches = (DATASET || []).filter(productMatchesFilters);
+matches = sortProducts(matches);
+
 
         if (!matches || matches.length === 0) {
           el('#es-empty').style.display = 'block';
