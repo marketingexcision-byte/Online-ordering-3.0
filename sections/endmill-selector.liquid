@@ -1446,15 +1446,28 @@
           }
 
           // if your prototype card has an image, at least point it somewhere sensible
-          const img =
+                    const frontImg =
             card.querySelector('img.product-image.front') ||
             card.querySelector('img.product-image.single') ||
             card.querySelector('.product-grid-image img');
 
-          if (img && p.featuredImage) {
-            img.setAttribute('data-src', p.featuredImage);
-            // let your lazyload script handle swapping data-src → src
+          if (frontImg && p.featuredImage) {
+            frontImg.setAttribute('data-src', p.featuredImage);
+            frontImg.setAttribute('src', p.featuredImage);
           }
+
+          const backImg = card.querySelector('img.product-image.back');
+          if (backImg) {
+            const hoverUrl = p.hoverImage || p.featuredImage || null;
+            if (hoverUrl) {
+              backImg.setAttribute('data-src', hoverUrl);
+              backImg.setAttribute('src', hoverUrl);
+            } else {
+              // no sensible second image. hide the back one
+              backImg.parentElement && backImg.parentElement.removeChild(backImg);
+            }
+          }
+
 
           frag.appendChild(card);
         });
