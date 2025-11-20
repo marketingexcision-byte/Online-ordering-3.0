@@ -233,15 +233,15 @@
       <div id="es-editable-summary" class="card" style="display:none;margin:16px 0 22px;">
         <h4 class="h4" style="margin-top:0;">Your selections</h4>
         <label class="rc-item">
-  <span class="rc-item__label">Sort</span>
-  <select id="es-sel-sort" class="form-input">
-    <option value="default">Recommended</option>
-    <option value="alpha-asc">A → Z</option>
-    <option value="alpha-desc">Z → A</option>
-    <option value="price-asc">Price: Low → High</option>
-    <option value="price-desc">Price: High → Low</option>
-  </select>
-</label>
+          <span class="rc-item__label">Sort</span>
+          <select id="es-sel-sort" class="form-input">
+            <option value="default">Recommended</option>
+            <option value="alpha-asc">A → Z</option>
+            <option value="alpha-desc">Z → A</option>
+            <option value="price-asc">Price: Low → High</option>
+            <option value="price-desc">Price: High → Low</option>
+          </select>
+        </label>
 
         <div class="rc-row">
           <label class="rc-item">
@@ -612,7 +612,7 @@
         lengthTag: null,
         typeTag: null,
         diameter: null,
-        sort: "default",
+        sort: 'default',
       };
 
       function pickVariantForCard(product) {
@@ -976,16 +976,15 @@
 
         const selSort = () => el('#es-sel-sort');
 
-selSort().addEventListener('change', () => {
-  selected.sort = selSort().value;
-  queueResultsUpdate();
-});
-
+        selSort().addEventListener('change', () => {
+          selected.sort = selSort().value;
+          queueResultsUpdate();
+        });
 
         selOp().addEventListener('change', () => {
-  selected.operationTag = selOp().value || null;
-queueResultsUpdate();
-});
+          selected.operationTag = selOp().value || null;
+          queueResultsUpdate();
+        });
 
         selType().addEventListener('change', () => {
           selected.typeTag = selType().value || null;
@@ -1003,7 +1002,7 @@ queueResultsUpdate();
           selected.vdis = null;
           selected.materialLabel = null;
           buildMaterialOptions('', iso);
-         queueResultsUpdate();
+          queueResultsUpdate();
         });
 
         selMat().addEventListener('change', () => {
@@ -1055,30 +1054,28 @@ queueResultsUpdate();
       }
 
       function showUpdateHint() {
-  const hint = document.getElementById('es-update-hint');
-  if (hint) {
-    hint.style.display = 'block';
-  }
-}
+        const hint = document.getElementById('es-update-hint');
+        if (hint) {
+          hint.style.display = 'block';
+        }
+      }
 
-let esUpdateTimer = null;
-function queueResultsUpdate() {
-  if (esUpdateTimer) clearTimeout(esUpdateTimer);
-  esUpdateTimer = setTimeout(() => {
-    fetchAndRenderResults();
-    hideUpdateHint && hideUpdateHint(); // safe if exists
-  }, 350);
-}
+      let esUpdateTimer = null;
+      function queueResultsUpdate() {
+        if (esUpdateTimer) clearTimeout(esUpdateTimer);
+        esUpdateTimer = setTimeout(() => {
+          fetchAndRenderResults();
+          hideUpdateHint && hideUpdateHint(); // safe if exists
+        }, 350);
+      }
 
-
-// Hide after new results load
-function hideUpdateHint() {
-  const hint = document.getElementById('es-update-hint');
-  if (hint) {
-    hint.style.display = 'none';
-  }
-}
-
+      // Hide after new results load
+      function hideUpdateHint() {
+        const hint = document.getElementById('es-update-hint');
+        if (hint) {
+          hint.style.display = 'none';
+        }
+      }
 
       function showSummary() {
         summaryEl.style.display = 'block';
@@ -1168,29 +1165,27 @@ function hideUpdateHint() {
         });
       });
 
-
       els('.es-next').forEach((b) => b.addEventListener('click', () => setStep(Math.min(5, step + 1))));
       els('.es-prev').forEach((b) => b.addEventListener('click', () => setStep(Math.max(1, step - 1))));
-el('.es-finish').addEventListener('click', () => {
-  // 1. Pull diameter from wizard input
-  const d = el('#es-dia').value.trim();
-  selected.diameter = d === '' ? null : Number(d);
+      el('.es-finish').addEventListener('click', () => {
+        // 1. Pull diameter from wizard input
+        const d = el('#es-dia').value.trim();
+        selected.diameter = d === '' ? null : Number(d);
 
-  // 2. Reflect into summary field immediately
-  selDia().value = d;
+        // 2. Reflect into summary field immediately
+        selDia().value = d;
 
-  // 3. Move to step 5, show summary, fetch results
-  setStep(5);
-  showSummary();
-  fetchAndRenderResults();
+        // 3. Move to step 5, show summary, fetch results
+        setStep(5);
+        showSummary();
+        fetchAndRenderResults();
 
-  // 4. Scroll into view
-  window.scrollTo({ 
-    top: el('#es-results').offsetTop - 20, 
-    behavior: 'smooth' 
-  });
-});
-
+        // 4. Scroll into view
+        window.scrollTo({
+          top: el('#es-results').offsetTop - 20,
+          behavior: 'smooth',
+        });
+      });
 
       el('#es-reset').addEventListener('click', () => {
         selected.operationTag = null;
@@ -1502,37 +1497,59 @@ el('.es-finish').addEventListener('click', () => {
         return true;
       }
 
+      function getVariantPrice(variant) {
+        if (!variant) return 0;
+
+        // Case 1. Shopify cents integer
+        if (typeof variant.price === 'number') {
+          return variant.price / 100; // convert cents → dollars
+        }
+
+        // Case 2. Shopify moneyV2 format
+        if (variant.price && typeof variant.price.amount === 'string') {
+          const n = Number(variant.price.amount);
+          return Number.isFinite(n) ? n : 0;
+        }
+
+        // Case 3. Some themes put price in variant.compare_at_price or variant.presentment_prices
+        if (variant.compare_at_price && typeof variant.compare_at_price === 'number') {
+          return variant.compare_at_price / 100;
+        }
+
+        // Case 4. Missing or corrupted
+        return 0;
+      }
+
       function sortProducts(list) {
-  const mode = selected.sort;
+        const mode = selected.sort;
 
-  if (!mode || mode === "default") return list;
+        if (!mode || mode === 'default') return list;
 
-  switch (mode) {
-    case "alpha-asc":
-      return list.slice().sort((a, b) => a.title.localeCompare(b.title));
+        switch (mode) {
+          case 'alpha-asc':
+            return list.slice().sort((a, b) => a.title.localeCompare(b.title));
 
-    case "alpha-desc":
-      return list.slice().sort((a, b) => b.title.localeCompare(a.title));
+          case 'alpha-desc':
+            return list.slice().sort((a, b) => b.title.localeCompare(a.title));
 
-    case "price-asc":
-      return list.slice().sort((a, b) => {
-        const av = pickVariantForCard(a);
-        const bv = pickVariantForCard(b);
-        return (av?.price || 0) - (bv?.price || 0);
-      });
+          case 'price-asc':
+            return list.slice().sort((a, b) => {
+              const av = pickVariantForCard(a);
+              const bv = pickVariantForCard(b);
+              return getVariantPrice(av) - getVariantPrice(bv);
+            });
 
-    case "price-desc":
-      return list.slice().sort((a, b) => {
-        const av = pickVariantForCard(a);
-        const bv = pickVariantForCard(b);
-        return (bv?.price || 0) - (av?.price || 0);
-      });
+          case 'price-desc':
+            return list.slice().sort((a, b) => {
+              const av = pickVariantForCard(a);
+              const bv = pickVariantForCard(b);
+              return getVariantPrice(bv) - getVariantPrice(av);
+            });
 
-    default:
-      return list;
-  }
-}
-
+          default:
+            return list;
+        }
+      }
 
       function renderResults() {
         const grid = el('#es-grid');
@@ -1545,8 +1562,7 @@ el('.es-finish').addEventListener('click', () => {
         }
 
         let matches = (DATASET || []).filter(productMatchesFilters);
-matches = sortProducts(matches);
-
+        matches = sortProducts(matches);
 
         if (!matches || matches.length === 0) {
           el('#es-empty').style.display = 'block';
