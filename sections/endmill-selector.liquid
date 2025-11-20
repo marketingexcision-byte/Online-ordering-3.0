@@ -223,6 +223,18 @@
     <div id="es-results">
       <h3 class="h3" style="margin-top:0;">Results</h3>
 
+      <div id="es-sort-bar">
+  <label for="es-sel-sort">Sort:</label>
+  <select id="es-sel-sort">
+      <option value="default">Recommended</option>
+      <option value="alpha-asc">A → Z</option>
+      <option value="alpha-desc">Z → A</option>
+      <option value="price-asc" selected>Price: Low → High</option>
+      <option value="price-desc">Price: High → Low</option>
+  </select>
+</div>
+
+
       {%- comment -%} Editable summary controls shown on results {%- endcomment -%}
       {% assign iso_tabs = 'P|M|K|N|S|H' | split: '|' %}
       {% assign ops = 'Profiling|Side Milling|Small Part|Slotting|Die Sinking|Facing|Corner|Helical-Interpol|Trochoidal|Side Taper'
@@ -232,17 +244,7 @@
 
       <div id="es-editable-summary" class="card" style="display:none;margin:16px 0 22px;">
         <h4 class="h4" style="margin-top:0;">Your selections</h4>
-        <label class="rc-item">
-          <span class="rc-item__label">Sort</span>
-          <select id="es-sel-sort" class="form-input">
-    <option value="default">Recommended</option>
-    <option value="alpha-asc">A → Z</option>
-    <option value="alpha-desc">Z → A</option>
-    <option value="price-asc" selected>Price: Low → High</option>
-    <option value="price-desc">Price: High → Low</option>
-</select>
 
-        </label>
 
         <div class="rc-row">
           <label class="rc-item">
@@ -1877,6 +1879,35 @@ function pickVariantForCard(product) {
               --iso-S: #f88d2b;  /* Titanium & super alloys */
               --iso-H: #666666;  /* Hardened */
             }
+
+            #es-sort-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 15px;
+  justify-content: flex-end; /* RIGHT ALIGN */
+}
+
+#es-sort-bar label {
+  font-size: 14px;
+  color: #444;
+  font-weight: 600;
+}
+
+#es-sort-bar select {
+  padding: 6px 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  background: #fff;
+  cursor: pointer;
+  min-width: 180px;
+}
+
+#es-sort-bar select:hover {
+  border-color: #ccc;
+}
+
 
             /* Soft background + border tint by ISO */
             .material-group-card[data-iso="P"] {
