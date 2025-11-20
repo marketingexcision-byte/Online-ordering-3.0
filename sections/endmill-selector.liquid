@@ -1299,37 +1299,46 @@
 
         const stockEl = root.querySelector('[data-vqs__stock]');
         if (stockEl) {
-          const isYG1 = Array.isArray(product.tags) && product.tags.some((t) => /yg-?1/i.test(t));
+  const isYG1 =
+    Array.isArray(product.tags) && product.tags.some((t) => /yg-?1/i.test(t));
 
-          let status = 'grey';
-          let text = 'Quantity unavailable';
+  let status = 'grey';
+  let text = 'Quantity unavailable';
 
-          if (variant.inventory_management) {
-            const q = Number(variant.inventory_quantity || 0);
-            if (q > 2) {
-              status = 'green';
-              text = 'In stock';
-            } else if (q > 0) {
-              status = 'orange';
-              text = 'Low stock';
-            } else {
-              if (variant.incoming && variant.next_incoming_date) {
-                status = 'blue';
-                text = 'Restocking';
-              } else if (variant.inventory_policy === 'continue') {
-                status = isYG1 ? 'yellow' : 'red';
-                text = isYG1 ? '5 days' : 'Order in';
-              } else {
-                status = 'red';
-                text = 'No stock';
-              }
-            }
-          }
+  // Determine if variant has ANY inventory visibility at all
+  const managed =
+    variant.inventory_management ||
+    variant.inventory_policy ||
+    variant.inventory_quantity != null ||
+    variant.incoming != null;
 
-          stockEl.textContent = text;
-          stockEl.dataset.status = status;
-        }
+  if (managed) {
+    const q = Number(variant.inventory_quantity || 0);
+
+    if (q > 2) {
+      status = 'green';
+      text = 'In stock';
+    } else if (q > 0) {
+      status = 'orange';
+      text = 'Low stock';
+    } else {
+      if (variant.incoming && variant.next_incoming_date) {
+        status = 'blue';
+        text = 'Restocking';
+      } else if (variant.inventory_policy === 'continue') {
+        status = isYG1 ? 'yellow' : 'red';
+        text = isYG1 ? '5 days' : 'Order in';
+      } else {
+        status = 'red';
+        text = 'No stock';
       }
+    }
+  }
+
+  stockEl.textContent = text;
+  stockEl.dataset.status = status;
+}
+
 
       function buildWorkerPayload() {
         return {
