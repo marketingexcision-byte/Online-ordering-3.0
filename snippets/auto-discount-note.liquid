@@ -70,66 +70,64 @@
 
 {%- comment -%}
   2. COLLECTION-LEVEL SALE (metaobject)
-     custom.sale_discount -> website_sale
-     Fields:
-       * discount (Decimal)
-       * sale_name (Single line text)
-     Used if no customer discount has been resolved.
-     If product belongs to multiple collections, use the highest discount
-     found on any collection.
 {%- endcomment -%}
-{%- if p and (show_pct == nil or show_pct == 0) -%}
-  {%- assign best_coll_pct = 0 -%}
-  {%- assign best_sale_label = nil -%}
+{%- if p -%}
+  {%- if show_pct == nil or show_pct == 0 -%}
 
-  {%- comment -%}Check explicit collection in context first{%- endcomment -%}
-  {%- if collection -%}
-    {%- assign col = collection -%}
-    {%- assign sale_ref = col.metafields.custom.sale_discount -%}
-    {%- if sale_ref != blank -%}
-      {%- assign sale = sale_ref.value | default: sale_ref -%}
-      {%- assign coll_pct = sale.discount | default: 0 | plus: 0 -%}
-      {%- assign coll_name = sale.sale_name | default: '' -%}
-      {%- if coll_pct > best_coll_pct -%}
-        {%- assign best_coll_pct = coll_pct -%}
-        {%- assign best_sale_label = coll_name -%}
-      {%- endif -%}
-    {%- elsif col.metafields.custom.discount_must_create_discount != blank -%}
-      {%- assign coll_pct = col.metafields.custom.discount_must_create_discount | default: 0 | plus: 0 -%}
-      {%- if coll_pct > best_coll_pct -%}
-        {%- assign best_coll_pct = coll_pct -%}
-      {%- endif -%}
-    {%- endif -%}
-  {%- endif -%}
+    {%- assign best_coll_pct = 0 -%}
+    {%- assign best_sale_label = nil -%}
 
-  {%- comment -%}Then check all collections the product belongs to{%- endcomment -%}
-  {%- if p.collections and p.collections.size > 0 -%}
-    {%- for col in p.collections -%}
+    {%- comment -%}Check explicit collection in context first{%- endcomment -%}
+    {%- if collection -%}
+      {%- assign col = collection -%}
       {%- assign sale_ref = col.metafields.custom.sale_discount -%}
       {%- if sale_ref != blank -%}
         {%- assign sale = sale_ref.value | default: sale_ref -%}
         {%- assign coll_pct = sale.discount | default: 0 | plus: 0 -%}
         {%- assign coll_name = sale.sale_name | default: '' -%}
+        {%- if coll_pct > best_coll_pct -%}
+          {%- assign best_coll_pct = coll_pct -%}
+          {%- assign best_sale_label = coll_name -%}
+        {%- endif -%}
       {%- elsif col.metafields.custom.discount_must_create_discount != blank -%}
-        {%- assign coll_pct = col.metafields.custom.discount_must_create_discount | default: 0 | plus: 0 -%}
-        {%- assign coll_name = '' -%}
-      {%- else -%}
-        {%- assign coll_pct = 0 -%}
-        {%- assign coll_name = '' -%}
+        {%- assign coll_pct = col.metafields.custom.discount_must_create_discount | plus: 0 -%}
+        {%- if coll_pct > best_coll_pct -%}
+          {%- assign best_coll_pct = coll_pct -%}
+        {%- endif -%}
       {%- endif -%}
+    {%- endif -%}
 
-      {%- if coll_pct > best_coll_pct -%}
-        {%- assign best_coll_pct = coll_pct -%}
-        {%- assign best_sale_label = coll_name -%}
-      {%- endif -%}
-    {%- endfor -%}
-  {%- endif -%}
+    {%- comment -%}Then check all collections the product belongs to{%- endcomment -%}
+    {%- if p.collections and p.collections.size > 0 -%}
+      {%- for col in p.collections -%}
+        {%- assign sale_ref = col.metafields.custom.sale_discount -%}
+        {%- if sale_ref != blank -%}
+          {%- assign sale = sale_ref.value | default: sale_ref -%}
+          {%- assign coll_pct = sale.discount | plus: 0 -%}
+          {%- assign coll_name = sale.sale_name | default: '' -%}
+        {%- elsif col.metafields.custom.discount_must_create_discount != blank -%}
+          {%- assign coll_pct = col.metafields.custom.discount_must_create_discount | plus: 0 -%}
+          {%- assign coll_name = '' -%}
+        {%- else -%}
+          {%- assign coll_pct = 0 -%}
+          {%- assign coll_name = '' -%}
+        {%- endif -%}
 
-  {%- if best_coll_pct > 0 -%}
-    {%- assign show_pct = best_coll_pct -%}
-    {%- assign sale_label = best_sale_label -%}
+        {%- if coll_pct > best_coll_pct -%}
+          {%- assign best_coll_pct = coll_pct -%}
+          {%- assign best_sale_label = coll_name -%}
+        {%- endif -%}
+      {%- endfor -%}
+    {%- endif -%}
+
+    {%- if best_coll_pct > 0 -%}
+      {%- assign show_pct = best_coll_pct -%}
+      {%- assign sale_label = best_sale_label -%}
+    {%- endif -%}
+
   {%- endif -%}
 {%- endif -%}
+
 
 {%- comment -%} Format % . integers show without .0 . decimals left as-is {%- endcomment -%}
 {%- assign rounded_pct = show_pct | default: 0 | round: 0 -%}
