@@ -1434,6 +1434,23 @@
   if (!hasOverlap) return false;
 
 } else if (selected.iso) {
+    // ISO fallback when no bucket selected
+  const isoCodes = deriveIsoCodes(p, tags);
+  if (!isoCodes.includes(selected.iso)) return false;
+}
+
+// Diameter filtering
+if (selected.diameter != null) {
+  const target = Number(selected.diameter);
+  const hasDia = (p.variants || []).some(
+    (v) => v.dia_mm != null && Number(v.dia_mm) === target
+  );
+  if (!hasDia) return false;
+}
+
+return true;
+}
+
 
 
       function renderResults() {
