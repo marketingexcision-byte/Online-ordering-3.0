@@ -1054,6 +1054,16 @@
   }
 }
 
+let esUpdateTimer = null;
+function queueResultsUpdate() {
+  if (esUpdateTimer) clearTimeout(esUpdateTimer);
+  esUpdateTimer = setTimeout(() => {
+    fetchAndRenderResults();
+    hideUpdateHint && hideUpdateHint(); // safe if exists
+  }, 350);
+}
+
+
 // Hide after new results load
 function hideUpdateHint() {
   const hint = document.getElementById('es-update-hint');
