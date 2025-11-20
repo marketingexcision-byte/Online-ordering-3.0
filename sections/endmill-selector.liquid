@@ -602,7 +602,7 @@
         diameter: null,
       };
 
-            function pickVariantForCard(product) {
+      function pickVariantForCard(product) {
         const variants = product.variants || [];
         if (!variants.length) return null;
 
@@ -610,7 +610,7 @@
 
         if (targetDia != null) {
           // prefer exact diameter match if we have numeric dia_mm
-          const exact = variants.find(v => v.dia_mm != null && Number(v.dia_mm) === Number(targetDia));
+          const exact = variants.find((v) => v.dia_mm != null && Number(v.dia_mm) === Number(targetDia));
           if (exact) return exact;
 
           // otherwise pick the closest diameter we know about
@@ -628,7 +628,6 @@
         // no diameter filter. just take first variant
         return variants[0];
       }
-
 
       // ---------- Helpers for tags / product classification ----------
       function normalizeTag(t) {
@@ -896,7 +895,6 @@
       function attachSummaryHandlersOnce() {
         if (summaryEl.dataset.bound === '1') return;
 
-
         selOp().addEventListener('change', () => {
           selected.operationTag = selOp().value || null;
           renderResults();
@@ -1105,6 +1103,104 @@
 
       // ---------- Filtering and rendering ----------
 
+      function hydratePrice(card, variant) {
+        if (!variant) return;
+
+        let cents = 0;
+        if (typeof variant.price === 'number') {
+          cents = variant.price;
+        } else if (variant.price && typeof variant.price.amount === 'string') {
+          const n = Number(variant.price.amount);
+          if (!Number.isNaN(n)) cents = Math.round(n * 100);
+        }
+        if (!cents) return;
+
+        const ex = cents / 100; // ex GST
+        const inc = ex * 1.1; // INC GST (10%)
+
+        const incEl = card.querySelector('.ex-price__inc');
+        const exEl = card.querySelector('.ex-price__ex');
+
+        if (incEl) {
+          let label = incEl.querySelector('.inc-price__label');
+          if (!label) {
+            label = document.createElement('span');
+            label.className = 'inc-price__label';
+          }
+          incEl.textContent = `$${inc.toFixed(2)}`;
+          incEl.appendChild(label);
+          label.textContent = 'INC GST';
+        }
+
+        if (exEl) {
+          let label = exEl.querySelector('.ex-price__label');
+          if (!label) {
+            label = document.createElement('span');
+            label.className = 'ex-price__label';
+          }
+          exEl.textContent = `$${ex.toFixed(2)}`;
+          exEl.appendChild(label);
+          label.textContent = 'EX GST';
+        }
+      }
+
+      function hydrateQuickSpecs(card, product, variant) {
+        if (!product || !variant) return;
+
+        const root = card.querySelector('[data-vqs]');
+        if (!root) return;
+
+        const setVal = (selector, val) => {
+          const el = root.querySelector(selector);
+          if (!el) return;
+          el.textContent = val !== null && val !== undefined && val !== '' ? String(val) : '—';
+        };
+
+        // core variant geometry
+        setVal('[data-vqs__sku]', variant.sku || '');
+        setVal('[data-vqs__dia]', variant.dia_mm != null ? `${variant.dia_mm} mm` : '');
+        setVal('[data-vqs__shank]', variant.shank_diameter_mm_mf != null ? `${variant.shank_diameter_mm_mf} mm` : '');
+        setVal('[data-vqs__loc]', variant.length_of_cut_mm != null ? `${variant.length_of_cut_mm} mm` : '');
+
+        const tags = Array.isArray(product.tags) ? product.tags : [];
+
+        const findTagVal = (prefix) => {
+          const t = tags.find((tt) => tt.startsWith(prefix));
+          return t ? t.slice(prefix.length) : null;
+        };
+
+        const shankType = findTagVal('Shank Type_');
+        const chamfer = findTagVal('Chamfer Angle_');
+        const flutes = findTagVal('No. Flutes_');
+
+        setVal('[data-vqs__shanktype]', shankType || '');
+        setVal('[data-vqs__chamfer]', chamfer ? `${chamfer}°` : '');
+        setVal('[data-vqs__flutes]', flutes || '');
+
+        // operations
+        const opTags = tags.filter((t) => t.startsWith('Operation_')).map((t) => t.replace('Operation_', ''));
+        setVal('[data-vqs__ops]', opTags.join(', '));
+
+        // workpiece materials (Carbon Steels_Excellent → Carbon Steels (Excellent))
+        const matTags = tags
+          .filter((t) => /_(Excellent|Great)$/i.test(t))
+          .map((t) => {
+            const m = t.match(/^(.*)_(Excellent|Great)$/i);
+            return m ? `${m[1]} (${m[2]})` : t;
+          });
+        const matsEl = root.querySelector('.vqs-mats[data-vqs__mats]');
+        if (matsEl) {
+          matsEl.textContent = matTags.length ? matTags.join(', ') : '—';
+        }
+
+        const stockEl = root.querySelector('[data-vqs__stock]');
+        if (stockEl) {
+          const available = !!variant.available;
+          stockEl.textContent = available ? 'In Stock' : 'Back Order';
+          stockEl.dataset.status = available ? 'in-stock' : 'backorder';
+        }
+      }
+
       function buildWorkerPayload() {
         return {
           shapeTag: selected.shapeTag,
@@ -1200,38 +1296,37 @@
           }
 
           const link =
-  card.querySelector('.product-grid-item') ||
-  card.querySelector('.product-grid-item__link') ||
-  card.querySelector('a');
+            card.querySelector('.product-grid-item') ||
+            card.querySelector('.product-grid-item__link') ||
+            card.querySelector('a');
 
-if (link) {
-  // 1. basic wiring
-  link.href = `/products/${p.handle}`;
-  try {
-    link.setAttribute('data-product-json', JSON.stringify(p));
-  } catch (e) {
-    console.warn('[ES] Failed to stringify product JSON', e, p);
-  }
+          if (link) {
+            // 1. basic wiring
+            link.href = `/products/${p.handle}`;
+            try {
+              link.setAttribute('data-product-json', JSON.stringify(p));
+            } catch (e) {
+              console.warn('[ES] Failed to stringify product JSON', e, p);
+            }
 
-  // 2. pick the variant this card should represent
-  const chosenVariant = pickVariantForCard(p);
-  if (chosenVariant) {
-    link.setAttribute('data-variant-id', String(chosenVariant.id));
-  }
+            // 2. pick the variant this card should represent
+            const chosenVariant = pickVariantForCard(p);
+            if (chosenVariant) {
+              link.setAttribute('data-variant-id', String(chosenVariant.id));
+            }
 
-  // 3. optional. feed some context to the suitability line
-  if (selected.operationTag) {
-    link.setAttribute('data-op-label', selected.operationTag);
-  }
-  if (selected.materialLabel) {
-    link.setAttribute('data-material-label', selected.materialLabel);
-  }
+            // 3. optional context attributes
+            if (selected.operationTag) {
+              link.setAttribute('data-op-label', selected.operationTag);
+            }
+            if (selected.materialLabel) {
+              link.setAttribute('data-material-label', selected.materialLabel);
+            }
 
-  // 4. tell the grid snippet to hydrate this card
-  const ev = new CustomEvent('es:hydrate-card', { bubbles: true });
-  link.dispatchEvent(ev);
-}
-
+            // 4. hydrate price + specs for this specific variant
+            hydratePrice(card, chosenVariant);
+            hydrateQuickSpecs(card, p, chosenVariant);
+          }
 
           const titleEl =
             card.querySelector('.cpgs_title') ||
@@ -1275,141 +1370,6 @@ if (link) {
           chipIso.style.display = 'none';
         }
       }
-
-            // ---------- Card hydration from data-product-json + data-variant-id ----------
-
-      function parseVariantNumericId(id) {
-        if (!id) return null;
-        const m = String(id).match(/(\d+)$/);
-        return m ? m[1] : null;
-      }
-
-      function pickVariantById(product, variantIdAttr) {
-        if (!product || !Array.isArray(product.variants) || !product.variants.length) return null;
-        if (!variantIdAttr) return product.variants[0];
-
-        const numeric = parseVariantNumericId(variantIdAttr);
-
-        let v = product.variants.find((vv) => String(vv.id) === String(variantIdAttr));
-        if (!v && numeric) {
-          v = product.variants.find((vv) => parseVariantNumericId(vv.id) === numeric);
-        }
-        return v || product.variants[0];
-      }
-
-      function hydratePrice(link, variant) {
-        const cents = typeof variant.price === 'number' ? variant.price : 0;
-
-        const ex = cents / 100;        // ex GST
-        const inc = ex * 1.1;          // hard-coded 10% GST
-
-        const exText = ex.toFixed(2);
-        const incText = inc.toFixed(2);
-
-        const incEl = link.querySelector('.ex-price__inc');
-        const exEl  = link.querySelector('.ex-price__ex');
-
-        if (incEl) {
-          let label = incEl.querySelector('.inc-price__label');
-          if (!label) {
-            label = document.createElement('span');
-            label.className = 'inc-price__label';
-          }
-          incEl.textContent = `$${incText}`;
-          incEl.appendChild(label);
-          label.textContent = 'INC GST';
-        }
-
-        if (exEl) {
-          let label = exEl.querySelector('.ex-price__label');
-          if (!label) {
-            label = document.createElement('span');
-            label.className = 'ex-price__label';
-          }
-          exEl.textContent = `$${exText}`;
-          exEl.appendChild(label);
-          label.textContent = 'EX GST';
-        }
-      }
-
-      function hydrateQuickSpecs(link, product, variant) {
-        const root = link.querySelector('[data-vqs]');
-        if (!root) return;
-
-        const setVal = (selector, val) => {
-          const el = root.querySelector(selector);
-          if (!el) return;
-          el.textContent = (val !== null && val !== undefined && val !== '') ? String(val) : '—';
-        };
-
-        // basic variant fields
-        setVal('[data-vqs__sku]', variant.sku || '');
-        setVal('[data-vqs__dia]',   variant.dia_mm != null ? `${variant.dia_mm} mm` : '');
-        setVal('[data-vqs__shank]', variant.shank_diameter_mm_mf != null ? `${variant.shank_diameter_mm_mf} mm` : '');
-        setVal('[data-vqs__loc]',   variant.length_of_cut_mm != null ? `${variant.length_of_cut_mm} mm` : '');
-
-        const tags = Array.isArray(product.tags) ? product.tags : [];
-
-        const findTagVal = (prefix) => {
-          const t = tags.find((tt) => tt.startsWith(prefix));
-          return t ? t.slice(prefix.length) : null;
-        };
-
-        const shankType = findTagVal('Shank Type_');
-        const chamfer   = findTagVal('Chamfer Angle_');
-        const flutes    = findTagVal('No. Flutes_');
-
-        setVal('[data-vqs__shanktype]', shankType || '');
-        setVal('[data-vqs__chamfer]',    chamfer ? `${chamfer}°` : '');
-        setVal('[data-vqs__flutes]',     flutes || '');
-
-        // operations (product-level. but variant-relevant enough)
-        const opTags = tags
-          .filter((t) => t.startsWith('Operation_'))
-          .map((t) => t.replace('Operation_', ''));
-        setVal('[data-vqs__ops]', opTags.join(', '));
-
-        // workpiece materials: Carbon Steels_Excellent → Carbon Steels (Excellent)
-        const matTags = tags
-          .filter((t) => /_(Excellent|Great)$/i.test(t))
-          .map((t) => {
-            const m = t.match(/^(.*)_(Excellent|Great)$/i);
-            return m ? `${m[1]} (${m[2]})` : t;
-          });
-        setVal('.vqs-mats[data-vqs__mats]', matTags.join(', '));
-
-        // stock badge. just use availableForSale. we don't have real inventory here
-        const stockEl = root.querySelector('[data-vqs__stock]');
-        if (stockEl) {
-          const available = !!variant.available;
-          stockEl.textContent = available ? 'In Stock' : 'Back Order';
-          stockEl.dataset.status = available ? 'in-stock' : 'backorder';
-        }
-      }
-
-      document.addEventListener('es:hydrate-card', (event) => {
-        const link = event.target.closest('a.product-grid-item, a');
-        if (!link) return;
-
-        const raw = link.getAttribute('data-product-json');
-        if (!raw) return;
-
-        let product;
-        try {
-          product = JSON.parse(raw);
-        } catch (err) {
-          console.error('[ES] Invalid data-product-json on card', err, raw);
-          return;
-        }
-
-        const variantIdAttr = link.getAttribute('data-variant-id');
-        const variant = pickVariantById(product, variantIdAttr);
-        if (!variant) return;
-
-        hydratePrice(link, variant);
-        hydrateQuickSpecs(link, product, variant);
-      });
-
 
       // ---------- Debug helper for 4G coverage ----------
       window.ES_DEBUG = window.ES_DEBUG || {};
