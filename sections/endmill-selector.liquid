@@ -1226,12 +1226,18 @@
           '[data-vqs__dia]',
           variant.dia_mm != null ? `${variant.dia_mm} mm` : ''
         );
+                const shankDia =
+          variant.shank_diameter_mm_mf != null
+            ? variant.shank_diameter_mm_mf
+            : variant.shank_diameter_mm_opt != null
+            ? variant.shank_diameter_mm_opt
+            : null;
+
         setVal(
           '[data-vqs__shank]',
-          variant.shank_diameter_mm_mf != null
-            ? `${variant.shank_diameter_mm_mf} mm`
-            : ''
+          shankDia != null ? `${shankDia} mm` : ''
         );
+
         setVal(
           '[data-vqs__loc]',
           variant.length_of_cut_mm != null
@@ -1295,12 +1301,41 @@
           }
         }
 
-        const stockEl = root.querySelector('[data-vqs__stock]');
+                const stockEl = root.querySelector('[data-vqs__stock]');
         if (stockEl) {
-          const available = !!variant.available;
-          stockEl.textContent = available ? 'In Stock' : 'Back Order';
-          stockEl.dataset.status = available ? 'in-stock' : 'backorder';
+          const isYG1 =
+            Array.isArray(product.tags) &&
+            product.tags.some((t) => /yg-?1/i.test(t));
+
+          let status = 'grey';
+          let text = 'Quantity unavailable';
+
+          if (variant.inventory_management) {
+            const q = Number(variant.inventory_quantity || 0);
+            if (q > 2) {
+              status = 'green';
+              text = 'In stock';
+            } else if (q > 0) {
+              status = 'orange';
+              text = 'Low stock';
+            } else {
+              if (variant.incoming && variant.next_incoming_date) {
+                status = 'blue';
+                text = 'Restocking';
+              } else if (variant.inventory_policy === 'continue') {
+                status = isYG1 ? 'yellow' : 'red';
+                text = isYG1 ? '5 days' : 'Order in';
+              } else {
+                status = 'red';
+                text = 'No stock';
+              }
+            }
+          }
+
+          stockEl.textContent = text;
+          stockEl.dataset.status = status;
         }
+
       }
 
 
@@ -1353,6 +1388,39 @@
         }
       }
 
+            function productMatchesFilters(p) {
+        if (!p) return false;
+
+        const tags = Array.isArray(p.tags) ? p.tags : [];
+        const hasTag = (tag) => !tag || tags.includes(tag);
+
+        // obey Operation / Shape / Length / Type
+        if (!hasTag(selected.operationTag)) return false;
+        if (!hasTag(selected.shapeTag)) return false;
+        if (!hasTag(selected.lengthTag)) return false;
+        if (!hasTag(selected.typeTag)) return false;
+
+        // obey ISO if we can derive it. but don't *exclude* unknowns
+        if (selected.iso) {
+          const isoCodes = deriveIsoCodes(p, tags);
+          if (isoCodes.length && !isoCodes.includes(selected.iso)) {
+            return false;
+          }
+        }
+
+        // obey diameter: require at least one exact match
+        if (selected.diameter != null) {
+          const target = Number(selected.diameter);
+          const hasExact = (p.variants || []).some(
+            (v) => v.dia_mm != null && Number(v.dia_mm) === target
+          );
+          if (!hasExact) return false;
+        }
+
+        return true;
+      }
+
+
       function renderResults() {
         const grid = el('#es-grid');
         grid.innerHTML = '';
@@ -1363,7 +1431,7 @@
           return;
         }
 
-        const matches = DATASET;
+            const matches = (DATASET || []).filter(productMatchesFilters);
 
         if (!matches || matches.length === 0) {
           el('#es-empty').style.display = 'block';
