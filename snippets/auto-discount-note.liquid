@@ -14,7 +14,7 @@
   {%- assign p = p.product -%}
 {%- endif -%}
 
-{%- assign show_pct = null -%}
+{%- assign show_pct = nil -%}
 
 {%- comment -%}
   1. CUSTOMER-BASED DISCOUNT (only if customer is logged in)
@@ -70,23 +70,41 @@
   2. COLLECTION-LEVEL DISCOUNT METAFIELD
      custom.discount_must_create_discount (Decimal, e.g. 10 for 10%)
      Used if no customer discount has been resolved.
+     If product belongs to multiple collections, use the highest discount
+     found on any collection.
 {%- endcomment -%}
 {%- if p -%}
   {%- if show_pct == nil or show_pct == 0 -%}
-    {%- assign c = collection -%}
-    {%- if c == nil and p.collections and p.collections.size > 0 -%}
-      {%- assign c = p.collections.first -%}
+    {%- assign best_coll_pct = 0 -%}
+
+    {%- comment -%}Check explicit collection in context first (if any){%- endcomment -%}
+    {%- if collection and collection.metafields.custom.discount_must_create_discount != blank -%}
+      {%- assign coll_raw = collection.metafields.custom.discount_must_create_discount -%}
+      {%- assign coll_pct = coll_raw | default: 0 | plus: 0 -%}
+      {%- if coll_pct > best_coll_pct -%}
+        {%- assign best_coll_pct = coll_pct -%}
+      {%- endif -%}
     {%- endif -%}
 
-    {%- if c and c.metafields.custom.discount_must_create_discount != blank -%}
-      {%- assign coll_raw = c.metafields.custom.discount_must_create_discount -%}
-      {%- assign coll_pct = coll_raw | default: 0 | plus: 0 -%}
-      {%- if coll_pct > 0 -%}
-        {%- assign show_pct = coll_pct -%}
-      {%- endif -%}
+    {%- comment -%}Then check all collections this product belongs to{%- endcomment -%}
+    {%- if p.collections and p.collections.size > 0 -%}
+      {%- for col in p.collections -%}
+        {%- if col.metafields.custom.discount_must_create_discount != blank -%}
+          {%- assign coll_raw = col.metafields.custom.discount_must_create_discount -%}
+          {%- assign coll_pct = coll_raw | default: 0 | plus: 0 -%}
+          {%- if coll_pct > best_coll_pct -%}
+            {%- assign best_coll_pct = coll_pct -%}
+          {%- endif -%}
+        {%- endif -%}
+      {%- endfor -%}
+    {%- endif -%}
+
+    {%- if best_coll_pct > 0 -%}
+      {%- assign show_pct = best_coll_pct -%}
     {%- endif -%}
   {%- endif -%}
 {%- endif -%}
+
 
 
 {%- comment -%} Format % . integers show without .0 . decimals left as-is {%- endcomment -%}
