@@ -629,5 +629,46 @@
         return { open: open, close: close };
       })();
     </script>
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+
+  // CLICK THE WHOLE WIDGET INSTEAD OF THE HIDDEN BADGE
+  const trigger = document.querySelector('.jdgm-widget.jdgm-preview-badge');
+
+  const reviewsTab = document.querySelector('.tab[data-tab="reviews"]');
+  const reviewsContent = document.querySelector('.tab-content[data-tab="reviews"]');
+
+  if (!trigger) {
+    console.error('No Judge.me preview widget found.');
+    return;
+  }
+
+  trigger.addEventListener('click', function() {
+    if (!reviewsTab || !reviewsContent) {
+      console.error('Reviews tab or content not found.');
+      return;
+    }
+
+    // Remove active from other tabs
+    document.querySelectorAll('.tab.active').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content.active').forEach(c => c.classList.remove('active'));
+
+    // Activate the reviews tab + content
+    reviewsTab.classList.add('active');
+    reviewsContent.classList.add('active');
+
+    // Scroll to the tab
+    reviewsTab.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start'
+    });
+
+    // Trigger the tab's click handler if the theme needs it
+    reviewsTab.click();
+  });
+
+});
+</script>
+
   </body>
 </html>
