@@ -1152,14 +1152,25 @@ function hideUpdateHint() {
       els('.es-next').forEach((b) => b.addEventListener('click', () => setStep(Math.min(5, step + 1))));
       els('.es-prev').forEach((b) => b.addEventListener('click', () => setStep(Math.max(1, step - 1))));
 el('.es-finish').addEventListener('click', () => {
+  // 1. Pull diameter from wizard input
+  const d = el('#es-dia').value.trim();
+  selected.diameter = d === '' ? null : Number(d);
+
+  // 2. Reflect into summary field immediately
+  selDia().value = d;
+
+  // 3. Move to step 5, show summary, fetch results
   setStep(5);
   showSummary();
-
-  // On first arrival to results, force a full fetch
   fetchAndRenderResults();
 
-  // After this point, auto-update takes over
+  // 4. Scroll into view
+  window.scrollTo({ 
+    top: el('#es-results').offsetTop - 20, 
+    behavior: 'smooth' 
+  });
 });
+
 
       el('#es-reset').addEventListener('click', () => {
         selected.operationTag = null;
