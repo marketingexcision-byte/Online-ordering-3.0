@@ -235,12 +235,13 @@
         <label class="rc-item">
           <span class="rc-item__label">Sort</span>
           <select id="es-sel-sort" class="form-input">
-            <option value="default">Recommended</option>
-            <option value="alpha-asc">A → Z</option>
-            <option value="alpha-desc">Z → A</option>
-            <option value="price-asc">Price: Low → High</option>
-            <option value="price-desc">Price: High → Low</option>
-          </select>
+    <option value="default">Recommended</option>
+    <option value="alpha-asc">A → Z</option>
+    <option value="alpha-desc">Z → A</option>
+    <option value="price-asc" selected>Price: Low → High</option>
+    <option value="price-desc">Price: High → Low</option>
+</select>
+
         </label>
 
         <div class="rc-row">
@@ -612,7 +613,7 @@
         lengthTag: null,
         typeTag: null,
         diameter: null,
-        sort: 'default',
+        sort: 'price-asc',
       };
 
 function variantHasValidPrice(v) {
