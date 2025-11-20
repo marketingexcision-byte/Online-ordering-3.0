@@ -672,6 +672,69 @@
 
       const MAT = JSON.parse(el('#es-vdi-table').textContent);
 
+            function deriveIsoCodes(product, tags) {
+        const allTags = Array.isArray(tags) ? tags : [];
+
+        const getIsosFromVdi = () => {
+          const allVdis = [];
+          const pushFromField = (val) => {
+            if (!val || typeof val !== 'string') return;
+            try {
+              const arr = JSON.parse(val);
+              if (Array.isArray(arr)) {
+                arr.forEach((n) => {
+                  const num = Number(n);
+                  if (!Number.isNaN(num)) allVdis.push(num);
+                });
+              }
+            } catch (e) {
+              // ignore parse errors
+            }
+          };
+
+          pushFromField(product.vdi_good);
+          pushFromField(product.vdi_excellent);
+
+          if (!allVdis.length) return [];
+
+          const isoSet = new Set();
+          allVdis.forEach((v) => {
+            const row = MAT.find((m) => m.vdi === v);
+            if (row && row.iso) isoSet.add(row.iso);
+          });
+          return Array.from(isoSet);
+        };
+
+        const getIsosFromTags = () => {
+          const isoSet = new Set();
+
+          const want = (regex, iso) => {
+            if (allTags.some((t) => regex.test(t))) isoSet.add(iso);
+          };
+
+          // P: steels
+          want(/Carbon Steels|Alloy Steels|Tool Steel|Wear Plate|Prehardened Steels/i, 'P');
+          // M: stainless
+          want(/Stainless Steels?/i, 'M');
+          // K: cast irons
+          want(/Cast Iron|Ductile Iron|Malleable Iron/i, 'K');
+          // N: non-ferrous / soft
+          want(/Aluminium|Aluminum|Copper|Brass|Bronze|Plastics?|Composites?|FRP|Non Metallic|Rubber|Wood/i, 'N');
+          // S: super alloys / Ti
+          want(/Inconel|Super Alloy|Titanium|Nickel|Cobalt/i, 'S');
+          // H: hardened
+          want(/Hardened Steels?|\(HRc[0-9]/i, 'H');
+
+          return Array.from(isoSet);
+        };
+
+        const isoFromVdi = getIsosFromVdi();
+        if (isoFromVdi.length) return isoFromVdi;
+
+        return getIsosFromTags();
+      }
+
+
       const MATERIAL_BUCKETS = [
         // P. Steels
         {
@@ -1144,7 +1207,7 @@
         }
       }
 
-      function hydrateQuickSpecs(card, product, variant) {
+            function hydrateQuickSpecs(card, product, variant) {
         if (!product || !variant) return;
 
         const root = card.querySelector('[data-vqs]');
@@ -1153,14 +1216,28 @@
         const setVal = (selector, val) => {
           const el = root.querySelector(selector);
           if (!el) return;
-          el.textContent = val !== null && val !== undefined && val !== '' ? String(val) : '—';
+          el.textContent =
+            val !== null && val !== undefined && val !== '' ? String(val) : '—';
         };
 
         // core variant geometry
-        setVal('[data-vqs__sku]', variant.sku || '');
-        setVal('[data-vqs__dia]', variant.dia_mm != null ? `${variant.dia_mm} mm` : '');
-        setVal('[data-vqs__shank]', variant.shank_diameter_mm_mf != null ? `${variant.shank_diameter_mm_mf} mm` : '');
-        setVal('[data-vqs__loc]', variant.length_of_cut_mm != null ? `${variant.length_of_cut_mm} mm` : '');
+        setVal('[data-vqs__sku]',   variant.sku || '');
+        setVal(
+          '[data-vqs__dia]',
+          variant.dia_mm != null ? `${variant.dia_mm} mm` : ''
+        );
+        setVal(
+          '[data-vqs__shank]',
+          variant.shank_diameter_mm_mf != null
+            ? `${variant.shank_diameter_mm_mf} mm`
+            : ''
+        );
+        setVal(
+          '[data-vqs__loc]',
+          variant.length_of_cut_mm != null
+            ? `${variant.length_of_cut_mm} mm`
+            : ''
+        );
 
         const tags = Array.isArray(product.tags) ? product.tags : [];
 
@@ -1169,28 +1246,53 @@
           return t ? t.slice(prefix.length) : null;
         };
 
-        const shankType = findTagVal('Shank Type_');
-        const chamfer = findTagVal('Chamfer Angle_');
-        const flutes = findTagVal('No. Flutes_');
+        const shankType    = findTagVal('Shank Type_');
+        const chamferAngle = findTagVal('Chamfer Angle_');
+        const flutes       = findTagVal('No. Flutes_');
+        const cornerRadius = findTagVal('Corner Radius_');
 
         setVal('[data-vqs__shanktype]', shankType || '');
-        setVal('[data-vqs__chamfer]', chamfer ? `${chamfer}°` : '');
         setVal('[data-vqs__flutes]', flutes || '');
 
+        // chamfer column: only show if we have a value
+        const chamferCol = root.querySelector('[data-vqs-chamfer]');
+        if (chamferAngle) {
+          setVal('[data-vqs__chamfer]', `${chamferAngle}°`);
+          if (chamferCol) chamferCol.style.display = '';
+        } else {
+          if (chamferCol) chamferCol.style.display = 'none';
+        }
+
+        // corner radius column: only show if we have a value
+        const crCol = root.querySelector('[data-vqs-cr]');
+        if (cornerRadius) {
+          setVal('[data-vqs__cr]', `${cornerRadius} mm`);
+          if (crCol) crCol.style.display = '';
+        } else {
+          if (crCol) crCol.style.display = 'none';
+        }
+
         // operations
-        const opTags = tags.filter((t) => t.startsWith('Operation_')).map((t) => t.replace('Operation_', ''));
+        const opTags = tags
+          .filter((t) => t.startsWith('Operation_'))
+          .map((t) => t.replace('Operation_', ''));
         setVal('[data-vqs__ops]', opTags.join(', '));
 
-        // workpiece materials (Carbon Steels_Excellent → Carbon Steels (Excellent))
-        const matTags = tags
-          .filter((t) => /_(Excellent|Great)$/i.test(t))
-          .map((t) => {
-            const m = t.match(/^(.*)_(Excellent|Great)$/i);
-            return m ? `${m[1]} (${m[2]})` : t;
-          });
+        // workpiece materials: ISO chips (P,M,K,N,S,H)
         const matsEl = root.querySelector('.vqs-mats[data-vqs__mats]');
         if (matsEl) {
-          matsEl.textContent = matTags.length ? matTags.join(', ') : '—';
+          const isoCodes = deriveIsoCodes(product, tags);
+          matsEl.innerHTML = '';
+          if (!isoCodes.length) {
+            matsEl.textContent = '—';
+          } else {
+            isoCodes.forEach((iso) => {
+              const span = document.createElement('span');
+              span.className = `material material-${iso}`;
+              span.textContent = iso;
+              matsEl.appendChild(span);
+            });
+          }
         }
 
         const stockEl = root.querySelector('[data-vqs__stock]');
@@ -1200,6 +1302,7 @@
           stockEl.dataset.status = available ? 'in-stock' : 'backorder';
         }
       }
+
 
       function buildWorkerPayload() {
         return {
