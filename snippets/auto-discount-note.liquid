@@ -4,8 +4,10 @@
   Order of resolution.
   1) Category match using the map below.
   2) Fallback to store_wide_discount (customer metafield).
-  3) Fallback to collection metafield custom.discount_must_create_discount.
-  Collection discount shows even for guests.
+  3) Fallback to collection sale metaobject (custom.sale_discount -> website_sale).
+     * discount (Decimal)
+     * sale_name (Single line text)
+  Collection sale discount shows even for guests.
 {%- endcomment -%}
 
 {%- comment -%} Resolve product object for PDP and cards {%- endcomment -%}
@@ -15,6 +17,7 @@
 {%- endif -%}
 
 {%- assign show_pct = nil -%}
+{%- assign sale_label = nil -%}
 
 {%- comment -%}
   1. CUSTOMER-BASED DISCOUNT (only if customer is logged in)
@@ -39,7 +42,6 @@
   -%}
 
   {%- assign mapping_pairs = discount_map | split: '|' -%}
-
   {%- assign product_tags_downcased = p.tags | join: '||' | downcase | split: '||' -%}
 
   {%- for pair in mapping_pairs -%}
@@ -67,45 +69,67 @@
 {%- endif -%}
 
 {%- comment -%}
-  2. COLLECTION-LEVEL DISCOUNT METAFIELD
-     custom.discount_must_create_discount (Decimal, e.g. 10 for 10%)
+  2. COLLECTION-LEVEL SALE (metaobject)
+     custom.sale_discount -> website_sale
+     Fields:
+       * discount (Decimal)
+       * sale_name (Single line text)
      Used if no customer discount has been resolved.
      If product belongs to multiple collections, use the highest discount
      found on any collection.
 {%- endcomment -%}
-{%- if p -%}
-  {%- if show_pct == nil or show_pct == 0 -%}
-    {%- assign best_coll_pct = 0 -%}
+{%- if p and (show_pct == nil or show_pct == 0) -%}
+  {%- assign best_coll_pct = 0 -%}
+  {%- assign best_sale_label = nil -%}
 
-    {%- comment -%}Check explicit collection in context first (if any){%- endcomment -%}
-    {%- if collection and collection.metafields.custom.discount_must_create_discount != blank -%}
-      {%- assign coll_raw = collection.metafields.custom.discount_must_create_discount -%}
-      {%- assign coll_pct = coll_raw | default: 0 | plus: 0 -%}
+  {%- comment -%}Check explicit collection in context first{%- endcomment -%}
+  {%- if collection -%}
+    {%- assign col = collection -%}
+    {%- assign sale_ref = col.metafields.custom.sale_discount -%}
+    {%- if sale_ref != blank -%}
+      {%- assign sale = sale_ref.value | default: sale_ref -%}
+      {%- assign coll_pct = sale.discount | default: 0 | plus: 0 -%}
+      {%- assign coll_name = sale.sale_name | default: '' -%}
+      {%- if coll_pct > best_coll_pct -%}
+        {%- assign best_coll_pct = coll_pct -%}
+        {%- assign best_sale_label = coll_name -%}
+      {%- endif -%}
+    {%- elsif col.metafields.custom.discount_must_create_discount != blank -%}
+      {%- assign coll_pct = col.metafields.custom.discount_must_create_discount | default: 0 | plus: 0 -%}
       {%- if coll_pct > best_coll_pct -%}
         {%- assign best_coll_pct = coll_pct -%}
       {%- endif -%}
     {%- endif -%}
+  {%- endif -%}
 
-    {%- comment -%}Then check all collections this product belongs to{%- endcomment -%}
-    {%- if p.collections and p.collections.size > 0 -%}
-      {%- for col in p.collections -%}
-        {%- if col.metafields.custom.discount_must_create_discount != blank -%}
-          {%- assign coll_raw = col.metafields.custom.discount_must_create_discount -%}
-          {%- assign coll_pct = coll_raw | default: 0 | plus: 0 -%}
-          {%- if coll_pct > best_coll_pct -%}
-            {%- assign best_coll_pct = coll_pct -%}
-          {%- endif -%}
-        {%- endif -%}
-      {%- endfor -%}
-    {%- endif -%}
+  {%- comment -%}Then check all collections the product belongs to{%- endcomment -%}
+  {%- if p.collections and p.collections.size > 0 -%}
+    {%- for col in p.collections -%}
+      {%- assign sale_ref = col.metafields.custom.sale_discount -%}
+      {%- if sale_ref != blank -%}
+        {%- assign sale = sale_ref.value | default: sale_ref -%}
+        {%- assign coll_pct = sale.discount | default: 0 | plus: 0 -%}
+        {%- assign coll_name = sale.sale_name | default: '' -%}
+      {%- elsif col.metafields.custom.discount_must_create_discount != blank -%}
+        {%- assign coll_pct = col.metafields.custom.discount_must_create_discount | default: 0 | plus: 0 -%}
+        {%- assign coll_name = '' -%}
+      {%- else -%}
+        {%- assign coll_pct = 0 -%}
+        {%- assign coll_name = '' -%}
+      {%- endif -%}
 
-    {%- if best_coll_pct > 0 -%}
-      {%- assign show_pct = best_coll_pct -%}
-    {%- endif -%}
+      {%- if coll_pct > best_coll_pct -%}
+        {%- assign best_coll_pct = coll_pct -%}
+        {%- assign best_sale_label = coll_name -%}
+      {%- endif -%}
+    {%- endfor -%}
+  {%- endif -%}
+
+  {%- if best_coll_pct > 0 -%}
+    {%- assign show_pct = best_coll_pct -%}
+    {%- assign sale_label = best_sale_label -%}
   {%- endif -%}
 {%- endif -%}
-
-
 
 {%- comment -%} Format % . integers show without .0 . decimals left as-is {%- endcomment -%}
 {%- assign rounded_pct = show_pct | default: 0 | round: 0 -%}
@@ -118,12 +142,16 @@
 {%- if show_pct and show_pct > 0 -%}
   <div class="auto-discount-note" role="status" aria-live="polite">
     <span class="auto-discount-note__icon" aria-hidden="true">
-      <!-- Inline tag icon. Scales with text. Uses currentColor. -->
       <svg width="16" height="16" viewBox="0 0 24 24" focusable="false">
         <path fill="#f88d2b" d="M20.59 13.41l-7.18 7.18a2 2 0 0 1-2.83 0l-7.17-7.17A2 2 0 0 1 3 12.17V5a2 2 0 0 1 2-2h7.17a2 2 0 0 1 1.41.59l7.01 7.01a2 2 0 0 1 0 2.81ZM7.5 7A1.5 1.5 0 1 0 9 8.5A1.5 1.5 0 0 0 7.5 7Z"/>
       </svg>
     </span>
-    <span class="auto-discount-note__text">{{ display_pct }}% discount applied at checkout</span>
+    <div class="auto-discount-note__text">
+      {%- if sale_label and sale_label != '' -%}
+        <div class="auto-discount-note__sale-name">{{ sale_label }}</div>
+      {%- endif -%}
+      <div>{{ display_pct }}% discount applied at checkout</div>
+    </div>
   </div>
   <style>
     .auto-discount-note {
@@ -133,8 +161,6 @@
       align-items: center;
       gap: 0.75rem;
       line-height: 1.2;
-      text-align: left;
-      width: 100%;
     }
     .auto-discount-note__icon {
       display: inline-flex;
@@ -144,6 +170,14 @@
     .auto-discount-note__icon svg {
       width: 1em;
       height: 1em;
+    }
+    .auto-discount-note__text {
+      display: flex;
+      flex-direction: column;
+      gap: 0.1rem;
+    }
+    .auto-discount-note__sale-name {
+      font-weight: 600;
     }
   </style>
 {%- endif -%}
