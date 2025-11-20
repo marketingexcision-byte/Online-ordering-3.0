@@ -71,20 +71,23 @@
      custom.discount_must_create_discount (Decimal, e.g. 10 for 10%)
      Used if no customer discount has been resolved.
 {%- endcomment -%}
-{%- if p and (show_pct == null or show_pct == 0) -%}
-  {%- assign c = collection -%}
-  {%- if c == nil and p.collections and p.collections.size > 0 -%}
-    {%- assign c = p.collections.first -%}
-  {%- endif -%}
+{%- if p -%}
+  {%- if show_pct == nil or show_pct == 0 -%}
+    {%- assign c = collection -%}
+    {%- if c == nil and p.collections and p.collections.size > 0 -%}
+      {%- assign c = p.collections.first -%}
+    {%- endif -%}
 
-  {%- if c and c.metafields.custom.discount_must_create_discount != blank -%}
-    {%- assign coll_raw = c.metafields.custom.discount_must_create_discount -%}
-    {%- assign coll_pct = coll_raw | default: 0 | plus: 0 -%}
-    {%- if coll_pct > 0 -%}
-      {%- assign show_pct = coll_pct -%}
+    {%- if c and c.metafields.custom.discount_must_create_discount != blank -%}
+      {%- assign coll_raw = c.metafields.custom.discount_must_create_discount -%}
+      {%- assign coll_pct = coll_raw | default: 0 | plus: 0 -%}
+      {%- if coll_pct > 0 -%}
+        {%- assign show_pct = coll_pct -%}
+      {%- endif -%}
     {%- endif -%}
   {%- endif -%}
 {%- endif -%}
+
 
 {%- comment -%} Format % . integers show without .0 . decimals left as-is {%- endcomment -%}
 {%- assign rounded_pct = show_pct | default: 0 | round: 0 -%}
