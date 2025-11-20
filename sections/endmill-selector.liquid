@@ -976,10 +976,9 @@
         if (summaryEl.dataset.bound === '1') return;
 
         selOp().addEventListener('change', () => {
-          selected.operationTag = selOp().value || null;
-          renderResults();
-          renderChips();
-        });
+  selected.operationTag = selOp().value || null;
+  showUpdateHint();
+});
 
         selType().addEventListener('change', () => {
           selected.typeTag = selType().value || null;
@@ -987,8 +986,7 @@
             selLen().value = '';
             selected.lengthTag = null;
           }
-          renderResults();
-          renderChips();
+          showUpdateHint();
         });
 
         selISO().addEventListener('change', () => {
@@ -998,8 +996,7 @@
           selected.vdis = null;
           selected.materialLabel = null;
           buildMaterialOptions('', iso);
-          renderResults();
-          renderChips();
+          showUpdateHint();
         });
 
         selMat().addEventListener('change', () => {
@@ -1018,14 +1015,12 @@
               selected.materialLabel = bucket.label;
             }
           }
-          renderResults();
-          renderChips();
+          showUpdateHint();
         });
 
         selSh().addEventListener('change', () => {
           selected.shapeTag = selSh().value || null;
-          renderResults();
-          renderChips();
+          showUpdateHint();
         });
 
         selLen().addEventListener('change', () => {
@@ -1034,22 +1029,19 @@
             selType().value = '';
             selected.typeTag = null;
           }
-          renderResults();
-          renderChips();
+          showUpdateHint();
         });
 
         selDia().addEventListener('input', () => {
           const v = selDia().value.trim();
           selected.diameter = v === '' ? null : Number(v);
-          renderResults();
-          renderChips();
+          showUpdateHint();
         });
 
         btnDiaC().addEventListener('click', () => {
           selDia().value = '';
           selected.diameter = null;
-          renderResults();
-          renderChips();
+          showUpdateHint();
         });
 
         summaryEl.dataset.bound = '1';
