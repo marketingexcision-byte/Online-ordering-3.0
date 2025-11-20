@@ -1362,7 +1362,7 @@ el('.es-finish').addEventListener('click', () => {
           if (managed) {
             const q = Number(variant.inventory_quantity || 0);
 
-            if (q > 2) {
+            if (q > 1) {
               status = 'green';
               text = 'In stock';
             } else if (q > 0) {
