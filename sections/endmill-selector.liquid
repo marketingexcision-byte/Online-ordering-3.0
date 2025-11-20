@@ -868,6 +868,34 @@
       function attachSummaryHandlersOnce() {
         if (summaryEl.dataset.bound === '1') return;
 
+        function pickVariantForCard(product) {
+  const variants = product.variants || [];
+  if (!variants.length) return null;
+
+  const targetDia = selected.diameter;
+
+  if (targetDia != null) {
+    // prefer exact diameter match if we have numeric dia_mm
+    const exact = variants.find(v => v.dia_mm != null && Number(v.dia_mm) === Number(targetDia));
+    if (exact) return exact;
+
+    // otherwise pick the closest diameter we know about
+    let best = null;
+    for (const v of variants) {
+      if (v.dia_mm == null) continue;
+      const dist = Math.abs(Number(v.dia_mm) - Number(targetDia));
+      if (!best || dist < best.dist) {
+        best = { v, dist };
+      }
+    }
+    if (best) return best.v;
+  }
+
+  // no diameter filter. just take first variant
+  return variants[0];
+}
+
+
         selOp().addEventListener('change', () => {
           selected.operationTag = selOp().value || null;
           renderResults();
@@ -1171,23 +1199,38 @@
           }
 
           const link =
-            card.querySelector('.product-grid-item') ||
-            card.querySelector('.product-grid-item__link') ||
-            card.querySelector('a');
+  card.querySelector('.product-grid-item') ||
+  card.querySelector('.product-grid-item__link') ||
+  card.querySelector('a');
 
-          if (link) {
-            link.href = `/products/${p.handle}`;
-            try {
-              link.setAttribute('data-product-json', JSON.stringify(p));
-            } catch (e) {
-              console.warn('[ES] Failed to stringify product JSON', e, p);
-            }
+if (link) {
+  // 1. basic wiring
+  link.href = `/products/${p.handle}`;
+  try {
+    link.setAttribute('data-product-json', JSON.stringify(p));
+  } catch (e) {
+    console.warn('[ES] Failed to stringify product JSON', e, p);
+  }
 
-            const firstVariant = (p.variants || [])[0];
-            if (firstVariant) {
-              link.setAttribute('data-variant-id', String(firstVariant.id));
-            }
-          }
+  // 2. pick the variant this card should represent
+  const chosenVariant = pickVariantForCard(p);
+  if (chosenVariant) {
+    link.setAttribute('data-variant-id', String(chosenVariant.id));
+  }
+
+  // 3. optional. feed some context to the suitability line
+  if (selected.operationTag) {
+    link.setAttribute('data-op-label', selected.operationTag);
+  }
+  if (selected.materialLabel) {
+    link.setAttribute('data-material-label', selected.materialLabel);
+  }
+
+  // 4. tell the grid snippet to hydrate this card
+  const ev = new CustomEvent('es:hydrate-card', { bubbles: true });
+  link.dispatchEvent(ev);
+}
+
 
           const titleEl =
             card.querySelector('.cpgs_title') ||
