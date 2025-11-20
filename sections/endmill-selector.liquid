@@ -1194,14 +1194,18 @@ function pickVariantForCard(product) {
 
         // 3. Move to step 5, show summary, fetch results
         setStep(5);
-        showSummary();
-        fetchAndRenderResults();
+showSummary();
 
-        // 4. Scroll into view
-        window.scrollTo({
-          top: el('#es-results').offsetTop - 20,
-          behavior: 'smooth',
-        });
+// SHOW RESULTS SECTION
+document.getElementById('es-results').style.display = 'block';
+
+fetchAndRenderResults();
+
+window.scrollTo({
+  top: document.getElementById('es-results').offsetTop - 20,
+  behavior: 'smooth',
+});
+
       });
 
       el('#es-reset').addEventListener('click', () => {
@@ -1942,6 +1946,11 @@ function pickVariantForCard(product) {
             .mgc-title {
             font-family: 'Humanist777BT-Bold';
         }
+
+        #es-results {
+  display: none;
+}
+
   </style>
 </section>
 
