@@ -4804,22 +4804,24 @@ document.addEventListener('DOMContentLoaded', function(){
 </script>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-  const badge = document.querySelector('.jdgm-prev-badge');
-  const reviewsTab = document.querySelector('.tab[data-tab="reviews"]');
+  document.addEventListener('click', function (e) {
+    // Check if the thing you clicked is the badge or inside it
+    const badge = e.target.closest('.jdgm-prev-badge, .jdgm-prev-badge__stars');
+    if (!badge) return;
 
-  if (!badge) {
-    console.error('No .jdgm-prev-badge found.');
-    return;
-  }
+    const reviewsTab = document.querySelector('.tab[data-tab="reviews"]');
+    if (!reviewsTab) {
+      console.error('No .tab[data-tab="reviews"] found');
+      return;
+    }
 
-  if (!reviewsTab) {
-    console.error('No reviews tab found.');
-    return;
-  }
+    // Scroll to the tab
+    reviewsTab.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start'
+    });
 
-  badge.addEventListener('click', function() {
+    // Trigger whatever click handler the theme attached
     reviewsTab.click();
   });
-});
 </script>
