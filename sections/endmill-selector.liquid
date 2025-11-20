@@ -223,19 +223,6 @@
     <div id="es-results">
       <h3 class="h3" style="margin-top:0;">Results</h3>
 
-      <div id="es-update-hint" style="
-  display:none;
-  background:#fff3cd;
-  color:#856404;
-  border:1px solid #ffeeba;
-  padding:10px 14px;
-  border-radius:6px;
-  margin-bottom:15px;
-  font-size:14px;
-">
-  Filters changed. Press <strong>Show results</strong> to refresh.
-</div>
-
       {%- comment -%} Editable summary controls shown on results {%- endcomment -%}
       {% assign iso_tabs = 'P|M|K|N|S|H' | split: '|' %}
       {% assign ops = 'Profiling|Side Milling|Small Part|Slotting|Die Sinking|Facing|Corner|Helical-Interpol|Trochoidal|Side Taper'
@@ -977,7 +964,7 @@
 
         selOp().addEventListener('change', () => {
   selected.operationTag = selOp().value || null;
-  showUpdateHint();
+queueResultsUpdate();
 });
 
         selType().addEventListener('change', () => {
@@ -986,7 +973,7 @@
             selLen().value = '';
             selected.lengthTag = null;
           }
-          showUpdateHint();
+          queueResultsUpdate();
         });
 
         selISO().addEventListener('change', () => {
@@ -996,7 +983,7 @@
           selected.vdis = null;
           selected.materialLabel = null;
           buildMaterialOptions('', iso);
-          showUpdateHint();
+         queueResultsUpdate();
         });
 
         selMat().addEventListener('change', () => {
@@ -1015,12 +1002,12 @@
               selected.materialLabel = bucket.label;
             }
           }
-          showUpdateHint();
+          queueResultsUpdate();
         });
 
         selSh().addEventListener('change', () => {
           selected.shapeTag = selSh().value || null;
-          showUpdateHint();
+          queueResultsUpdate();
         });
 
         selLen().addEventListener('change', () => {
@@ -1029,19 +1016,19 @@
             selType().value = '';
             selected.typeTag = null;
           }
-          showUpdateHint();
+          queueResultsUpdate();
         });
 
         selDia().addEventListener('input', () => {
           const v = selDia().value.trim();
           selected.diameter = v === '' ? null : Number(v);
-          showUpdateHint();
+          queueResultsUpdate();
         });
 
         btnDiaC().addEventListener('click', () => {
           selDia().value = '';
           selected.diameter = null;
-          showUpdateHint();
+          queueResultsUpdate();
         });
 
         summaryEl.dataset.bound = '1';
@@ -1169,11 +1156,10 @@ function hideUpdateHint() {
       els('.es-next').forEach((b) => b.addEventListener('click', () => setStep(Math.min(5, step + 1))));
       els('.es-prev').forEach((b) => b.addEventListener('click', () => setStep(Math.max(1, step - 1))));
       el('.es-finish').addEventListener('click', () => {
-        setStep(5);
-        showSummary();
-        fetchAndRenderResults();
-        window.scrollTo({ top: el('#es-results').offsetTop - 20, behavior: 'smooth' });
-      });
+  setStep(5);
+  showSummary();
+  // results will auto-update via queueResultsUpdate
+});
 
       el('#es-reset').addEventListener('click', () => {
         selected.operationTag = null;
