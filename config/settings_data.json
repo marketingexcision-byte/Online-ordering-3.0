@@ -641,7 +641,7 @@
             "settings": {
               "image": "shopify://shop_images/andy-oconnor.jpg",
               "team_name": "Andy",
-              "team_designation": "Production Manager",
+              "team_designation": "Operations Team Leader",
               "team_info": "",
               "team_bio_url": ""
             }
@@ -766,16 +766,6 @@
               "team_bio_url": "shopify://pages/authors-leon-thomas"
             }
           },
-          "3b873cb0-f32d-4677-9e89-2bf0c1dc2cf5": {
-            "type": "team",
-            "settings": {
-              "image": "shopify://shop_images/martin-devassy.jpg",
-              "team_name": "Martin",
-              "team_designation": "Logistics Supervisor",
-              "team_info": "",
-              "team_bio_url": ""
-            }
-          },
           "bbf66eb5-0690-4d57-83a4-9b8372f2fb0b": {
             "type": "team",
             "settings": {
@@ -812,7 +802,6 @@
           "f067bda1-3187-42af-a156-8e0c69bfefef",
           "team_CNfQRp",
           "f88ab845-833c-4947-b3dc-49c40ceebe8e",
-          "3b873cb0-f32d-4677-9e89-2bf0c1dc2cf5",
           "bbf66eb5-0690-4d57-83a4-9b8372f2fb0b",
           "9f6984fc-8341-4b17-9240-934f93564d15"
         ],
