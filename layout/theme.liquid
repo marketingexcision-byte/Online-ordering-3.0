@@ -1,6 +1,7 @@
 <!doctype html>
 <html class="no-touch no-js" lang="en" dir="ltr">
   <head>
+ {%- render 'ecom_header' -%}
 {% liquid
   assign request_path  = request.path        | default: '' | downcase
   assign request_query = request.query_string| default: '' | downcase
